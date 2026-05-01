@@ -1672,7 +1672,7 @@ function getState$6(open) {
   return open ? "open" : "closed";
 }
 var Root$b = Collapsible;
-var Trigger$5 = CollapsibleTrigger;
+var Trigger$4 = CollapsibleTrigger;
 var Content$3 = CollapsibleContent;
 var DirectionContext = React.createContext(void 0);
 function useDirection(localDir) {
@@ -1923,7 +1923,7 @@ var AccordionTrigger$1 = React.forwardRef(
     const collapsibleContext = useAccordionCollapsibleContext(TRIGGER_NAME$9, __scopeAccordion);
     const collapsibleScope = useCollapsibleScope(__scopeAccordion);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(Collection$3.ItemSlot, { scope: __scopeAccordion, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Trigger$5,
+      Trigger$4,
       {
         "aria-disabled": itemContext.open && !collapsibleContext.collapsible || void 0,
         "data-orientation": accordionContext.orientation,
@@ -2455,7 +2455,7 @@ const __iconNode$D = [
   ["path", { d: "M4 12h16", key: "1lakjw" }],
   ["path", { d: "M4 19h16", key: "1djgab" }]
 ];
-const Menu$1 = createLucideIcon("menu", __iconNode$D);
+const Menu = createLucideIcon("menu", __iconNode$D);
 const __iconNode$C = [
   ["rect", { width: "20", height: "14", x: "2", y: "3", rx: "2", key: "48i651" }],
   ["line", { x1: "8", x2: "16", y1: "21", y2: "21", key: "1svkeh" }],
@@ -4367,7 +4367,7 @@ var DescriptionWarning$1 = ({ contentRef, descriptionId }) => {
   return null;
 };
 var Root$a = Dialog;
-var Trigger$4 = DialogTrigger;
+var Trigger$3 = DialogTrigger;
 var Portal$3 = DialogPortal$1;
 var Overlay = DialogOverlay$1;
 var Content$2 = DialogContent$1;
@@ -4384,7 +4384,7 @@ var AlertDialogTrigger = React.forwardRef(
   (props, forwardedRef) => {
     const { __scopeAlertDialog, ...triggerProps } = props;
     const dialogScope = useDialogScope(__scopeAlertDialog);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Trigger$4, { ...dialogScope, ...triggerProps, ref: forwardedRef });
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Trigger$3, { ...dialogScope, ...triggerProps, ref: forwardedRef });
   }
 );
 AlertDialogTrigger.displayName = TRIGGER_NAME$7;
@@ -17427,7 +17427,7 @@ function getSideAndAlignFromPlacement(placement) {
   const [side, align = "center"] = placement.split("-");
   return [side, align];
 }
-var Root2$5 = Popper;
+var Root2$4 = Popper;
 var Anchor = PopperAnchor;
 var Content$1 = PopperContent;
 var Arrow = PopperArrow;
@@ -18379,7 +18379,7 @@ var [createDropdownMenuContext] = createContextScope$1(
 var useMenuScope = createMenuScope();
 var [DropdownMenuProvider, useDropdownMenuContext] = createDropdownMenuContext(DROPDOWN_MENU_NAME);
 var TRIGGER_NAME$5 = "DropdownMenuTrigger";
-var DropdownMenuTrigger$1 = React.forwardRef(
+var DropdownMenuTrigger = React.forwardRef(
   (props, forwardedRef) => {
     const { __scopeDropdownMenu, disabled = false, ...triggerProps } = props;
     const context = useDropdownMenuContext(TRIGGER_NAME$5, __scopeDropdownMenu);
@@ -18413,7 +18413,7 @@ var DropdownMenuTrigger$1 = React.forwardRef(
     ) });
   }
 );
-DropdownMenuTrigger$1.displayName = TRIGGER_NAME$5;
+DropdownMenuTrigger.displayName = TRIGGER_NAME$5;
 var PORTAL_NAME$4 = "DropdownMenuPortal";
 var DropdownMenuPortal = (props) => {
   const { __scopeDropdownMenu, ...portalProps } = props;
@@ -18600,7 +18600,7 @@ var Popover$1 = (props) => {
     onChange: onOpenChange,
     caller: POPOVER_NAME
   });
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root2$5, { ...popperScope, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root2$4, { ...popperScope, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
     PopoverProvider,
     {
       scope: __scopePopover,
@@ -25402,7 +25402,7 @@ var Icons = {
   Wallet,
   WalletCards,
   StretchHorizontal,
-  Menu: Menu$1,
+  Menu,
   Import: Upload,
   FileText,
   FileX,

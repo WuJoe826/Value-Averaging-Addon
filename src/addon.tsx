@@ -1,24 +1,95 @@
-import type { AddonContext } from "@wealthfolio/addon-sdk";
-import { Card, CardContent, Icons } from "@wealthfolio/ui";
-import React from "react";
+import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
+import type { AddonContext, AddonEnableFunction } from "@wealthfolio/addon-sdk";
+import { Icons } from "@wealthfolio/ui";
+import React, { useMemo, useState } from "react";
+import type { AddonPageTab } from "./components/page-tab-selector";
+import { DEFAULT_TICKERS, readSettings, saveSettings } from "./lib";
+import { DashboardPage, SettingsPage } from "./pages";
+import type { PortfolioTicker, ValueAveragingSettings } from "./types";
 
-function AddonExample({ ctx }: { ctx: AddonContext }) {
+function toCurrency(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
+  const [currentPage, setCurrentPage] = useState<AddonPageTab>("dashboard");
+  const [settings, setSettings] = useState<ValueAveragingSettings>(() => readSettings());
+  const [tickers, setTickers] = useState<PortfolioTicker[]>(DEFAULT_TICKERS);
+  const [generatedTransactions, setGeneratedTransactions] = useState<string[]>([]);
+
+  const enabledTickers = useMemo(
+    () => tickers.filter((ticker) => settings.enabledTickers[ticker.id]),
+    [settings.enabledTickers, tickers],
+  );
+
+  const fetchLatestPrices = () => {
+    setTickers((prev) =>
+      prev.map((ticker) => {
+        const changeRate = (Math.random() * 6 - 3) / 100;
+        const nextPrice = Number((ticker.currentPrice * (1 + changeRate)).toFixed(2));
+        return { ...ticker, currentPrice: Math.max(0.01, nextPrice) };
+      }),
+    );
+    ctx.api.logger.info("Value averaging prices refreshed");
+  };
+
+  const autoGenerateTransactions = () => {
+    const baseTopUp =
+      settings.topUpMode === "amount"
+        ? settings.topUpAmount
+        : (enabledTickers.reduce((sum, ticker) => sum + ticker.currentPrice, 0) * settings.topUpPercentage) /
+          100;
+
+    const generated = enabledTickers.map((ticker) => {
+      const allocation = (settings.tickerAllocations[ticker.id] ?? 0) / 100;
+      const plannedAmount = baseTopUp * allocation;
+      const amount = settings.maxTopUpEnabled
+        ? Math.min(plannedAmount, plannedAmount * settings.maxTopUpMultiplier)
+        : plannedAmount;
+      return `BUY ${ticker.symbol} in ${ticker.accountName}: ${toCurrency(amount)}`;
+    });
+
+    setGeneratedTransactions(generated);
+    ctx.api.logger.info(`Auto-generated ${generated.length} value averaging transactions`);
+  };
+
+  const confirmSettings = (nextSettings: ValueAveragingSettings) => {
+    setSettings(nextSettings);
+    saveSettings(nextSettings);
+  };
+
+  if (currentPage === "settings") {
+    return (
+      <SettingsPage
+        ctx={ctx}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        settings={settings}
+        tickers={tickers}
+        onConfirmSettings={confirmSettings}
+      />
+    );
+  }
+
   return (
-    <div className="p-6">
-      <Card>
-        <CardContent className="p-6">
-          <h1 className="mb-2 text-2xl font-semibold">Value Averaging</h1>
-          <p className="text-muted-foreground">
-            Welcome to your new Wealthfolio addon! Start building amazing features.
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+    <DashboardPage
+      ctx={ctx}
+      currentPage={currentPage}
+      onPageChange={setCurrentPage}
+      settings={settings}
+      tickers={tickers}
+      onFetchLatestPrices={fetchLatestPrices}
+      onAutoGenerateTransactions={autoGenerateTransactions}
+      generatedTransactions={generatedTransactions}
+    />
   );
 }
 
-export default function enable(ctx: AddonContext) {
-  // Add a sidebar item
+const enable: AddonEnableFunction = (ctx) => {
   const sidebarItem = ctx.sidebar.addItem({
     id: "value-averaging-addon",
     label: "Value Averaging",
@@ -27,14 +98,20 @@ export default function enable(ctx: AddonContext) {
     order: 100,
   });
 
-  // Add a route
-  const Wrapper = () => <AddonExample ctx={ctx} />;
+  const AddonRoute = () => {
+    const sharedQueryClient = ctx.api.query.getClient() as QueryClient;
+    return (
+      <QueryClientProvider client={sharedQueryClient}>
+        <ValueAveragingShell ctx={ctx} />
+      </QueryClientProvider>
+    );
+  };
+
   ctx.router.add({
     path: "/addon/value-averaging-addon",
-    component: React.lazy(() => Promise.resolve({ default: Wrapper })),
+    component: React.lazy(() => Promise.resolve({ default: AddonRoute })),
   });
 
-  // Cleanup on disable
   ctx.onDisable(() => {
     try {
       sidebarItem.remove();
@@ -42,4 +119,6 @@ export default function enable(ctx: AddonContext) {
       ctx.api.logger.error("Failed to remove sidebar item: " + (err as Error).message);
     }
   });
-}
+};
+
+export default enable;

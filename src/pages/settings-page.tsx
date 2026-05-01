@@ -50,11 +50,6 @@ const SETTINGS_SECTIONS: SettingsNavSection[] = [
         subtitle: "Top-up strategy and growth period",
         icon: <Icons.Settings className="size-5" />,
       },
-    ],
-  },
-  {
-    title: "Portfolio",
-    items: [
       {
         key: "portfolio" as const,
         title: "Portfolio",
@@ -156,13 +151,17 @@ export default function SettingsPage({
       <PageHeader heading="Value Averaging" actions={headerActions} />
       <PageContent>
         <div className="hidden lg:flex lg:w-full lg:justify-start">
-          <div className="flex w-full max-w-6xl flex-col px-2 py-2">
+          <div className="flex w-full max-w-6xl flex-col px-0 py-8">
+            <div className="space-y-0.5">
+              <h2 className="text-2xl font-bold tracking-tight">Value Averaging</h2>
+            </div>
+            <div className="my-6 border-border border-b" />
             <div className="flex gap-10">
               <aside className="hidden w-[240px] shrink-0 lg:sticky lg:top-24 lg:flex lg:flex-col lg:self-start">
                 <div className="space-y-6">
                   {SETTINGS_SECTIONS.map((section) => (
                     <div key={section.title} className="space-y-2">
-                      <div className="text-muted-foreground pl-2 text-[11px] font-semibold uppercase tracking-[0.2em]">
+                      <div className="text-muted-foreground pl-2 text-sm font-light uppercase tracking-widest">
                         {section.title}
                       </div>
                       <nav className="flex flex-col space-y-1">
@@ -173,13 +172,13 @@ export default function SettingsPage({
                               key={item.key}
                               type="button"
                               onClick={() => selectSection(item.key, false)}
-                              className={`inline-flex h-10 items-center justify-start gap-2.5 rounded-md px-2.5 text-left text-sm ${
+                              className={`inline-flex h-9 w-full items-center justify-start gap-2 rounded-md px-2 text-left text-sm ${
                                 isActive
-                                  ? "bg-muted text-foreground font-medium hover:bg-muted"
-                                  : "text-muted-foreground font-normal hover:bg-muted/50 hover:text-foreground"
+                                  ? "bg-muted hover:bg-muted"
+                                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                               }`}
                             >
-                              <span className="inline-flex items-center justify-center [&_svg]:size-[15px]">
+                              <span className="inline-flex items-center justify-center [&_svg]:size-4">
                                 {item.icon}
                               </span>
                               <span>{item.title}</span>
@@ -206,40 +205,38 @@ export default function SettingsPage({
           </div>
         </div>
 
-        <div className="space-y-4 lg:hidden">
+        <div className="w-full lg:hidden">
           {mobileView === "menu" ? (
-            <div className="space-y-4">
+            <div className="space-y-6 px-1 py-3">
               {SETTINGS_SECTIONS.map((section) => (
-                <div key={section.title} className="space-y-2">
+                <div key={section.title} className="space-y-3">
                   <div className="text-muted-foreground px-2 text-xs font-semibold uppercase tracking-widest">
                     {section.title}
                   </div>
-                  <Card>
-                    <CardContent className="p-2">
-                      {section.items.map((item) => (
-                        <button
-                          key={item.key}
-                          type="button"
-                          onClick={() => selectSection(item.key, true)}
-                          className="hover:bg-accent hover:text-accent-foreground flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors"
-                        >
-                          <span className="text-muted-foreground">{item.icon}</span>
-                          <span className="min-w-0">
-                            <span className="block font-medium">{item.title}</span>
-                            <span className="text-muted-foreground block truncate text-xs">
-                              {item.subtitle}
-                            </span>
-                          </span>
-                          <Icons.ChevronRight className="text-muted-foreground ml-auto size-4" />
-                        </button>
-                      ))}
-                    </CardContent>
-                  </Card>
+                  <div className="divide-border bg-card divide-y overflow-hidden rounded-2xl border shadow-sm">
+                    {section.items.map((item) => (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => selectSection(item.key, true)}
+                        className="hover:bg-muted/40 flex w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors active:opacity-90"
+                      >
+                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                          <div className="text-muted-foreground shrink-0">{item.icon}</div>
+                          <div className="min-w-0">
+                            <div className="text-foreground truncate text-base font-medium">{item.title}</div>
+                            <div className="text-muted-foreground truncate text-sm">{item.subtitle}</div>
+                          </div>
+                        </div>
+                        <Icons.ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
+                      </button>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-4 py-2">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -250,7 +247,7 @@ export default function SettingsPage({
                 </button>
                 <div className="min-w-0">
                   <h2 className="text-lg font-bold tracking-tight">{activeNavItem?.title ?? "Section"}</h2>
-                  <p className="text-muted-foreground truncate text-xs">
+                  <p className="text-muted-foreground truncate text-sm">
                     {activeNavItem?.subtitle ?? sectionMeta.description}
                   </p>
                 </div>

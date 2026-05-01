@@ -27172,12 +27172,7 @@ const SETTINGS_SECTIONS = [
         title: "General",
         subtitle: "Top-up strategy and growth period",
         icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.Settings, { className: "size-5" })
-      }
-    ]
-  },
-  {
-    title: "Portfolio",
-    items: [
+      },
       {
         key: "portfolio",
         title: "Portfolio",
@@ -27267,55 +27262,61 @@ function SettingsPage({
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Page, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(PageHeader, { heading: "Value Averaging", actions: headerActions }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(PageContent, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden lg:flex lg:w-full lg:justify-start", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex w-full max-w-6xl flex-col px-2 py-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-10", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("aside", { className: "hidden w-[240px] shrink-0 lg:sticky lg:top-24 lg:flex lg:flex-col lg:self-start", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-6", children: SETTINGS_SECTIONS.map((section) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground pl-2 text-[11px] font-semibold uppercase tracking-[0.2em]", children: section.title }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("nav", { className: "flex flex-col space-y-1", children: section.items.map((item) => {
-            const isActive = activeSection === item.key;
-            return /* @__PURE__ */ jsxRuntimeExports.jsxs(
-              "button",
-              {
-                type: "button",
-                onClick: () => selectSection(item.key, false),
-                className: `inline-flex h-10 items-center justify-start gap-2.5 rounded-md px-2.5 text-left text-sm ${isActive ? "bg-muted text-foreground font-medium hover:bg-muted" : "text-muted-foreground font-normal hover:bg-muted/50 hover:text-foreground"}`,
-                children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "inline-flex items-center justify-center [&_svg]:size-[15px]", children: item.icon }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: item.title })
-                ]
-              },
-              item.key
-            );
-          }) })
-        ] }, section.title)) }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-8 min-w-0 flex-1", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full max-w-4xl space-y-4", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-xl font-bold tracking-tight", children: sectionMeta.title }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-sm", children: sectionMeta.description })
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border-border border-b" }),
-          renderSectionContent()
-        ] }) })
-      ] }) }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-4 lg:hidden", children: mobileView === "menu" ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-4", children: SETTINGS_SECTIONS.map((section) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden lg:flex lg:w-full lg:justify-start", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex w-full max-w-6xl flex-col px-0 py-8", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-0.5", children: /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-2xl font-bold tracking-tight", children: "Value Averaging" }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "my-6 border-border border-b" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-10", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("aside", { className: "hidden w-[240px] shrink-0 lg:sticky lg:top-24 lg:flex lg:flex-col lg:self-start", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-6", children: SETTINGS_SECTIONS.map((section) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground pl-2 text-sm font-light uppercase tracking-widest", children: section.title }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("nav", { className: "flex flex-col space-y-1", children: section.items.map((item) => {
+              const isActive = activeSection === item.key;
+              return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => selectSection(item.key, false),
+                  className: `inline-flex h-9 w-full items-center justify-start gap-2 rounded-md px-2 text-left text-sm ${isActive ? "bg-muted hover:bg-muted" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"}`,
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "inline-flex items-center justify-center [&_svg]:size-4", children: item.icon }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: item.title })
+                  ]
+                },
+                item.key
+              );
+            }) })
+          ] }, section.title)) }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-8 min-w-0 flex-1", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full max-w-4xl space-y-4", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-xl font-bold tracking-tight", children: sectionMeta.title }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-sm", children: sectionMeta.description })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border-border border-b" }),
+            renderSectionContent()
+          ] }) })
+        ] })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full lg:hidden", children: mobileView === "menu" ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-6 px-1 py-3", children: SETTINGS_SECTIONS.map((section) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground px-2 text-xs font-semibold uppercase tracking-widest", children: section.title }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: "p-2", children: section.items.map((item) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "divide-border bg-card divide-y overflow-hidden rounded-2xl border shadow-sm", children: section.items.map((item) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
           "button",
           {
             type: "button",
             onClick: () => selectSection(item.key, true),
-            className: "hover:bg-accent hover:text-accent-foreground flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors",
+            className: "hover:bg-muted/40 flex w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors active:opacity-90",
             children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground", children: item.icon }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "min-w-0", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block font-medium", children: item.title }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground block truncate text-xs", children: item.subtitle })
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex min-w-0 flex-1 items-center gap-3", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground shrink-0", children: item.icon }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-foreground truncate text-base font-medium", children: item.title }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground truncate text-sm", children: item.subtitle })
+                ] })
               ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.ChevronRight, { className: "text-muted-foreground ml-auto size-4" })
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.ChevronRight, { className: "text-muted-foreground h-4 w-4 shrink-0" })
             ]
           },
           item.key
-        )) }) })
-      ] }, section.title)) }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4", children: [
+        )) })
+      ] }, section.title)) }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4 py-2", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(
             "button",
@@ -27328,7 +27329,7 @@ function SettingsPage({
           ),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-lg font-bold tracking-tight", children: activeNavItem?.title ?? "Section" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground truncate text-xs", children: activeNavItem?.subtitle ?? sectionMeta.description })
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground truncate text-sm", children: activeNavItem?.subtitle ?? sectionMeta.description })
           ] })
         ] }),
         renderSectionContent()

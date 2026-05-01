@@ -1,11 +1,32 @@
 import { QueryClientProvider, type QueryClient, useQuery } from "@tanstack/react-query";
-import type { AddonContext, AddonEnableFunction } from "@wealthfolio/addon-sdk";
+import type { Account, AddonContext, AddonEnableFunction, Holding } from "@wealthfolio/addon-sdk";
 import { Icons } from "@wealthfolio/ui";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import type { AddonPageTab } from "./components/page-tab-selector";
-import { DEFAULT_TICKERS, formatCurrency, readSettings, saveSettings } from "./lib";
+import { formatCurrency, readSettings, saveSettings } from "./lib";
 import { DashboardPage, SettingsPage } from "./pages";
 import type { PortfolioTicker, ValueAveragingSettings } from "./types";
+
+function mapHoldingToTicker(account: Account, holding: Holding): PortfolioTicker {
+  const symbol = holding.instrument?.symbol ?? holding.id;
+  const name = holding.instrument?.name ?? symbol;
+  const quantity = Number(holding.quantity) || 0;
+  const marketValue = Number(holding.marketValue?.local ?? holding.marketValue?.base ?? 0);
+  const totalInvested = Number(holding.costBasis?.local ?? holding.costBasis?.base ?? 0);
+  const currentPrice = Number(holding.price ?? (quantity > 0 ? marketValue / quantity : 0));
+  const averageCost = quantity > 0 ? totalInvested / quantity : currentPrice;
+
+  return {
+    id: `${account.id}:${holding.instrument?.id ?? holding.id}`,
+    symbol,
+    name,
+    accountName: account.name,
+    averageCost: Number.isFinite(averageCost) ? averageCost : 0,
+    currentPrice: Number.isFinite(currentPrice) ? currentPrice : 0,
+    totalInvested: Number.isFinite(totalInvested) ? totalInvested : 0,
+    valueAveragingInvested: 0,
+  };
+}
 
 function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
   const { data: hostSettings } = useQuery({
@@ -13,26 +34,80 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
     queryFn: () => ctx.api.settings.get(),
   });
   const baseCurrency = hostSettings?.baseCurrency ?? "USD";
+  const {
+    data: tickers = [],
+    isLoading: isTickersLoading,
+    refetch: refetchTickers,
+  } = useQuery({
+    queryKey: ["value-averaging-addon", "portfolio-tickers"],
+    queryFn: async () => {
+      const accounts = await ctx.api.accounts.getAll();
+      const activeAccounts = accounts.filter((account) => account.isActive);
+      const holdingsByAccount = await Promise.all(
+        activeAccounts.map(async (account) => ({
+          account,
+          holdings: await ctx.api.portfolio.getHoldings(account.id),
+        })),
+      );
+
+      return holdingsByAccount
+        .flatMap(({ account, holdings }) =>
+          holdings
+            .filter((holding) => String(holding.holdingType).toLowerCase() !== "cash")
+            .map((holding) => mapHoldingToTicker(account, holding)),
+        )
+        .sort((a, b) => b.currentPrice - a.currentPrice);
+    },
+  });
 
   const [currentPage, setCurrentPage] = useState<AddonPageTab>("dashboard");
   const [settings, setSettings] = useState<ValueAveragingSettings>(() => readSettings());
-  const [tickers, setTickers] = useState<PortfolioTicker[]>(DEFAULT_TICKERS);
   const [generatedTransactions, setGeneratedTransactions] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!tickers.length) {
+      return;
+    }
+
+    setSettings((prev) => {
+      let hasNewTicker = false;
+      const nextEnabledTickers = { ...prev.enabledTickers };
+      const nextTickerAllocations = { ...prev.tickerAllocations };
+
+      tickers.forEach((ticker) => {
+        if (!(ticker.id in nextEnabledTickers)) {
+          nextEnabledTickers[ticker.id] = false;
+          hasNewTicker = true;
+        }
+        if (!(ticker.id in nextTickerAllocations)) {
+          nextTickerAllocations[ticker.id] = 0;
+          hasNewTicker = true;
+        }
+      });
+
+      if (!hasNewTicker) {
+        return prev;
+      }
+
+      const nextSettings: ValueAveragingSettings = {
+        ...prev,
+        enabledTickers: nextEnabledTickers,
+        tickerAllocations: nextTickerAllocations,
+      };
+      saveSettings(nextSettings);
+      ctx.api.logger.info("Detected new holdings and added them as disabled tickers");
+      return nextSettings;
+    });
+  }, [tickers, ctx]);
 
   const enabledTickers = useMemo(
     () => tickers.filter((ticker) => settings.enabledTickers[ticker.id]),
     [settings.enabledTickers, tickers],
   );
 
-  const fetchLatestPrices = () => {
-    setTickers((prev) =>
-      prev.map((ticker) => {
-        const changeRate = (Math.random() * 6 - 3) / 100;
-        const nextPrice = Number((ticker.currentPrice * (1 + changeRate)).toFixed(2));
-        return { ...ticker, currentPrice: Math.max(0.01, nextPrice) };
-      }),
-    );
-    ctx.api.logger.info("Value averaging prices refreshed");
+  const fetchLatestPrices = async () => {
+    await refetchTickers();
+    ctx.api.logger.info("Value averaging portfolio holdings synced");
   };
 
   const autoGenerateTransactions = () => {
@@ -85,6 +160,7 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
       onPageChange={setCurrentPage}
       settings={settings}
       tickers={tickers}
+      isTickersLoading={isTickersLoading}
       onFetchLatestPrices={fetchLatestPrices}
       onAutoGenerateTransactions={autoGenerateTransactions}
       generatedTransactions={generatedTransactions}

@@ -23,7 +23,8 @@ interface DashboardPageProps {
   onPageChange: (nextPage: AddonPageTab) => void;
   settings: ValueAveragingSettings;
   tickers: PortfolioTicker[];
-  onFetchLatestPrices: () => void;
+  isTickersLoading: boolean;
+  onFetchLatestPrices: () => void | Promise<void>;
   onAutoGenerateTransactions: () => void;
   generatedTransactions: string[];
 }
@@ -76,6 +77,7 @@ export default function DashboardPage({
   onPageChange,
   settings,
   tickers,
+  isTickersLoading,
   onFetchLatestPrices,
   onAutoGenerateTransactions,
   generatedTransactions,
@@ -98,6 +100,48 @@ export default function DashboardPage({
   const selectedPlan = selectedTicker ? investmentPlan[selectedTicker.id] : null;
 
   const headerActions = <PageTabSelector currentPage={currentPage} onPageChange={onPageChange} />;
+
+  if (isTickersLoading) {
+    return (
+      <Page>
+        <PageHeader heading="Value Averaging" actions={headerActions} />
+        <PageContent>
+          <div className="text-muted-foreground py-12 text-center text-sm">Syncing portfolio holdings...</div>
+        </PageContent>
+      </Page>
+    );
+  }
+
+  if (!tickers.length) {
+    return (
+      <Page>
+        <PageHeader heading="Value Averaging" actions={headerActions} />
+        <PageContent>
+          <div className="flex justify-center">
+            <div className="w-full max-w-lg">
+              <EmptyPlaceholder className="mt-16">
+                <EmptyPlaceholder.Icon name="PieChart" />
+                <EmptyPlaceholder.Title>No portfolio yet</EmptyPlaceholder.Title>
+                <EmptyPlaceholder.Description>
+                  No holdings were found in your Wealthfolio portfolio. Add holdings first, then reopen this
+                  page to build value averaging plans.
+                </EmptyPlaceholder.Description>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    void ctx.api.navigation.navigate("/holdings");
+                  }}
+                >
+                  <Icons.PieChart className="mr-2 h-4 w-4" />
+                  Go to holdings
+                </Button>
+              </EmptyPlaceholder>
+            </div>
+          </div>
+        </PageContent>
+      </Page>
+    );
+  }
 
   if (!enabledTickers.length) {
     return (

@@ -9,6 +9,21 @@
   "enabled": true,
   "permissions": [
     {
+      "category": "accounts",
+      "functions": ["getAll"],
+      "purpose": "Read accounts to map holdings by account"
+    },
+    {
+      "category": "portfolio",
+      "functions": ["getHoldings"],
+      "purpose": "Read live holdings for value averaging calculations"
+    },
+    {
+      "category": "settings",
+      "functions": ["get"],
+      "purpose": "Read base currency from host settings"
+    },
+    {
       "category": "ui",
       "functions": ["sidebar.addItem", "router.add"],
       "purpose": "Add navigation items to the sidebar"

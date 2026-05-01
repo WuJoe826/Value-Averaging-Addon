@@ -45,7 +45,12 @@ export function PortfolioSettingsSection({
   );
 
   if (layout === "mobile") {
-    return content;
+    return (
+      <div className="space-y-4">
+        <div className="border-border border-b" />
+        {content}
+      </div>
+    );
   }
 
   return (

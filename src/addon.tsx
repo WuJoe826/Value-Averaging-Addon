@@ -7,25 +7,85 @@ import { formatCurrency, readSettings, saveSettings } from "./lib";
 import { DashboardPage, SettingsPage } from "./pages";
 import type { PortfolioTicker, ValueAveragingSettings } from "./types";
 
-function mapHoldingToTicker(account: Account, holding: Holding): PortfolioTicker {
+interface RawTickerSnapshot {
+  key: string;
+  symbol: string;
+  name: string;
+  accountName: string;
+  quantity: number;
+  marketValue: number;
+  totalInvested: number;
+  currentPrice: number;
+}
+
+function mapHoldingToSnapshot(account: Account, holding: Holding): RawTickerSnapshot {
   const symbol = holding.instrument?.symbol ?? holding.id;
   const name = holding.instrument?.name ?? symbol;
   const quantity = Number(holding.quantity) || 0;
   const marketValue = Number(holding.marketValue?.local ?? holding.marketValue?.base ?? 0);
   const totalInvested = Number(holding.costBasis?.local ?? holding.costBasis?.base ?? 0);
   const currentPrice = Number(holding.price ?? (quantity > 0 ? marketValue / quantity : 0));
-  const averageCost = quantity > 0 ? totalInvested / quantity : currentPrice;
 
   return {
-    id: `${account.id}:${holding.instrument?.id ?? holding.id}`,
+    key: `${symbol.toLowerCase()}::${name.toLowerCase()}`,
     symbol,
     name,
     accountName: account.name,
-    averageCost: Number.isFinite(averageCost) ? averageCost : 0,
-    currentPrice: Number.isFinite(currentPrice) ? currentPrice : 0,
+    quantity: Number.isFinite(quantity) ? quantity : 0,
+    marketValue: Number.isFinite(marketValue) ? marketValue : 0,
     totalInvested: Number.isFinite(totalInvested) ? totalInvested : 0,
-    valueAveragingInvested: 0,
+    currentPrice: Number.isFinite(currentPrice) ? currentPrice : 0,
   };
+}
+
+function aggregateTickers(snapshots: RawTickerSnapshot[]): PortfolioTicker[] {
+  const grouped = new Map<
+    string,
+    {
+      symbol: string;
+      name: string;
+      accountNames: Set<string>;
+      totalQuantity: number;
+      totalMarketValue: number;
+      totalInvested: number;
+    }
+  >();
+
+  snapshots.forEach((snapshot) => {
+    const existing = grouped.get(snapshot.key);
+    if (!existing) {
+      grouped.set(snapshot.key, {
+        symbol: snapshot.symbol,
+        name: snapshot.name,
+        accountNames: new Set([snapshot.accountName]),
+        totalQuantity: snapshot.quantity,
+        totalMarketValue: snapshot.marketValue,
+        totalInvested: snapshot.totalInvested,
+      });
+      return;
+    }
+
+    existing.accountNames.add(snapshot.accountName);
+    existing.totalQuantity += snapshot.quantity;
+    existing.totalMarketValue += snapshot.marketValue;
+    existing.totalInvested += snapshot.totalInvested;
+  });
+
+  return Array.from(grouped.entries()).map(([key, group]) => {
+    const currentPrice = group.totalQuantity > 0 ? group.totalMarketValue / group.totalQuantity : 0;
+    const averageCost = group.totalQuantity > 0 ? group.totalInvested / group.totalQuantity : currentPrice;
+
+    return {
+      id: key,
+      symbol: group.symbol,
+      name: group.name,
+      accountName: Array.from(group.accountNames).join(", "),
+      averageCost: Number.isFinite(averageCost) ? averageCost : 0,
+      currentPrice: Number.isFinite(currentPrice) ? currentPrice : 0,
+      totalInvested: Number.isFinite(group.totalInvested) ? group.totalInvested : 0,
+      valueAveragingInvested: 0,
+    };
+  });
 }
 
 function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
@@ -50,13 +110,14 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
         })),
       );
 
-      return holdingsByAccount
+      const snapshots = holdingsByAccount
         .flatMap(({ account, holdings }) =>
           holdings
             .filter((holding) => String(holding.holdingType).toLowerCase() !== "cash")
-            .map((holding) => mapHoldingToTicker(account, holding)),
-        )
-        .sort((a, b) => b.currentPrice - a.currentPrice);
+            .map((holding) => mapHoldingToSnapshot(account, holding)),
+        );
+
+      return aggregateTickers(snapshots).sort((a, b) => b.currentPrice - a.currentPrice);
     },
   });
 

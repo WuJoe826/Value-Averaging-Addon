@@ -23,6 +23,7 @@ export function SettingsPageMobile({
   detailContent,
 }: SettingsPageMobileProps) {
   const sectionMeta = getSectionMeta(activeSection);
+  const compactDetailSpacing = activeSection === "general" || activeSection === "portfolio";
 
   return (
     <div className="w-full max-w-full lg:hidden">
@@ -61,7 +62,7 @@ export function SettingsPageMobile({
         >
           <div
             className={`px-3 pb-[calc(var(--mobile-nav-ui-height)+max(var(--mobile-nav-gap),env(safe-area-inset-bottom)))] ${
-              activeSection === "general"
+              compactDetailSpacing
                 ? "space-y-1 pt-0"
                 : "space-y-4 pt-2"
             }`}

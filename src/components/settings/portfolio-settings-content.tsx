@@ -71,11 +71,6 @@ export function PortfolioSettingsContent({
             </div>
           </div>
           <label className="flex shrink-0 items-center gap-2">
-            <span
-              className={`rounded-md px-2 py-0.5 text-[11px] font-medium ${enabled ? "text-success" : "text-muted-foreground"}`}
-            >
-              {enabled ? "Enabled" : "Disabled"}
-            </span>
             <Switch
               checked={enabled}
               onCheckedChange={(checked) =>
@@ -201,8 +196,9 @@ export function PortfolioSettingsContent({
           <div className="bg-card divide-border divide-y rounded-md border">{filteredTickers.map(renderTickerItem)}</div>
         )}
 
-        <div className="rounded-md px-3 py-2 text-xs">
-          Enabled allocation total: {totalAllocation.toFixed(2)}%
+        <div className="flex items-center justify-between rounded-md px-3 py-2">
+          <span className="text-sm font-medium">Allocation total:</span>
+          <span className="text-lg font-semibold">{totalAllocation.toFixed(2)}%</span>
         </div>
 
         <Button type="button" onClick={onConfirm} className="h-10 w-full">

@@ -44,7 +44,7 @@ export function PageTabSelector({ currentPage, onPageChange }: PageTabSelectorPr
         </div>
       </div>
       <div className="block sm:hidden">
-        <div className="bg-secondary/50 inline-flex items-center rounded-full border p-0.5">
+        <div className="bg-secondary/50 inline-flex items-center gap-0.5 rounded-full border p-0.5">
           {mobileTabs.map((tab) => {
             const isSelected = currentPage === tab.value;
             const Icon = tab.icon;
@@ -57,7 +57,7 @@ export function PageTabSelector({ currentPage, onPageChange }: PageTabSelectorPr
                 className={`inline-flex h-7 items-center rounded-full transition-all ${
                   isSelected
                     ? "bg-background px-2.5 text-foreground shadow-xs"
-                    : "text-muted-foreground hover:text-foreground w-7 justify-center"
+                    : "text-muted-foreground hover:text-foreground w-8 px-2.5 justify-center"
                 }`}
               >
                 <Icon className="size-4" />

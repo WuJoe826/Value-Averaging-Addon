@@ -41,9 +41,865 @@ function requireJsxRuntime() {
   return jsxRuntime.exports;
 }
 var jsxRuntimeExports = requireJsxRuntime();
+var Subscribable = class {
+  constructor() {
+    this.listeners = /* @__PURE__ */ new Set();
+    this.subscribe = this.subscribe.bind(this);
+  }
+  subscribe(listener) {
+    this.listeners.add(listener);
+    this.onSubscribe();
+    return () => {
+      this.listeners.delete(listener);
+      this.onUnsubscribe();
+    };
+  }
+  hasListeners() {
+    return this.listeners.size > 0;
+  }
+  onSubscribe() {
+  }
+  onUnsubscribe() {
+  }
+};
+var defaultTimeoutProvider = {
+  // We need the wrapper function syntax below instead of direct references to
+  // global setTimeout etc.
+  //
+  // BAD: `setTimeout: setTimeout`
+  // GOOD: `setTimeout: (cb, delay) => setTimeout(cb, delay)`
+  //
+  // If we use direct references here, then anything that wants to spy on or
+  // replace the global setTimeout (like tests) won't work since we'll already
+  // have a hard reference to the original implementation at the time when this
+  // file was imported.
+  setTimeout: (callback, delay2) => setTimeout(callback, delay2),
+  clearTimeout: (timeoutId) => clearTimeout(timeoutId),
+  setInterval: (callback, delay2) => setInterval(callback, delay2),
+  clearInterval: (intervalId) => clearInterval(intervalId)
+};
+var TimeoutManager = class {
+  // We cannot have TimeoutManager<T> as we must instantiate it with a concrete
+  // type at app boot; and if we leave that type, then any new timer provider
+  // would need to support ReturnType<typeof setTimeout>, which is infeasible.
+  //
+  // We settle for type safety for the TimeoutProvider type, and accept that
+  // this class is unsafe internally to allow for extension.
+  #provider = defaultTimeoutProvider;
+  #providerCalled = false;
+  setTimeoutProvider(provider) {
+    this.#provider = provider;
+  }
+  setTimeout(callback, delay2) {
+    return this.#provider.setTimeout(callback, delay2);
+  }
+  clearTimeout(timeoutId) {
+    this.#provider.clearTimeout(timeoutId);
+  }
+  setInterval(callback, delay2) {
+    return this.#provider.setInterval(callback, delay2);
+  }
+  clearInterval(intervalId) {
+    this.#provider.clearInterval(intervalId);
+  }
+};
+var timeoutManager = new TimeoutManager();
+function systemSetTimeoutZero(callback) {
+  setTimeout(callback, 0);
+}
+var isServer = typeof window === "undefined" || "Deno" in globalThis;
+function noop$3() {
+}
+function isValidTimeout(value) {
+  return typeof value === "number" && value >= 0 && value !== Infinity;
+}
+function timeUntilStale(updatedAt, staleTime) {
+  return Math.max(updatedAt + (staleTime || 0) - Date.now(), 0);
+}
+function resolveStaleTime(staleTime, query) {
+  return typeof staleTime === "function" ? staleTime(query) : staleTime;
+}
+function resolveEnabled(enabled, query) {
+  return typeof enabled === "function" ? enabled(query) : enabled;
+}
+var hasOwn = Object.prototype.hasOwnProperty;
+function replaceEqualDeep(a, b, depth = 0) {
+  if (a === b) {
+    return a;
+  }
+  if (depth > 500) return b;
+  const array = isPlainArray(a) && isPlainArray(b);
+  if (!array && !(isPlainObject(a) && isPlainObject(b))) return b;
+  const aItems = array ? a : Object.keys(a);
+  const aSize = aItems.length;
+  const bItems = array ? b : Object.keys(b);
+  const bSize = bItems.length;
+  const copy = array ? new Array(bSize) : {};
+  let equalItems = 0;
+  for (let i = 0; i < bSize; i++) {
+    const key = array ? i : bItems[i];
+    const aItem = a[key];
+    const bItem = b[key];
+    if (aItem === bItem) {
+      copy[key] = aItem;
+      if (array ? i < aSize : hasOwn.call(a, key)) equalItems++;
+      continue;
+    }
+    if (aItem === null || bItem === null || typeof aItem !== "object" || typeof bItem !== "object") {
+      copy[key] = bItem;
+      continue;
+    }
+    const v = replaceEqualDeep(aItem, bItem, depth + 1);
+    copy[key] = v;
+    if (v === aItem) equalItems++;
+  }
+  return aSize === bSize && equalItems === aSize ? a : copy;
+}
+function shallowEqualObjects(a, b) {
+  if (!b || Object.keys(a).length !== Object.keys(b).length) {
+    return false;
+  }
+  for (const key in a) {
+    if (a[key] !== b[key]) {
+      return false;
+    }
+  }
+  return true;
+}
+function isPlainArray(value) {
+  return Array.isArray(value) && value.length === Object.keys(value).length;
+}
+function isPlainObject(o) {
+  if (!hasObjectPrototype(o)) {
+    return false;
+  }
+  const ctor = o.constructor;
+  if (ctor === void 0) {
+    return true;
+  }
+  const prot = ctor.prototype;
+  if (!hasObjectPrototype(prot)) {
+    return false;
+  }
+  if (!prot.hasOwnProperty("isPrototypeOf")) {
+    return false;
+  }
+  if (Object.getPrototypeOf(o) !== Object.prototype) {
+    return false;
+  }
+  return true;
+}
+function hasObjectPrototype(o) {
+  return Object.prototype.toString.call(o) === "[object Object]";
+}
+function replaceData(prevData, data, options) {
+  if (typeof options.structuralSharing === "function") {
+    return options.structuralSharing(prevData, data);
+  } else if (options.structuralSharing !== false) {
+    return replaceEqualDeep(prevData, data);
+  }
+  return data;
+}
+function shouldThrowError(throwOnError, params) {
+  if (typeof throwOnError === "function") {
+    return throwOnError(...params);
+  }
+  return !!throwOnError;
+}
+var FocusManager = class extends Subscribable {
+  #focused;
+  #cleanup;
+  #setup;
+  constructor() {
+    super();
+    this.#setup = (onFocus) => {
+      if (!isServer && window.addEventListener) {
+        const listener = () => onFocus();
+        window.addEventListener("visibilitychange", listener, false);
+        return () => {
+          window.removeEventListener("visibilitychange", listener);
+        };
+      }
+      return;
+    };
+  }
+  onSubscribe() {
+    if (!this.#cleanup) {
+      this.setEventListener(this.#setup);
+    }
+  }
+  onUnsubscribe() {
+    if (!this.hasListeners()) {
+      this.#cleanup?.();
+      this.#cleanup = void 0;
+    }
+  }
+  setEventListener(setup) {
+    this.#setup = setup;
+    this.#cleanup?.();
+    this.#cleanup = setup((focused) => {
+      if (typeof focused === "boolean") {
+        this.setFocused(focused);
+      } else {
+        this.onFocus();
+      }
+    });
+  }
+  setFocused(focused) {
+    const changed = this.#focused !== focused;
+    if (changed) {
+      this.#focused = focused;
+      this.onFocus();
+    }
+  }
+  onFocus() {
+    const isFocused = this.isFocused();
+    this.listeners.forEach((listener) => {
+      listener(isFocused);
+    });
+  }
+  isFocused() {
+    if (typeof this.#focused === "boolean") {
+      return this.#focused;
+    }
+    return globalThis.document?.visibilityState !== "hidden";
+  }
+};
+var focusManager = new FocusManager();
+function pendingThenable() {
+  let resolve;
+  let reject;
+  const thenable = new Promise((_resolve, _reject) => {
+    resolve = _resolve;
+    reject = _reject;
+  });
+  thenable.status = "pending";
+  thenable.catch(() => {
+  });
+  function finalize(data) {
+    Object.assign(thenable, data);
+    delete thenable.resolve;
+    delete thenable.reject;
+  }
+  thenable.resolve = (value) => {
+    finalize({
+      status: "fulfilled",
+      value
+    });
+    resolve(value);
+  };
+  thenable.reject = (reason) => {
+    finalize({
+      status: "rejected",
+      reason
+    });
+    reject(reason);
+  };
+  return thenable;
+}
+var defaultScheduler = systemSetTimeoutZero;
+function createNotifyManager() {
+  let queue = [];
+  let transactions = 0;
+  let notifyFn = (callback) => {
+    callback();
+  };
+  let batchNotifyFn = (callback) => {
+    callback();
+  };
+  let scheduleFn = defaultScheduler;
+  const schedule = (callback) => {
+    if (transactions) {
+      queue.push(callback);
+    } else {
+      scheduleFn(() => {
+        notifyFn(callback);
+      });
+    }
+  };
+  const flush = () => {
+    const originalQueue = queue;
+    queue = [];
+    if (originalQueue.length) {
+      scheduleFn(() => {
+        batchNotifyFn(() => {
+          originalQueue.forEach((callback) => {
+            notifyFn(callback);
+          });
+        });
+      });
+    }
+  };
+  return {
+    batch: (callback) => {
+      let result;
+      transactions++;
+      try {
+        result = callback();
+      } finally {
+        transactions--;
+        if (!transactions) {
+          flush();
+        }
+      }
+      return result;
+    },
+    /**
+     * All calls to the wrapped function will be batched.
+     */
+    batchCalls: (callback) => {
+      return (...args) => {
+        schedule(() => {
+          callback(...args);
+        });
+      };
+    },
+    schedule,
+    /**
+     * Use this method to set a custom notify function.
+     * This can be used to for example wrap notifications with `React.act` while running tests.
+     */
+    setNotifyFunction: (fn) => {
+      notifyFn = fn;
+    },
+    /**
+     * Use this method to set a custom function to batch notifications together into a single tick.
+     * By default React Query will use the batch function provided by ReactDOM or React Native.
+     */
+    setBatchNotifyFunction: (fn) => {
+      batchNotifyFn = fn;
+    },
+    setScheduler: (fn) => {
+      scheduleFn = fn;
+    }
+  };
+}
+var notifyManager = createNotifyManager();
+var OnlineManager = class extends Subscribable {
+  #online = true;
+  #cleanup;
+  #setup;
+  constructor() {
+    super();
+    this.#setup = (onOnline) => {
+      if (!isServer && window.addEventListener) {
+        const onlineListener = () => onOnline(true);
+        const offlineListener = () => onOnline(false);
+        window.addEventListener("online", onlineListener, false);
+        window.addEventListener("offline", offlineListener, false);
+        return () => {
+          window.removeEventListener("online", onlineListener);
+          window.removeEventListener("offline", offlineListener);
+        };
+      }
+      return;
+    };
+  }
+  onSubscribe() {
+    if (!this.#cleanup) {
+      this.setEventListener(this.#setup);
+    }
+  }
+  onUnsubscribe() {
+    if (!this.hasListeners()) {
+      this.#cleanup?.();
+      this.#cleanup = void 0;
+    }
+  }
+  setEventListener(setup) {
+    this.#setup = setup;
+    this.#cleanup?.();
+    this.#cleanup = setup(this.setOnline.bind(this));
+  }
+  setOnline(online) {
+    const changed = this.#online !== online;
+    if (changed) {
+      this.#online = online;
+      this.listeners.forEach((listener) => {
+        listener(online);
+      });
+    }
+  }
+  isOnline() {
+    return this.#online;
+  }
+};
+var onlineManager = new OnlineManager();
+function canFetch(networkMode) {
+  return (networkMode ?? "online") === "online" ? onlineManager.isOnline() : true;
+}
+function fetchState(data, options) {
+  return {
+    fetchFailureCount: 0,
+    fetchFailureReason: null,
+    fetchStatus: canFetch(options.networkMode) ? "fetching" : "paused",
+    ...data === void 0 && {
+      error: null,
+      status: "pending"
+    }
+  };
+}
+var QueryObserver = class extends Subscribable {
+  constructor(client, options) {
+    super();
+    this.options = options;
+    this.#client = client;
+    this.#selectError = null;
+    this.#currentThenable = pendingThenable();
+    this.bindMethods();
+    this.setOptions(options);
+  }
+  #client;
+  #currentQuery = void 0;
+  #currentQueryInitialState = void 0;
+  #currentResult = void 0;
+  #currentResultState;
+  #currentResultOptions;
+  #currentThenable;
+  #selectError;
+  #selectFn;
+  #selectResult;
+  // This property keeps track of the last query with defined data.
+  // It will be used to pass the previous data and query to the placeholder function between renders.
+  #lastQueryWithDefinedData;
+  #staleTimeoutId;
+  #refetchIntervalId;
+  #currentRefetchInterval;
+  #trackedProps = /* @__PURE__ */ new Set();
+  bindMethods() {
+    this.refetch = this.refetch.bind(this);
+  }
+  onSubscribe() {
+    if (this.listeners.size === 1) {
+      this.#currentQuery.addObserver(this);
+      if (shouldFetchOnMount(this.#currentQuery, this.options)) {
+        this.#executeFetch();
+      } else {
+        this.updateResult();
+      }
+      this.#updateTimers();
+    }
+  }
+  onUnsubscribe() {
+    if (!this.hasListeners()) {
+      this.destroy();
+    }
+  }
+  shouldFetchOnReconnect() {
+    return shouldFetchOn(
+      this.#currentQuery,
+      this.options,
+      this.options.refetchOnReconnect
+    );
+  }
+  shouldFetchOnWindowFocus() {
+    return shouldFetchOn(
+      this.#currentQuery,
+      this.options,
+      this.options.refetchOnWindowFocus
+    );
+  }
+  destroy() {
+    this.listeners = /* @__PURE__ */ new Set();
+    this.#clearStaleTimeout();
+    this.#clearRefetchInterval();
+    this.#currentQuery.removeObserver(this);
+  }
+  setOptions(options) {
+    const prevOptions = this.options;
+    const prevQuery = this.#currentQuery;
+    this.options = this.#client.defaultQueryOptions(options);
+    if (this.options.enabled !== void 0 && typeof this.options.enabled !== "boolean" && typeof this.options.enabled !== "function" && typeof resolveEnabled(this.options.enabled, this.#currentQuery) !== "boolean") {
+      throw new Error(
+        "Expected enabled to be a boolean or a callback that returns a boolean"
+      );
+    }
+    this.#updateQuery();
+    this.#currentQuery.setOptions(this.options);
+    if (prevOptions._defaulted && !shallowEqualObjects(this.options, prevOptions)) {
+      this.#client.getQueryCache().notify({
+        type: "observerOptionsUpdated",
+        query: this.#currentQuery,
+        observer: this
+      });
+    }
+    const mounted = this.hasListeners();
+    if (mounted && shouldFetchOptionally(
+      this.#currentQuery,
+      prevQuery,
+      this.options,
+      prevOptions
+    )) {
+      this.#executeFetch();
+    }
+    this.updateResult();
+    if (mounted && (this.#currentQuery !== prevQuery || resolveEnabled(this.options.enabled, this.#currentQuery) !== resolveEnabled(prevOptions.enabled, this.#currentQuery) || resolveStaleTime(this.options.staleTime, this.#currentQuery) !== resolveStaleTime(prevOptions.staleTime, this.#currentQuery))) {
+      this.#updateStaleTimeout();
+    }
+    const nextRefetchInterval = this.#computeRefetchInterval();
+    if (mounted && (this.#currentQuery !== prevQuery || resolveEnabled(this.options.enabled, this.#currentQuery) !== resolveEnabled(prevOptions.enabled, this.#currentQuery) || nextRefetchInterval !== this.#currentRefetchInterval)) {
+      this.#updateRefetchInterval(nextRefetchInterval);
+    }
+  }
+  getOptimisticResult(options) {
+    const query = this.#client.getQueryCache().build(this.#client, options);
+    const result = this.createResult(query, options);
+    if (shouldAssignObserverCurrentProperties(this, result)) {
+      this.#currentResult = result;
+      this.#currentResultOptions = this.options;
+      this.#currentResultState = this.#currentQuery.state;
+    }
+    return result;
+  }
+  getCurrentResult() {
+    return this.#currentResult;
+  }
+  trackResult(result, onPropTracked) {
+    return new Proxy(result, {
+      get: (target, key) => {
+        this.trackProp(key);
+        onPropTracked?.(key);
+        if (key === "promise") {
+          this.trackProp("data");
+          if (!this.options.experimental_prefetchInRender && this.#currentThenable.status === "pending") {
+            this.#currentThenable.reject(
+              new Error(
+                "experimental_prefetchInRender feature flag is not enabled"
+              )
+            );
+          }
+        }
+        return Reflect.get(target, key);
+      }
+    });
+  }
+  trackProp(key) {
+    this.#trackedProps.add(key);
+  }
+  getCurrentQuery() {
+    return this.#currentQuery;
+  }
+  refetch({ ...options } = {}) {
+    return this.fetch({
+      ...options
+    });
+  }
+  fetchOptimistic(options) {
+    const defaultedOptions = this.#client.defaultQueryOptions(options);
+    const query = this.#client.getQueryCache().build(this.#client, defaultedOptions);
+    return query.fetch().then(() => this.createResult(query, defaultedOptions));
+  }
+  fetch(fetchOptions) {
+    return this.#executeFetch({
+      ...fetchOptions,
+      cancelRefetch: fetchOptions.cancelRefetch ?? true
+    }).then(() => {
+      this.updateResult();
+      return this.#currentResult;
+    });
+  }
+  #executeFetch(fetchOptions) {
+    this.#updateQuery();
+    let promise = this.#currentQuery.fetch(
+      this.options,
+      fetchOptions
+    );
+    if (!fetchOptions?.throwOnError) {
+      promise = promise.catch(noop$3);
+    }
+    return promise;
+  }
+  #updateStaleTimeout() {
+    this.#clearStaleTimeout();
+    const staleTime = resolveStaleTime(
+      this.options.staleTime,
+      this.#currentQuery
+    );
+    if (isServer || this.#currentResult.isStale || !isValidTimeout(staleTime)) {
+      return;
+    }
+    const time2 = timeUntilStale(this.#currentResult.dataUpdatedAt, staleTime);
+    const timeout = time2 + 1;
+    this.#staleTimeoutId = timeoutManager.setTimeout(() => {
+      if (!this.#currentResult.isStale) {
+        this.updateResult();
+      }
+    }, timeout);
+  }
+  #computeRefetchInterval() {
+    return (typeof this.options.refetchInterval === "function" ? this.options.refetchInterval(this.#currentQuery) : this.options.refetchInterval) ?? false;
+  }
+  #updateRefetchInterval(nextInterval) {
+    this.#clearRefetchInterval();
+    this.#currentRefetchInterval = nextInterval;
+    if (isServer || resolveEnabled(this.options.enabled, this.#currentQuery) === false || !isValidTimeout(this.#currentRefetchInterval) || this.#currentRefetchInterval === 0) {
+      return;
+    }
+    this.#refetchIntervalId = timeoutManager.setInterval(() => {
+      if (this.options.refetchIntervalInBackground || focusManager.isFocused()) {
+        this.#executeFetch();
+      }
+    }, this.#currentRefetchInterval);
+  }
+  #updateTimers() {
+    this.#updateStaleTimeout();
+    this.#updateRefetchInterval(this.#computeRefetchInterval());
+  }
+  #clearStaleTimeout() {
+    if (this.#staleTimeoutId) {
+      timeoutManager.clearTimeout(this.#staleTimeoutId);
+      this.#staleTimeoutId = void 0;
+    }
+  }
+  #clearRefetchInterval() {
+    if (this.#refetchIntervalId) {
+      timeoutManager.clearInterval(this.#refetchIntervalId);
+      this.#refetchIntervalId = void 0;
+    }
+  }
+  createResult(query, options) {
+    const prevQuery = this.#currentQuery;
+    const prevOptions = this.options;
+    const prevResult = this.#currentResult;
+    const prevResultState = this.#currentResultState;
+    const prevResultOptions = this.#currentResultOptions;
+    const queryChange = query !== prevQuery;
+    const queryInitialState = queryChange ? query.state : this.#currentQueryInitialState;
+    const { state } = query;
+    let newState = { ...state };
+    let isPlaceholderData = false;
+    let data;
+    if (options._optimisticResults) {
+      const mounted = this.hasListeners();
+      const fetchOnMount = !mounted && shouldFetchOnMount(query, options);
+      const fetchOptionally = mounted && shouldFetchOptionally(query, prevQuery, options, prevOptions);
+      if (fetchOnMount || fetchOptionally) {
+        newState = {
+          ...newState,
+          ...fetchState(state.data, query.options)
+        };
+      }
+      if (options._optimisticResults === "isRestoring") {
+        newState.fetchStatus = "idle";
+      }
+    }
+    let { error, errorUpdatedAt, status } = newState;
+    data = newState.data;
+    let skipSelect = false;
+    if (options.placeholderData !== void 0 && data === void 0 && status === "pending") {
+      let placeholderData;
+      if (prevResult?.isPlaceholderData && options.placeholderData === prevResultOptions?.placeholderData) {
+        placeholderData = prevResult.data;
+        skipSelect = true;
+      } else {
+        placeholderData = typeof options.placeholderData === "function" ? options.placeholderData(
+          this.#lastQueryWithDefinedData?.state.data,
+          this.#lastQueryWithDefinedData
+        ) : options.placeholderData;
+      }
+      if (placeholderData !== void 0) {
+        status = "success";
+        data = replaceData(
+          prevResult?.data,
+          placeholderData,
+          options
+        );
+        isPlaceholderData = true;
+      }
+    }
+    if (options.select && data !== void 0 && !skipSelect) {
+      if (prevResult && data === prevResultState?.data && options.select === this.#selectFn) {
+        data = this.#selectResult;
+      } else {
+        try {
+          this.#selectFn = options.select;
+          data = options.select(data);
+          data = replaceData(prevResult?.data, data, options);
+          this.#selectResult = data;
+          this.#selectError = null;
+        } catch (selectError) {
+          this.#selectError = selectError;
+        }
+      }
+    }
+    if (this.#selectError) {
+      error = this.#selectError;
+      data = this.#selectResult;
+      errorUpdatedAt = Date.now();
+      status = "error";
+    }
+    const isFetching = newState.fetchStatus === "fetching";
+    const isPending = status === "pending";
+    const isError = status === "error";
+    const isLoading = isPending && isFetching;
+    const hasData = data !== void 0;
+    const result = {
+      status,
+      fetchStatus: newState.fetchStatus,
+      isPending,
+      isSuccess: status === "success",
+      isError,
+      isInitialLoading: isLoading,
+      isLoading,
+      data,
+      dataUpdatedAt: newState.dataUpdatedAt,
+      error,
+      errorUpdatedAt,
+      failureCount: newState.fetchFailureCount,
+      failureReason: newState.fetchFailureReason,
+      errorUpdateCount: newState.errorUpdateCount,
+      isFetched: newState.dataUpdateCount > 0 || newState.errorUpdateCount > 0,
+      isFetchedAfterMount: newState.dataUpdateCount > queryInitialState.dataUpdateCount || newState.errorUpdateCount > queryInitialState.errorUpdateCount,
+      isFetching,
+      isRefetching: isFetching && !isPending,
+      isLoadingError: isError && !hasData,
+      isPaused: newState.fetchStatus === "paused",
+      isPlaceholderData,
+      isRefetchError: isError && hasData,
+      isStale: isStale(query, options),
+      refetch: this.refetch,
+      promise: this.#currentThenable,
+      isEnabled: resolveEnabled(options.enabled, query) !== false
+    };
+    const nextResult = result;
+    if (this.options.experimental_prefetchInRender) {
+      const hasResultData = nextResult.data !== void 0;
+      const isErrorWithoutData = nextResult.status === "error" && !hasResultData;
+      const finalizeThenableIfPossible = (thenable) => {
+        if (isErrorWithoutData) {
+          thenable.reject(nextResult.error);
+        } else if (hasResultData) {
+          thenable.resolve(nextResult.data);
+        }
+      };
+      const recreateThenable = () => {
+        const pending = this.#currentThenable = nextResult.promise = pendingThenable();
+        finalizeThenableIfPossible(pending);
+      };
+      const prevThenable = this.#currentThenable;
+      switch (prevThenable.status) {
+        case "pending":
+          if (query.queryHash === prevQuery.queryHash) {
+            finalizeThenableIfPossible(prevThenable);
+          }
+          break;
+        case "fulfilled":
+          if (isErrorWithoutData || nextResult.data !== prevThenable.value) {
+            recreateThenable();
+          }
+          break;
+        case "rejected":
+          if (!isErrorWithoutData || nextResult.error !== prevThenable.reason) {
+            recreateThenable();
+          }
+          break;
+      }
+    }
+    return nextResult;
+  }
+  updateResult() {
+    const prevResult = this.#currentResult;
+    const nextResult = this.createResult(this.#currentQuery, this.options);
+    this.#currentResultState = this.#currentQuery.state;
+    this.#currentResultOptions = this.options;
+    if (this.#currentResultState.data !== void 0) {
+      this.#lastQueryWithDefinedData = this.#currentQuery;
+    }
+    if (shallowEqualObjects(nextResult, prevResult)) {
+      return;
+    }
+    this.#currentResult = nextResult;
+    const shouldNotifyListeners = () => {
+      if (!prevResult) {
+        return true;
+      }
+      const { notifyOnChangeProps } = this.options;
+      const notifyOnChangePropsValue = typeof notifyOnChangeProps === "function" ? notifyOnChangeProps() : notifyOnChangeProps;
+      if (notifyOnChangePropsValue === "all" || !notifyOnChangePropsValue && !this.#trackedProps.size) {
+        return true;
+      }
+      const includedProps = new Set(
+        notifyOnChangePropsValue ?? this.#trackedProps
+      );
+      if (this.options.throwOnError) {
+        includedProps.add("error");
+      }
+      return Object.keys(this.#currentResult).some((key) => {
+        const typedKey = key;
+        const changed = this.#currentResult[typedKey] !== prevResult[typedKey];
+        return changed && includedProps.has(typedKey);
+      });
+    };
+    this.#notify({ listeners: shouldNotifyListeners() });
+  }
+  #updateQuery() {
+    const query = this.#client.getQueryCache().build(this.#client, this.options);
+    if (query === this.#currentQuery) {
+      return;
+    }
+    const prevQuery = this.#currentQuery;
+    this.#currentQuery = query;
+    this.#currentQueryInitialState = query.state;
+    if (this.hasListeners()) {
+      prevQuery?.removeObserver(this);
+      query.addObserver(this);
+    }
+  }
+  onQueryUpdate() {
+    this.updateResult();
+    if (this.hasListeners()) {
+      this.#updateTimers();
+    }
+  }
+  #notify(notifyOptions) {
+    notifyManager.batch(() => {
+      if (notifyOptions.listeners) {
+        this.listeners.forEach((listener) => {
+          listener(this.#currentResult);
+        });
+      }
+      this.#client.getQueryCache().notify({
+        query: this.#currentQuery,
+        type: "observerResultsUpdated"
+      });
+    });
+  }
+};
+function shouldLoadOnMount(query, options) {
+  return resolveEnabled(options.enabled, query) !== false && query.state.data === void 0 && !(query.state.status === "error" && options.retryOnMount === false);
+}
+function shouldFetchOnMount(query, options) {
+  return shouldLoadOnMount(query, options) || query.state.data !== void 0 && shouldFetchOn(query, options, options.refetchOnMount);
+}
+function shouldFetchOn(query, options, field) {
+  if (resolveEnabled(options.enabled, query) !== false && resolveStaleTime(options.staleTime, query) !== "static") {
+    const value = typeof field === "function" ? field(query) : field;
+    return value === "always" || value !== false && isStale(query, options);
+  }
+  return false;
+}
+function shouldFetchOptionally(query, prevQuery, options, prevOptions) {
+  return (query !== prevQuery || resolveEnabled(prevOptions.enabled, query) === false) && (!options.suspense || query.state.status !== "error") && isStale(query, options);
+}
+function isStale(query, options) {
+  return resolveEnabled(options.enabled, query) !== false && query.isStaleByTime(resolveStaleTime(options.staleTime, query));
+}
+function shouldAssignObserverCurrentProperties(observer2, optimisticResult) {
+  if (!shallowEqualObjects(observer2.getCurrentResult(), optimisticResult)) {
+    return true;
+  }
+  return false;
+}
 var QueryClientContext = React.createContext(
   void 0
 );
+var useQueryClient = (queryClient) => {
+  const client = React.useContext(QueryClientContext);
+  if (!client) {
+    throw new Error("No QueryClient set, use QueryClientProvider to set one");
+  }
+  return client;
+};
 var QueryClientProvider = ({
   client,
   children
@@ -56,6 +912,136 @@ var QueryClientProvider = ({
   }, [client]);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(QueryClientContext.Provider, { value: client, children });
 };
+var IsRestoringContext = React.createContext(false);
+var useIsRestoring = () => React.useContext(IsRestoringContext);
+IsRestoringContext.Provider;
+function createValue() {
+  let isReset = false;
+  return {
+    clearReset: () => {
+      isReset = false;
+    },
+    reset: () => {
+      isReset = true;
+    },
+    isReset: () => {
+      return isReset;
+    }
+  };
+}
+var QueryErrorResetBoundaryContext = React.createContext(createValue());
+var useQueryErrorResetBoundary = () => React.useContext(QueryErrorResetBoundaryContext);
+var ensurePreventErrorBoundaryRetry = (options, errorResetBoundary, query) => {
+  const throwOnError = query?.state.error && typeof options.throwOnError === "function" ? shouldThrowError(options.throwOnError, [query.state.error, query]) : options.throwOnError;
+  if (options.suspense || options.experimental_prefetchInRender || throwOnError) {
+    if (!errorResetBoundary.isReset()) {
+      options.retryOnMount = false;
+    }
+  }
+};
+var useClearResetErrorBoundary = (errorResetBoundary) => {
+  React.useEffect(() => {
+    errorResetBoundary.clearReset();
+  }, [errorResetBoundary]);
+};
+var getHasError = ({
+  result,
+  errorResetBoundary,
+  throwOnError,
+  query,
+  suspense
+}) => {
+  return result.isError && !errorResetBoundary.isReset() && !result.isFetching && query && (suspense && result.data === void 0 || shouldThrowError(throwOnError, [result.error, query]));
+};
+var ensureSuspenseTimers = (defaultedOptions) => {
+  if (defaultedOptions.suspense) {
+    const MIN_SUSPENSE_TIME_MS = 1e3;
+    const clamp2 = (value) => value === "static" ? value : Math.max(value ?? MIN_SUSPENSE_TIME_MS, MIN_SUSPENSE_TIME_MS);
+    const originalStaleTime = defaultedOptions.staleTime;
+    defaultedOptions.staleTime = typeof originalStaleTime === "function" ? (...args) => clamp2(originalStaleTime(...args)) : clamp2(originalStaleTime);
+    if (typeof defaultedOptions.gcTime === "number") {
+      defaultedOptions.gcTime = Math.max(
+        defaultedOptions.gcTime,
+        MIN_SUSPENSE_TIME_MS
+      );
+    }
+  }
+};
+var willFetch = (result, isRestoring) => result.isLoading && result.isFetching && !isRestoring;
+var shouldSuspend = (defaultedOptions, result) => defaultedOptions?.suspense && result.isPending;
+var fetchOptimistic = (defaultedOptions, observer2, errorResetBoundary) => observer2.fetchOptimistic(defaultedOptions).catch(() => {
+  errorResetBoundary.clearReset();
+});
+function useBaseQuery(options, Observer, queryClient) {
+  const isRestoring = useIsRestoring();
+  const errorResetBoundary = useQueryErrorResetBoundary();
+  const client = useQueryClient();
+  const defaultedOptions = client.defaultQueryOptions(options);
+  client.getDefaultOptions().queries?._experimental_beforeQuery?.(
+    defaultedOptions
+  );
+  const query = client.getQueryCache().get(defaultedOptions.queryHash);
+  defaultedOptions._optimisticResults = isRestoring ? "isRestoring" : "optimistic";
+  ensureSuspenseTimers(defaultedOptions);
+  ensurePreventErrorBoundaryRetry(defaultedOptions, errorResetBoundary, query);
+  useClearResetErrorBoundary(errorResetBoundary);
+  const isNewCacheEntry = !client.getQueryCache().get(defaultedOptions.queryHash);
+  const [observer2] = React.useState(
+    () => new Observer(
+      client,
+      defaultedOptions
+    )
+  );
+  const result = observer2.getOptimisticResult(defaultedOptions);
+  const shouldSubscribe = !isRestoring && options.subscribed !== false;
+  React.useSyncExternalStore(
+    React.useCallback(
+      (onStoreChange) => {
+        const unsubscribe = shouldSubscribe ? observer2.subscribe(notifyManager.batchCalls(onStoreChange)) : noop$3;
+        observer2.updateResult();
+        return unsubscribe;
+      },
+      [observer2, shouldSubscribe]
+    ),
+    () => observer2.getCurrentResult(),
+    () => observer2.getCurrentResult()
+  );
+  React.useEffect(() => {
+    observer2.setOptions(defaultedOptions);
+  }, [defaultedOptions, observer2]);
+  if (shouldSuspend(defaultedOptions, result)) {
+    throw fetchOptimistic(defaultedOptions, observer2, errorResetBoundary);
+  }
+  if (getHasError({
+    result,
+    errorResetBoundary,
+    throwOnError: defaultedOptions.throwOnError,
+    query,
+    suspense: defaultedOptions.suspense
+  })) {
+    throw result.error;
+  }
+  client.getDefaultOptions().queries?._experimental_afterQuery?.(
+    defaultedOptions,
+    result
+  );
+  if (defaultedOptions.experimental_prefetchInRender && !isServer && willFetch(result, isRestoring)) {
+    const promise = isNewCacheEntry ? (
+      // Fetch immediately on render in order to ensure `.promise` is resolved even if the component is unmounted
+      fetchOptimistic(defaultedOptions, observer2, errorResetBoundary)
+    ) : (
+      // subscribe to the "cache promise" so that we can finalize the currentThenable once data comes in
+      query?.promise
+    );
+    promise?.catch(noop$3).finally(() => {
+      observer2.updateResult();
+    });
+  }
+  return !defaultedOptions.notifyOnChangeProps ? observer2.trackResult(result) : result;
+}
+function useQuery(options, queryClient) {
+  return useBaseQuery(options, QueryObserver);
+}
 function createContext2(rootComponentName, defaultContext) {
   const Context = React.createContext(defaultContext);
   const Provider = (props) => {
@@ -8296,8 +9282,8 @@ class NodeStack {
       const dependencyMatches = prevDep !== void 0 && nextDep !== void 0 && prevDep === nextDep;
       if (!dependencyMatches) {
         const prevInstance = prevLead.instance;
-        const isStale = prevInstance && prevInstance.isConnected === false && !prevLead.snapshot;
-        if (!isStale) {
+        const isStale2 = prevInstance && prevInstance.isConnected === false && !prevLead.snapshot;
+        if (!isStale2) {
           node.resumeFrom = prevLead;
           if (preserveFollowOpacity) {
             node.resumeFrom.preserveOpacity = true;
@@ -26334,7 +27320,7 @@ var MoneyInput = React.forwardRef(
   ({ className, maxDecimalPlaces = 6, value, onChange, ...props }, ref) => {
     const { placeholder = "0.00" } = props;
     const controlledValue = value === void 0 || value === null ? "" : value.toString();
-    const formatCurrency = (value2) => {
+    const formatCurrency2 = (value2) => {
       const numericValue = parseFloat(value2);
       return isNaN(numericValue) ? "" : numericValue.toLocaleString(void 0, {
         minimumFractionDigits: 2,
@@ -26348,7 +27334,7 @@ var MoneyInput = React.forwardRef(
       if (decimalIndex !== -1) {
         rawValue = rawValue.slice(0, decimalIndex + 1) + rawValue.slice(decimalIndex + 1).replace(/\./g, "");
       }
-      const formattedValue = formatCurrency(rawValue);
+      const formattedValue = formatCurrency2(rawValue);
       e.target.value = formattedValue;
       if (cursorPos !== null) {
         e.target.setSelectionRange(cursorPos, cursorPos);
@@ -26636,6 +27622,21 @@ CurrencyInput.displayName = "CurrencyInput";
     return this.props.children;
   }
 });
+function formatCurrency(value, currencyCode) {
+  try {
+    return new Intl.NumberFormat(void 0, {
+      style: "currency",
+      currency: currencyCode,
+      maximumFractionDigits: 2
+    }).format(value);
+  } catch {
+    return new Intl.NumberFormat(void 0, {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 2
+    }).format(value);
+  }
+}
 const SETTINGS_STORAGE_KEY = "value-averaging-addon:settings";
 const DEFAULT_TICKERS = [
   {
@@ -26768,134 +27769,165 @@ function PageTabSelector({ currentPage, onPageChange }) {
     }) }) })
   ] });
 }
-const PRESET_MULTIPLIERS = [1.5, 2, 3, 4, 5];
-function GeneralSettingsContent({ draft, setDraft }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-4 pt-6 text-sm", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-medium", children: "Top-up mode" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "button",
-          {
-            type: "button",
-            className: `inline-flex h-9 items-center rounded-md border px-3 ${draft.topUpMode === "amount" ? "bg-primary text-primary-foreground" : ""}`,
-            onClick: () => setDraft((prev) => ({ ...prev, topUpMode: "amount" })),
-            children: "Fixed amount"
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "button",
-          {
-            type: "button",
-            className: `inline-flex h-9 items-center rounded-md border px-3 ${draft.topUpMode === "percentage" ? "bg-primary text-primary-foreground" : ""}`,
-            onClick: () => setDraft((prev) => ({ ...prev, topUpMode: "percentage" })),
-            children: "Percentage"
-          }
-        )
+const PRESET_MULTIPLIERS = [2, 3, 4, 5];
+function InfinityGlyph() {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "svg",
+    {
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "2",
+      className: "size-4 shrink-0",
+      "aria-hidden": true,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 12c-2-2.67-4-4-6-4a4 4 0 1 0 0 8c2 0 4-1.33 6-4zm0 0c2 2.67 4 4 6 4a4 4 0 1 0 0-8c-2 0-4 1.33-6 4z" })
+    }
+  );
+}
+function GeneralSettingsContent({ baseCurrency, draft, setDraft }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-lg", children: "Top-Up" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardDescription, { children: "Choose whether each cycle uses a fixed currency amount or a percentage of your plan, and optionally cap how large a single top-up can grow during sharp drawdowns." })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-6", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Label2, { className: "text-base", children: "Top-up mode" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button,
+              {
+                type: "button",
+                size: "sm",
+                variant: draft.topUpMode === "amount" ? "default" : "outline",
+                onClick: () => setDraft((prev) => ({ ...prev, topUpMode: "amount" })),
+                children: "Fixed amount"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button,
+              {
+                type: "button",
+                size: "sm",
+                variant: draft.topUpMode === "percentage" ? "default" : "outline",
+                onClick: () => setDraft((prev) => ({ ...prev, topUpMode: "percentage" })),
+                children: "Percentage"
+              }
+            )
+          ] })
+        ] }),
+        draft.topUpMode === "amount" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(Label2, { htmlFor: "va-top-up-amount", children: [
+            "Top-up amount (",
+            baseCurrency,
+            ")"
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Input,
+            {
+              id: "va-top-up-amount",
+              type: "number",
+              min: 0,
+              className: "w-full max-w-[360px]",
+              value: draft.topUpAmount,
+              onChange: (event) => setDraft((prev) => ({
+                ...prev,
+                topUpAmount: Math.max(0, Number(event.target.value) || 0)
+              }))
+            }
+          )
+        ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Label2, { htmlFor: "va-top-up-pct", children: "Top-up percentage (%)" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Input,
+            {
+              id: "va-top-up-pct",
+              type: "number",
+              min: 0,
+              max: 100,
+              className: "w-full max-w-[360px]",
+              value: draft.topUpPercentage,
+              onChange: (event) => setDraft((prev) => ({
+                ...prev,
+                topUpPercentage: Math.min(100, Math.max(0, Number(event.target.value) || 0))
+              }))
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between gap-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0 space-y-0.5", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Label2, { htmlFor: "va-max-top-up", className: "text-base", children: "Enable maximum top-up amount" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-xs", children: "When the market drops heavily, limit how large a single top-up can be relative to your base plan, or choose no limit." })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Switch,
+            {
+              id: "va-max-top-up",
+              checked: draft.maxTopUpEnabled,
+              onCheckedChange: (checked) => setDraft((prev) => ({ ...prev, maxTopUpEnabled: checked })),
+              className: "shrink-0"
+            }
+          )
+        ] }),
+        draft.maxTopUpEnabled && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Label2, { children: "Multipliers" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button,
+              {
+                type: "button",
+                size: "sm",
+                variant: draft.maxTopUpMultiplier === null ? "default" : "outline",
+                onClick: () => setDraft((prev) => ({ ...prev, maxTopUpMultiplier: null })),
+                className: "gap-1.5",
+                "aria-label": "No limit",
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx(InfinityGlyph, {})
+              }
+            ),
+            PRESET_MULTIPLIERS.map((value) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              Button,
+              {
+                type: "button",
+                size: "sm",
+                variant: draft.maxTopUpMultiplier === value ? "default" : "outline",
+                onClick: () => setDraft((prev) => ({ ...prev, maxTopUpMultiplier: value })),
+                children: [
+                  value,
+                  "x"
+                ]
+              },
+              value
+            ))
+          ] })
+        ] })
       ] })
     ] }),
-    draft.topUpMode === "amount" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "block space-y-1", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: "Top-up amount (USD)" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "input",
-        {
-          type: "number",
-          min: 0,
-          value: draft.topUpAmount,
-          onChange: (event) => setDraft((prev) => ({
-            ...prev,
-            topUpAmount: Math.max(0, Number(event.target.value) || 0)
-          })),
-          className: "border-input bg-background h-9 w-full rounded-md border px-3"
-        }
-      )
-    ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "block space-y-1", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: "Top-up percentage (%)" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "input",
-        {
-          type: "number",
-          min: 0,
-          max: 100,
-          value: draft.topUpPercentage,
-          onChange: (event) => setDraft((prev) => ({
-            ...prev,
-            topUpPercentage: Math.min(100, Math.max(0, Number(event.target.value) || 0))
-          })),
-          className: "border-input bg-background h-9 w-full rounded-md border px-3"
-        }
-      )
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "flex items-center justify-between rounded-md border px-3 py-2", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Enable maximum top-up amount" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "input",
-        {
-          type: "checkbox",
-          checked: draft.maxTopUpEnabled,
-          onChange: (event) => setDraft((prev) => ({ ...prev, maxTopUpEnabled: event.target.checked })),
-          className: "h-4 w-4"
-        }
-      )
-    ] }),
-    draft.maxTopUpEnabled && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-2 font-medium", children: "Preset multipliers" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-wrap gap-2", children: PRESET_MULTIPLIERS.map((value) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "button",
-          {
-            type: "button",
-            onClick: () => setDraft((prev) => ({ ...prev, maxTopUpMultiplier: value })),
-            className: `inline-flex h-8 items-center rounded-md border px-2.5 ${draft.maxTopUpMultiplier === value ? "bg-primary text-primary-foreground" : ""}`,
-            children: [
-              value,
-              "x"
-            ]
-          },
-          value
-        )) })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "block space-y-2", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-medium", children: [
-          "Custom multiplier: ",
-          draft.maxTopUpMultiplier.toFixed(1),
-          "x"
-        ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-lg", children: "Growth period" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardDescription, { children: "Set the number of months over which you expect the value averaging path to grow—used for scheduling reminders and notification context." })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Label2, { htmlFor: "va-growth-months", children: "Months (for notification)" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "input",
+          Input,
           {
-            type: "range",
+            id: "va-growth-months",
+            type: "number",
             min: 1,
-            max: 10,
-            step: 0.1,
-            value: draft.maxTopUpMultiplier,
+            max: 240,
+            className: "w-full max-w-[360px]",
+            value: draft.growthPeriodMonths,
             onChange: (event) => setDraft((prev) => ({
               ...prev,
-              maxTopUpMultiplier: Number(event.target.value)
-            })),
-            className: "w-full"
+              growthPeriodMonths: Math.min(240, Math.max(1, Number(event.target.value) || 1))
+            }))
           }
         )
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "block space-y-1", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: "Growth period (months, for notification)" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "input",
-        {
-          type: "number",
-          min: 1,
-          max: 240,
-          value: draft.growthPeriodMonths,
-          onChange: (event) => setDraft((prev) => ({
-            ...prev,
-            growthPeriodMonths: Math.min(240, Math.max(1, Number(event.target.value) || 1))
-          })),
-          className: "border-input bg-background h-9 w-full rounded-md border px-3"
-        }
-      )
+      ] }) })
     ] })
-  ] }) });
+  ] });
 }
 function PortfolioSettingsContent({
   draft,
@@ -26997,13 +28029,6 @@ function AboutSettingsContent({ draft }) {
     /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-xs", children: "Tip: Set your General and Portfolio sections first, then confirm settings in Portfolio." })
   ] }) });
 }
-function toCurrency$1(value) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 2
-  }).format(value);
-}
 function buildInvestmentPlan(tickers, settings) {
   const baseTopUp = settings.topUpMode === "amount" ? settings.topUpAmount : tickers.reduce((total, ticker) => total + ticker.currentPrice, 0) * settings.topUpPercentage / 100;
   const plans = {};
@@ -27013,7 +28038,7 @@ function buildInvestmentPlan(tickers, settings) {
     const targetValue = ticker.totalInvested * (1 + growthRatio);
     const valueGap = Math.max(0, targetValue - ticker.currentPrice);
     const uncappedTopUp = baseTopUp * allocation + valueGap * 0.2;
-    const maxAllowedTopUp = settings.maxTopUpEnabled ? baseTopUp * settings.maxTopUpMultiplier * allocation : Number.MAX_SAFE_INTEGER;
+    const maxAllowedTopUp = settings.maxTopUpEnabled && settings.maxTopUpMultiplier != null ? baseTopUp * settings.maxTopUpMultiplier * allocation : Number.MAX_SAFE_INTEGER;
     plans[ticker.id] = {
       tickerId: ticker.id,
       targetValue,
@@ -27024,6 +28049,7 @@ function buildInvestmentPlan(tickers, settings) {
 }
 function DashboardPage({
   ctx,
+  baseCurrency,
   currentPage,
   onPageChange,
   settings,
@@ -27115,14 +28141,14 @@ function DashboardPage({
                       }
                     ) }),
                     /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-2 py-3", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-medium", children: toCurrency$1(ticker.averageCost) }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-medium", children: formatCurrency(ticker.averageCost, baseCurrency) }),
                       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground text-xs", children: "Avg price" })
                     ] }),
                     /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-2 py-3", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-medium", children: toCurrency$1(ticker.currentPrice) }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-medium", children: formatCurrency(ticker.currentPrice, baseCurrency) }),
                       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground text-xs", children: "Current price" })
                     ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-2 py-3 font-medium", children: toCurrency$1(plan?.amountToInvest ?? 0) })
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-2 py-3 font-medium", children: formatCurrency(plan?.amountToInvest ?? 0, baseCurrency) })
                   ]
                 },
                 ticker.id
@@ -27143,15 +28169,15 @@ function DashboardPage({
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground", children: "Total invested (VA)" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: toCurrency$1(selectedTicker.valueAveragingInvested) })
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: formatCurrency(selectedTicker.valueAveragingInvested, baseCurrency) })
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground", children: "Target portfolio value" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: toCurrency$1(selectedPlan.targetValue) })
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: formatCurrency(selectedPlan.targetValue, baseCurrency) })
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground", children: "Amount to invest now" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: toCurrency$1(selectedPlan.amountToInvest) })
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: formatCurrency(selectedPlan.amountToInvest, baseCurrency) })
             ] })
           ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground", children: "Select a ticker to see details." }) })
         ] })
@@ -27193,11 +28219,12 @@ const SETTINGS_SECTIONS = [
     ]
   }
 ];
+const GENERAL_PAGE_DESCRIPTION = "Configure top-up logic, risk limits, and growth period notifications.";
 function getSectionMeta(section) {
   if (section === "general") {
     return {
       title: "General",
-      description: "Configure top-up logic, risk limits, and growth period notifications."
+      description: GENERAL_PAGE_DESCRIPTION
     };
   }
   if (section === "portfolio") {
@@ -27213,6 +28240,7 @@ function getSectionMeta(section) {
 }
 function SettingsPage({
   ctx,
+  baseCurrency,
   currentPage,
   onPageChange,
   settings,
@@ -27237,9 +28265,6 @@ function SettingsPage({
     }
   };
   const renderSectionContent = () => {
-    if (activeSection === "general") {
-      return /* @__PURE__ */ jsxRuntimeExports.jsx(GeneralSettingsContent, { draft, setDraft });
-    }
     if (activeSection === "portfolio") {
       return /* @__PURE__ */ jsxRuntimeExports.jsx(
         PortfolioSettingsContent,
@@ -27261,42 +28286,52 @@ function SettingsPage({
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Page, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(PageHeader, { heading: "Value Averaging", actions: headerActions }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(PageContent, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden lg:flex lg:w-full lg:justify-start", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex w-full max-w-6xl flex-col px-0 py-8", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-0.5", children: /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-2xl font-bold tracking-tight", children: "Value Averaging" }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "my-6 border-border border-b" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-10", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("aside", { className: "hidden w-[240px] shrink-0 lg:sticky lg:top-24 lg:flex lg:flex-col lg:self-start", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-6", children: SETTINGS_SECTIONS.map((section) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground pl-2 text-sm font-light uppercase tracking-widest", children: section.title }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("nav", { className: "flex flex-col space-y-1", children: section.items.map((item) => {
-              const isActive = activeSection === item.key;
-              return /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                "button",
-                {
-                  type: "button",
-                  onClick: () => selectSection(item.key, false),
-                  className: `inline-flex h-9 w-full items-center justify-start gap-2 rounded-md px-2 text-left text-sm ${isActive ? "bg-muted hover:bg-muted" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"}`,
-                  children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "inline-flex items-center justify-center [&_svg]:size-4", children: item.icon }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: item.title })
-                  ]
-                },
-                item.key
-              );
-            }) })
-          ] }, section.title)) }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-8 min-w-0 flex-1", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full max-w-4xl space-y-4", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-xl font-bold tracking-tight", children: sectionMeta.title }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-sm", children: sectionMeta.description })
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border-border border-b" }),
-            renderSectionContent()
-          ] }) })
-        ] })
-      ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full lg:hidden", children: mobileView === "menu" ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-6 px-1 py-3", children: SETTINGS_SECTIONS.map((section) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground px-2 text-xs font-semibold uppercase tracking-widest", children: section.title }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(PageContent, { withPadding: false, containerMode: true, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full min-w-0", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden lg:flex lg:w-full lg:justify-start", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex w-full max-w-6xl flex-col px-3 lg:px-3", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-10", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("aside", { className: "hidden w-[240px] shrink-0 lg:sticky lg:top-24 lg:flex lg:flex-col lg:self-start", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-6", children: SETTINGS_SECTIONS.map((section) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground pl-2 text-sm font-light uppercase tracking-widest", children: section.title }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("nav", { className: "flex flex-col space-y-1", children: section.items.map((item) => {
+            const isActive = activeSection === item.key;
+            return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "button",
+              {
+                type: "button",
+                onClick: () => selectSection(item.key, false),
+                className: `inline-flex h-9 w-full items-center justify-start gap-2 rounded-md px-2 text-left text-sm transition-colors ${isActive ? "bg-muted text-foreground hover:bg-muted" : "text-foreground hover:bg-muted/50 hover:text-muted-foreground"}`,
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "inline-flex items-center justify-center [&_svg]:size-4", children: item.icon }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: item.title })
+                ]
+              },
+              item.key
+            );
+          }) })
+        ] }, section.title)) }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-8 min-w-0 flex-1", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full max-w-4xl", children: activeSection === "general" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-6", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-[1fr_auto] items-start gap-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid min-w-0 gap-1", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-heading break-words text-lg font-bold lg:text-xl", children: "General" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground lg:text-md break-words text-sm font-light", children: GENERAL_PAGE_DESCRIPTION })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Separator2, {}),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            GeneralSettingsContent,
+            {
+              baseCurrency,
+              draft,
+              setDraft
+            }
+          )
+        ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-xl font-bold tracking-tight", children: sectionMeta.title }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-sm", children: sectionMeta.description })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border-border border-b" }),
+          renderSectionContent()
+        ] }) }) })
+      ] }) }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full max-w-full lg:hidden", children: mobileView === "menu" ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-6 px-3 pt-3 pb-[calc(var(--mobile-nav-ui-height)+max(var(--mobile-nav-gap),env(safe-area-inset-bottom)))]", children: SETTINGS_SECTIONS.map((section) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground px-0 text-xs font-semibold uppercase tracking-widest", children: section.title }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "divide-border bg-card divide-y overflow-hidden rounded-2xl border shadow-sm", children: section.items.map((item) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
           "button",
           {
@@ -27316,35 +28351,44 @@ function SettingsPage({
           },
           item.key
         )) })
-      ] }, section.title)) }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4 py-2", children: [
+      ] }, section.title)) }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full max-w-full overflow-x-hidden pt-safe", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4 px-3 pt-2 pb-[calc(var(--mobile-nav-ui-height)+max(var(--mobile-nav-gap),env(safe-area-inset-bottom)))]", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(
             "button",
             {
               type: "button",
               onClick: () => setMobileView("menu"),
-              className: "hover:bg-accent inline-flex h-8 w-8 items-center justify-center rounded-md border",
-              children: /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.ArrowLeft, { className: "size-4" })
+              className: "hover:bg-accent inline-flex h-8 w-8 items-center justify-center",
+              children: /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.ArrowLeft, { className: "size-6" })
             }
           ),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-lg font-bold tracking-tight", children: activeNavItem?.title ?? "Section" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground truncate text-sm", children: activeNavItem?.subtitle ?? sectionMeta.description })
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-heading text-lg font-bold tracking-tight", children: activeNavItem?.title ?? "Section" }),
+            activeSection !== "general" && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground truncate text-sm", children: activeNavItem?.subtitle ?? sectionMeta.description })
           ] })
         ] }),
-        renderSectionContent()
-      ] }) })
-    ] })
+        activeSection === "general" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-6", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground break-words text-sm font-light", children: GENERAL_PAGE_DESCRIPTION }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Separator2, {}),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            GeneralSettingsContent,
+            {
+              baseCurrency,
+              draft,
+              setDraft
+            }
+          )
+        ] }) : renderSectionContent()
+      ] }) }) })
+    ] }) })
   ] });
 }
-function toCurrency(value) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 2
-  }).format(value);
-}
 function ValueAveragingShell({ ctx }) {
+  const { data: hostSettings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => ctx.api.settings.get()
+  });
+  const baseCurrency = hostSettings?.baseCurrency ?? "USD";
   const [currentPage, setCurrentPage] = React.useState("dashboard");
   const [settings, setSettings] = React.useState(() => readSettings());
   const [tickers, setTickers] = React.useState(DEFAULT_TICKERS);
@@ -27368,8 +28412,8 @@ function ValueAveragingShell({ ctx }) {
     const generated = enabledTickers.map((ticker) => {
       const allocation = (settings.tickerAllocations[ticker.id] ?? 0) / 100;
       const plannedAmount = baseTopUp * allocation;
-      const amount = settings.maxTopUpEnabled ? Math.min(plannedAmount, plannedAmount * settings.maxTopUpMultiplier) : plannedAmount;
-      return `BUY ${ticker.symbol} in ${ticker.accountName}: ${toCurrency(amount)}`;
+      const amount = settings.maxTopUpEnabled && settings.maxTopUpMultiplier != null ? Math.min(plannedAmount, plannedAmount * settings.maxTopUpMultiplier) : plannedAmount;
+      return `BUY ${ticker.symbol} in ${ticker.accountName}: ${formatCurrency(amount, baseCurrency)}`;
     });
     setGeneratedTransactions(generated);
     ctx.api.logger.info(`Auto-generated ${generated.length} value averaging transactions`);
@@ -27383,6 +28427,7 @@ function ValueAveragingShell({ ctx }) {
       SettingsPage,
       {
         ctx,
+        baseCurrency,
         currentPage,
         onPageChange: setCurrentPage,
         settings,
@@ -27395,6 +28440,7 @@ function ValueAveragingShell({ ctx }) {
     DashboardPage,
     {
       ctx,
+      baseCurrency,
       currentPage,
       onPageChange: setCurrentPage,
       settings,

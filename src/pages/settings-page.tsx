@@ -6,6 +6,7 @@ import {
   Page,
   PageContent,
   PageHeader,
+  Separator,
 } from "@wealthfolio/ui";
 import React, { useMemo, useState } from "react";
 import {
@@ -19,6 +20,7 @@ import type { PortfolioTicker, ValueAveragingSettings } from "../types";
 
 interface SettingsPageProps {
   ctx: AddonContext;
+  baseCurrency: string;
   currentPage: AddonPageTab;
   onPageChange: (nextPage: AddonPageTab) => void;
   settings: ValueAveragingSettings;
@@ -71,11 +73,14 @@ const SETTINGS_SECTIONS: SettingsNavSection[] = [
   },
 ];
 
+const GENERAL_PAGE_DESCRIPTION =
+  "Configure top-up logic, risk limits, and growth period notifications.";
+
 function getSectionMeta(section: PreferenceSection): { title: string; description: string } {
   if (section === "general") {
     return {
       title: "General",
-      description: "Configure top-up logic, risk limits, and growth period notifications.",
+      description: GENERAL_PAGE_DESCRIPTION,
     };
   }
   if (section === "portfolio") {
@@ -92,6 +97,7 @@ function getSectionMeta(section: PreferenceSection): { title: string; descriptio
 
 export default function SettingsPage({
   ctx,
+  baseCurrency,
   currentPage,
   onPageChange,
   settings,
@@ -122,10 +128,6 @@ export default function SettingsPage({
   };
 
   const renderSectionContent = () => {
-    if (activeSection === "general") {
-      return <GeneralSettingsContent draft={draft} setDraft={setDraft} />;
-    }
-
     if (activeSection === "portfolio") {
       return (
         <PortfolioSettingsContent
@@ -149,13 +151,10 @@ export default function SettingsPage({
   return (
     <Page>
       <PageHeader heading="Value Averaging" actions={headerActions} />
-      <PageContent>
+      <PageContent withPadding={false} containerMode>
+        <div className="w-full min-w-0">
         <div className="hidden lg:flex lg:w-full lg:justify-start">
-          <div className="flex w-full max-w-6xl flex-col px-0 py-8">
-            <div className="space-y-0.5">
-              <h2 className="text-2xl font-bold tracking-tight">Value Averaging</h2>
-            </div>
-            <div className="my-6 border-border border-b" />
+          <div className="flex w-full max-w-6xl flex-col px-3 lg:px-3">
             <div className="flex gap-10">
               <aside className="hidden w-[240px] shrink-0 lg:sticky lg:top-24 lg:flex lg:flex-col lg:self-start">
                 <div className="space-y-6">
@@ -172,10 +171,10 @@ export default function SettingsPage({
                               key={item.key}
                               type="button"
                               onClick={() => selectSection(item.key, false)}
-                              className={`inline-flex h-9 w-full items-center justify-start gap-2 rounded-md px-2 text-left text-sm ${
+                              className={`inline-flex h-9 w-full items-center justify-start gap-2 rounded-md px-2 text-left text-sm transition-colors ${
                                 isActive
-                                  ? "bg-muted hover:bg-muted"
-                                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                                  ? "bg-muted text-foreground hover:bg-muted"
+                                  : "text-foreground hover:bg-muted/50 hover:text-muted-foreground"
                               }`}
                             >
                               <span className="inline-flex items-center justify-center [&_svg]:size-4">
@@ -192,25 +191,46 @@ export default function SettingsPage({
               </aside>
 
               <div className="mb-8 min-w-0 flex-1">
-                <div className="w-full max-w-4xl space-y-4">
-                  <div className="space-y-1">
-                    <h2 className="text-xl font-bold tracking-tight">{sectionMeta.title}</h2>
-                    <p className="text-muted-foreground text-sm">{sectionMeta.description}</p>
-                  </div>
-                  <div className="border-border border-b" />
-                  {renderSectionContent()}
+                <div className="w-full max-w-4xl">
+                  {activeSection === "general" ? (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                        <div className="grid min-w-0 gap-1">
+                          <h1 className="font-heading break-words text-lg font-bold lg:text-xl">General</h1>
+                          <p className="text-muted-foreground lg:text-md break-words text-sm font-light">
+                            {GENERAL_PAGE_DESCRIPTION}
+                          </p>
+                        </div>
+                      </div>
+                      <Separator />
+                      <GeneralSettingsContent
+                        baseCurrency={baseCurrency}
+                        draft={draft}
+                        setDraft={setDraft}
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="space-y-1">
+                        <h2 className="text-xl font-bold tracking-tight">{sectionMeta.title}</h2>
+                        <p className="text-muted-foreground text-sm">{sectionMeta.description}</p>
+                      </div>
+                      <div className="border-border border-b" />
+                      {renderSectionContent()}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="w-full lg:hidden">
+        <div className="w-full max-w-full lg:hidden">
           {mobileView === "menu" ? (
-            <div className="space-y-6 px-1 py-3">
+            <div className="space-y-6 px-3 pt-3 pb-[calc(var(--mobile-nav-ui-height)+max(var(--mobile-nav-gap),env(safe-area-inset-bottom)))]">
               {SETTINGS_SECTIONS.map((section) => (
                 <div key={section.title} className="space-y-3">
-                  <div className="text-muted-foreground px-2 text-xs font-semibold uppercase tracking-widest">
+                  <div className="text-muted-foreground px-0 text-xs font-semibold uppercase tracking-widest">
                     {section.title}
                   </div>
                   <div className="divide-border bg-card divide-y overflow-hidden rounded-2xl border shadow-sm">
@@ -236,25 +256,46 @@ export default function SettingsPage({
               ))}
             </div>
           ) : (
-            <div className="space-y-4 py-2">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setMobileView("menu")}
-                  className="hover:bg-accent inline-flex h-8 w-8 items-center justify-center rounded-md border"
-                >
-                  <Icons.ArrowLeft className="size-4" />
-                </button>
-                <div className="min-w-0">
-                  <h2 className="text-lg font-bold tracking-tight">{activeNavItem?.title ?? "Section"}</h2>
-                  <p className="text-muted-foreground truncate text-sm">
-                    {activeNavItem?.subtitle ?? sectionMeta.description}
-                  </p>
+            <div className="w-full max-w-full overflow-x-hidden pt-safe">
+              <div className="space-y-4 px-3 pt-2 pb-[calc(var(--mobile-nav-ui-height)+max(var(--mobile-nav-gap),env(safe-area-inset-bottom)))]">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setMobileView("menu")}
+                    className="hover:bg-accent inline-flex h-8 w-8 items-center justify-center"
+                  >
+                    <Icons.ArrowLeft className="size-6" />
+                  </button>
+                  <div className="min-w-0">
+                    <h2 className="font-heading text-lg font-bold tracking-tight">
+                      {activeNavItem?.title ?? "Section"}
+                    </h2>
+                    {activeSection !== "general" && (
+                      <p className="text-muted-foreground truncate text-sm">
+                        {activeNavItem?.subtitle ?? sectionMeta.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
+                {activeSection === "general" ? (
+                  <div className="space-y-6">
+                    <p className="text-muted-foreground break-words text-sm font-light">
+                      {GENERAL_PAGE_DESCRIPTION}
+                    </p>
+                    <Separator />
+                    <GeneralSettingsContent
+                      baseCurrency={baseCurrency}
+                      draft={draft}
+                      setDraft={setDraft}
+                    />
+                  </div>
+                ) : (
+                  renderSectionContent()
+                )}
               </div>
-              {renderSectionContent()}
             </div>
           )}
+        </div>
         </div>
       </PageContent>
     </Page>

@@ -1,3 +1,4 @@
+export { formatCurrency } from "./format-currency";
 export {
   DEFAULT_TICKERS,
   buildDefaultSettings,

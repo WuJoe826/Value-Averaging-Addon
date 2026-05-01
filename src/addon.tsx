@@ -1,21 +1,19 @@
-import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
+import { QueryClientProvider, type QueryClient, useQuery } from "@tanstack/react-query";
 import type { AddonContext, AddonEnableFunction } from "@wealthfolio/addon-sdk";
 import { Icons } from "@wealthfolio/ui";
 import React, { useMemo, useState } from "react";
 import type { AddonPageTab } from "./components/page-tab-selector";
-import { DEFAULT_TICKERS, readSettings, saveSettings } from "./lib";
+import { DEFAULT_TICKERS, formatCurrency, readSettings, saveSettings } from "./lib";
 import { DashboardPage, SettingsPage } from "./pages";
 import type { PortfolioTicker, ValueAveragingSettings } from "./types";
 
-function toCurrency(value: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 2,
-  }).format(value);
-}
-
 function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
+  const { data: hostSettings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => ctx.api.settings.get(),
+  });
+  const baseCurrency = hostSettings?.baseCurrency ?? "USD";
+
   const [currentPage, setCurrentPage] = useState<AddonPageTab>("dashboard");
   const [settings, setSettings] = useState<ValueAveragingSettings>(() => readSettings());
   const [tickers, setTickers] = useState<PortfolioTicker[]>(DEFAULT_TICKERS);
@@ -47,10 +45,11 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
     const generated = enabledTickers.map((ticker) => {
       const allocation = (settings.tickerAllocations[ticker.id] ?? 0) / 100;
       const plannedAmount = baseTopUp * allocation;
-      const amount = settings.maxTopUpEnabled
-        ? Math.min(plannedAmount, plannedAmount * settings.maxTopUpMultiplier)
-        : plannedAmount;
-      return `BUY ${ticker.symbol} in ${ticker.accountName}: ${toCurrency(amount)}`;
+      const amount =
+        settings.maxTopUpEnabled && settings.maxTopUpMultiplier != null
+          ? Math.min(plannedAmount, plannedAmount * settings.maxTopUpMultiplier)
+          : plannedAmount;
+      return `BUY ${ticker.symbol} in ${ticker.accountName}: ${formatCurrency(amount, baseCurrency)}`;
     });
 
     setGeneratedTransactions(generated);
@@ -66,6 +65,7 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
     return (
       <SettingsPage
         ctx={ctx}
+        baseCurrency={baseCurrency}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
         settings={settings}
@@ -78,6 +78,7 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
   return (
     <DashboardPage
       ctx={ctx}
+      baseCurrency={baseCurrency}
       currentPage={currentPage}
       onPageChange={setCurrentPage}
       settings={settings}

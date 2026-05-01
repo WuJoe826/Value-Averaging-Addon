@@ -12,10 +12,12 @@ import {
 } from "@wealthfolio/ui";
 import React, { useMemo, useState } from "react";
 import { PageTabSelector, type AddonPageTab } from "../components";
+import { formatCurrency } from "../lib";
 import type { PortfolioTicker, ValueAveragingSettings } from "../types";
 
 interface DashboardPageProps {
   ctx: AddonContext;
+  baseCurrency: string;
   currentPage: AddonPageTab;
   onPageChange: (nextPage: AddonPageTab) => void;
   settings: ValueAveragingSettings;
@@ -29,14 +31,6 @@ interface InvestmentPlan {
   tickerId: string;
   targetValue: number;
   amountToInvest: number;
-}
-
-function toCurrency(value: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 2,
-  }).format(value);
 }
 
 function buildInvestmentPlan(
@@ -58,9 +52,10 @@ function buildInvestmentPlan(
     const valueGap = Math.max(0, targetValue - ticker.currentPrice);
 
     const uncappedTopUp = baseTopUp * allocation + valueGap * 0.2;
-    const maxAllowedTopUp = settings.maxTopUpEnabled
-      ? baseTopUp * settings.maxTopUpMultiplier * allocation
-      : Number.MAX_SAFE_INTEGER;
+    const maxAllowedTopUp =
+      settings.maxTopUpEnabled && settings.maxTopUpMultiplier != null
+        ? baseTopUp * settings.maxTopUpMultiplier * allocation
+        : Number.MAX_SAFE_INTEGER;
 
     plans[ticker.id] = {
       tickerId: ticker.id,
@@ -74,6 +69,7 @@ function buildInvestmentPlan(
 
 export default function DashboardPage({
   ctx,
+  baseCurrency,
   currentPage,
   onPageChange,
   settings,
@@ -186,15 +182,15 @@ export default function DashboardPage({
                             </button>
                           </td>
                           <td className="px-2 py-3">
-                            <div className="font-medium">{toCurrency(ticker.averageCost)}</div>
+                            <div className="font-medium">{formatCurrency(ticker.averageCost, baseCurrency)}</div>
                             <div className="text-muted-foreground text-xs">Avg price</div>
                           </td>
                           <td className="px-2 py-3">
-                            <div className="font-medium">{toCurrency(ticker.currentPrice)}</div>
+                            <div className="font-medium">{formatCurrency(ticker.currentPrice, baseCurrency)}</div>
                             <div className="text-muted-foreground text-xs">Current price</div>
                           </td>
                           <td className="px-2 py-3 font-medium">
-                            {toCurrency(plan?.amountToInvest ?? 0)}
+                            {formatCurrency(plan?.amountToInvest ?? 0, baseCurrency)}
                           </td>
                         </tr>
                       );
@@ -223,16 +219,16 @@ export default function DashboardPage({
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Total invested (VA)</span>
                     <span className="font-medium">
-                      {toCurrency(selectedTicker.valueAveragingInvested)}
+                      {formatCurrency(selectedTicker.valueAveragingInvested, baseCurrency)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Target portfolio value</span>
-                    <span className="font-medium">{toCurrency(selectedPlan.targetValue)}</span>
+                    <span className="font-medium">{formatCurrency(selectedPlan.targetValue, baseCurrency)}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Amount to invest now</span>
-                    <span className="font-medium">{toCurrency(selectedPlan.amountToInvest)}</span>
+                    <span className="font-medium">{formatCurrency(selectedPlan.amountToInvest, baseCurrency)}</span>
                   </div>
                 </>
               ) : (

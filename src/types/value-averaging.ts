@@ -14,7 +14,8 @@ export interface ValueAveragingSettings {
   topUpAmount: number;
   topUpPercentage: number;
   maxTopUpEnabled: boolean;
-  maxTopUpMultiplier: number;
+  /** Cap versus base plan; `null` means no limit when `maxTopUpEnabled` is on. */
+  maxTopUpMultiplier: number | null;
   growthPeriodMonths: number;
   enabledTickers: Record<string, boolean>;
   tickerAllocations: Record<string, number>;

@@ -57,7 +57,7 @@ export function PageTabSelector({ currentPage, onPageChange }: PageTabSelectorPr
                 className={`inline-flex h-7 items-center rounded-full transition-all ${
                   isSelected
                     ? "bg-background px-2.5 text-foreground shadow-xs"
-                    : "text-muted-foreground hover:text-foreground w-8 px-2.5 justify-center"
+                    : "text-muted-foreground hover:text-foreground w-8 justify-center"
                 }`}
               >
                 <Icon className="size-4" />

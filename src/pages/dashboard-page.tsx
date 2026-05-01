@@ -1,5 +1,6 @@
 import type { AddonContext } from "@wealthfolio/addon-sdk";
 import {
+  Button,
   Card,
   CardContent,
   CardHeader,
@@ -102,21 +103,21 @@ export default function DashboardPage({
       <Page>
         <PageHeader heading="Value Averaging" actions={headerActions} />
         <PageContent>
-          <div className="flex h-[calc(100vh-200px)] items-center justify-center">
-            <EmptyPlaceholder
-              className="border-border/50 w-full max-w-[520px] border border-dashed"
-              icon={<Icons.Activity2 className="h-10 w-10" />}
-              title="Dashboard is empty"
-              description="Please complete your value averaging setup first. After confirming settings, your selected tickers and investment recommendations will appear here."
-            >
-              <button
-                type="button"
-                onClick={() => onPageChange("settings")}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center rounded-md px-3 text-sm font-medium"
-              >
-                Go to settings
-              </button>
-            </EmptyPlaceholder>
+          <div className="flex justify-center">
+            <div className="w-full max-w-lg">
+              <EmptyPlaceholder className="mt-16">
+                <EmptyPlaceholder.Icon name="Settings" />
+                <EmptyPlaceholder.Title>Dashboard is empty</EmptyPlaceholder.Title>
+                <EmptyPlaceholder.Description>
+                  Please complete your value averaging setup first. After confirming settings, your selected
+                  tickers and investment recommendations will appear here.
+                </EmptyPlaceholder.Description>
+                <Button type="button" onClick={() => onPageChange("settings")}>
+                  <Icons.Settings className="mr-2 h-4 w-4" />
+                  Go to settings
+                </Button>
+              </EmptyPlaceholder>
+            </div>
           </div>
         </PageContent>
       </Page>
@@ -128,13 +129,20 @@ export default function DashboardPage({
       <Page>
         <PageHeader heading="Value Averaging" actions={headerActions} />
         <PageContent>
-          <div className="flex h-[calc(100vh-200px)] items-center justify-center">
-            <EmptyPlaceholder
-              className="border-border/50 w-full max-w-[520px] border border-dashed"
-              icon={<Icons.Activity2 className="h-10 w-10" />}
-              title="No ticker selected"
-              description="Enable at least one ticker in settings to build your value averaging portfolio."
-            />
+          <div className="flex justify-center">
+            <div className="w-full max-w-lg">
+              <EmptyPlaceholder className="mt-16">
+                <EmptyPlaceholder.Icon name="Activity2" />
+                <EmptyPlaceholder.Title>No ticker selected</EmptyPlaceholder.Title>
+                <EmptyPlaceholder.Description>
+                  Enable at least one ticker in settings to build your value averaging portfolio.
+                </EmptyPlaceholder.Description>
+                <Button type="button" onClick={() => onPageChange("settings")}>
+                  <Icons.Settings className="mr-2 h-4 w-4" />
+                  Go to settings
+                </Button>
+              </EmptyPlaceholder>
+            </div>
           </div>
         </PageContent>
       </Page>

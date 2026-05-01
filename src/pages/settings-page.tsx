@@ -1,22 +1,17 @@
 import type { AddonContext } from "@wealthfolio/addon-sdk";
-import {
-  Card,
-  CardContent,
-  Icons,
-  Page,
-  PageContent,
-  PageHeader,
-  Separator,
-} from "@wealthfolio/ui";
+import { Page, PageContent, PageHeader } from "@wealthfolio/ui";
 import React, { useMemo, useState } from "react";
 import {
-  AboutSettingsContent,
-  GeneralSettingsContent,
+  AboutSettingsSection,
+  GeneralSettingsSection,
   PageTabSelector,
-  PortfolioSettingsContent,
+  PortfolioSettingsSection,
   type AddonPageTab,
 } from "../components";
 import type { PortfolioTicker, ValueAveragingSettings } from "../types";
+import { SETTINGS_SECTIONS, getSectionMeta, type MobileView, type PreferenceSection } from "./settings-nav-config";
+import { SettingsPageDesktop } from "./settings-page-desktop";
+import { SettingsPageMobile } from "./settings-page-mobile";
 
 interface SettingsPageProps {
   ctx: AddonContext;
@@ -26,73 +21,6 @@ interface SettingsPageProps {
   settings: ValueAveragingSettings;
   tickers: PortfolioTicker[];
   onConfirmSettings: (nextSettings: ValueAveragingSettings) => void;
-}
-type PreferenceSection = "general" | "portfolio" | "about";
-type MobileView = "menu" | "detail";
-
-interface SettingsNavItem {
-  key: PreferenceSection;
-  title: string;
-  subtitle: string;
-  icon: React.ReactNode;
-}
-
-interface SettingsNavSection {
-  title: string;
-  items: SettingsNavItem[];
-}
-
-const SETTINGS_SECTIONS: SettingsNavSection[] = [
-  {
-    title: "Preferences",
-    items: [
-      {
-        key: "general" as const,
-        title: "General",
-        subtitle: "Top-up strategy and growth period",
-        icon: <Icons.Settings className="size-5" />,
-      },
-      {
-        key: "portfolio" as const,
-        title: "Portfolio",
-        subtitle: "Ticker selection and allocations",
-        icon: <Icons.PieChart className="size-5" />,
-      },
-    ],
-  },
-  {
-    title: "About",
-    items: [
-      {
-        key: "about" as const,
-        title: "About",
-        subtitle: "Addon information and status",
-        icon: <Icons.InfoCircle className="size-5" />,
-      },
-    ],
-  },
-];
-
-const GENERAL_PAGE_DESCRIPTION =
-  "Configure top-up logic, risk limits, and growth period notifications.";
-
-function getSectionMeta(section: PreferenceSection): { title: string; description: string } {
-  if (section === "general") {
-    return {
-      title: "General",
-      description: GENERAL_PAGE_DESCRIPTION,
-    };
-  }
-  if (section === "portfolio") {
-    return {
-      title: "Portfolio",
-      description: "Select tickers and assign allocation percentages for value averaging.",
-    };
-  }
-  return {
-    title: "About",
-    description: "Basic information and current status of your value averaging setup.",
-  };
 }
 
 export default function SettingsPage({
@@ -120,32 +48,88 @@ export default function SettingsPage({
   );
 
   const headerActions = <PageTabSelector currentPage={currentPage} onPageChange={onPageChange} />;
-  const selectSection = (section: PreferenceSection, isMobile: boolean) => {
+
+  const selectSectionDesktop = (section: PreferenceSection) => {
     setActiveSection(section);
-    if (isMobile) {
-      setMobileView("detail");
-    }
   };
 
-  const renderSectionContent = () => {
+  const selectSectionMobile = (section: PreferenceSection) => {
+    setActiveSection(section);
+    setMobileView("detail");
+  };
+
+  const renderDesktopBody = () => {
+    if (activeSection === "general") {
+      return (
+        <GeneralSettingsSection
+          layout="desktop"
+          baseCurrency={baseCurrency}
+          draft={draft}
+          setDraft={setDraft}
+        />
+      );
+    }
     if (activeSection === "portfolio") {
       return (
-        <PortfolioSettingsContent
+        <PortfolioSettingsSection
+          layout="desktop"
+          ctx={ctx}
           draft={draft}
           setDraft={setDraft}
           tickers={tickers}
           totalAllocation={totalAllocation}
-          onConfirm={() => {
-            const next = { ...draft, isConfigured: true };
-            onConfirmSettings(next);
-            onPageChange("dashboard");
-            ctx.api.logger.info("Value averaging settings confirmed");
-          }}
+          title={sectionMeta.title}
+          description={sectionMeta.description}
+          onConfirmSettings={onConfirmSettings}
+          onPageChange={onPageChange}
         />
       );
     }
+    return (
+      <AboutSettingsSection
+        layout="desktop"
+        draft={draft}
+        title={sectionMeta.title}
+        description={sectionMeta.description}
+      />
+    );
+  };
 
-    return <AboutSettingsContent draft={draft} />;
+  const renderMobileDetailBody = () => {
+    if (activeSection === "general") {
+      return (
+        <GeneralSettingsSection
+          layout="mobile"
+          baseCurrency={baseCurrency}
+          draft={draft}
+          setDraft={setDraft}
+        />
+      );
+    }
+    if (activeSection === "portfolio") {
+      return (
+        <PortfolioSettingsSection
+          layout="mobile"
+          ctx={ctx}
+          draft={draft}
+          setDraft={setDraft}
+          tickers={tickers}
+          totalAllocation={totalAllocation}
+          title={sectionMeta.title}
+          description={sectionMeta.description}
+          onConfirmSettings={onConfirmSettings}
+          onPageChange={onPageChange}
+        />
+      );
+    }
+    return (
+      <AboutSettingsSection
+        layout="mobile"
+        draft={draft}
+        title={sectionMeta.title}
+        description={sectionMeta.description}
+      />
+    );
   };
 
   return (
@@ -153,149 +137,21 @@ export default function SettingsPage({
       <PageHeader heading="Value Averaging" actions={headerActions} />
       <PageContent withPadding={false} containerMode>
         <div className="w-full min-w-0">
-        <div className="hidden lg:flex lg:w-full lg:justify-start">
-          <div className="flex w-full max-w-6xl flex-col px-3 lg:px-3">
-            <div className="flex gap-10">
-              <aside className="hidden w-[240px] shrink-0 lg:sticky lg:top-24 lg:flex lg:flex-col lg:self-start">
-                <div className="space-y-6">
-                  {SETTINGS_SECTIONS.map((section) => (
-                    <div key={section.title} className="space-y-2">
-                      <div className="text-muted-foreground pl-2 text-sm font-light uppercase tracking-widest">
-                        {section.title}
-                      </div>
-                      <nav className="flex flex-col space-y-1">
-                        {section.items.map((item) => {
-                          const isActive = activeSection === item.key;
-                          return (
-                            <button
-                              key={item.key}
-                              type="button"
-                              onClick={() => selectSection(item.key, false)}
-                              className={`inline-flex h-9 w-full items-center justify-start gap-2 rounded-md px-2 text-left text-sm transition-colors ${
-                                isActive
-                                  ? "bg-muted text-foreground hover:bg-muted"
-                                  : "text-foreground hover:bg-muted/50 hover:text-muted-foreground"
-                              }`}
-                            >
-                              <span className="inline-flex items-center justify-center [&_svg]:size-4">
-                                {item.icon}
-                              </span>
-                              <span>{item.title}</span>
-                            </button>
-                          );
-                        })}
-                      </nav>
-                    </div>
-                  ))}
-                </div>
-              </aside>
-
-              <div className="mb-8 min-w-0 flex-1">
-                <div className="w-full max-w-4xl">
-                  {activeSection === "general" ? (
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-[1fr_auto] items-start gap-2">
-                        <div className="grid min-w-0 gap-1">
-                          <h1 className="font-heading break-words text-lg font-bold lg:text-xl">General</h1>
-                          <p className="text-muted-foreground lg:text-md break-words text-sm font-light">
-                            {GENERAL_PAGE_DESCRIPTION}
-                          </p>
-                        </div>
-                      </div>
-                      <Separator />
-                      <GeneralSettingsContent
-                        baseCurrency={baseCurrency}
-                        draft={draft}
-                        setDraft={setDraft}
-                      />
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="space-y-1">
-                        <h2 className="text-xl font-bold tracking-tight">{sectionMeta.title}</h2>
-                        <p className="text-muted-foreground text-sm">{sectionMeta.description}</p>
-                      </div>
-                      <div className="border-border border-b" />
-                      {renderSectionContent()}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="w-full max-w-full lg:hidden">
-          {mobileView === "menu" ? (
-            <div className="space-y-6 px-3 pt-3 pb-[calc(var(--mobile-nav-ui-height)+max(var(--mobile-nav-gap),env(safe-area-inset-bottom)))]">
-              {SETTINGS_SECTIONS.map((section) => (
-                <div key={section.title} className="space-y-3">
-                  <div className="text-muted-foreground px-0 text-xs font-semibold uppercase tracking-widest">
-                    {section.title}
-                  </div>
-                  <div className="divide-border bg-card divide-y overflow-hidden rounded-2xl border shadow-sm">
-                    {section.items.map((item) => (
-                      <button
-                        key={item.key}
-                        type="button"
-                        onClick={() => selectSection(item.key, true)}
-                        className="hover:bg-muted/40 flex w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors active:opacity-90"
-                      >
-                        <div className="flex min-w-0 flex-1 items-center gap-3">
-                          <div className="text-muted-foreground shrink-0">{item.icon}</div>
-                          <div className="min-w-0">
-                            <div className="text-foreground truncate text-base font-medium">{item.title}</div>
-                            <div className="text-muted-foreground truncate text-sm">{item.subtitle}</div>
-                          </div>
-                        </div>
-                        <Icons.ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="w-full max-w-full overflow-x-hidden pt-safe">
-              <div className="space-y-4 px-3 pt-2 pb-[calc(var(--mobile-nav-ui-height)+max(var(--mobile-nav-gap),env(safe-area-inset-bottom)))]">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setMobileView("menu")}
-                    className="hover:bg-accent inline-flex h-8 w-8 items-center justify-center"
-                  >
-                    <Icons.ArrowLeft className="size-6" />
-                  </button>
-                  <div className="min-w-0">
-                    <h2 className="font-heading text-lg font-bold tracking-tight">
-                      {activeNavItem?.title ?? "Section"}
-                    </h2>
-                    {activeSection !== "general" && (
-                      <p className="text-muted-foreground truncate text-sm">
-                        {activeNavItem?.subtitle ?? sectionMeta.description}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                {activeSection === "general" ? (
-                  <div className="space-y-6">
-                    <p className="text-muted-foreground break-words text-sm font-light">
-                      {GENERAL_PAGE_DESCRIPTION}
-                    </p>
-                    <Separator />
-                    <GeneralSettingsContent
-                      baseCurrency={baseCurrency}
-                      draft={draft}
-                      setDraft={setDraft}
-                    />
-                  </div>
-                ) : (
-                  renderSectionContent()
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+          <SettingsPageDesktop
+            sections={SETTINGS_SECTIONS}
+            activeSection={activeSection}
+            onSelectSection={selectSectionDesktop}
+            content={renderDesktopBody()}
+          />
+          <SettingsPageMobile
+            sections={SETTINGS_SECTIONS}
+            mobileView={mobileView}
+            onMobileViewChange={setMobileView}
+            activeSection={activeSection}
+            onSelectSection={selectSectionMobile}
+            activeNavItem={activeNavItem}
+            detailContent={renderMobileDetailBody()}
+          />
         </div>
       </PageContent>
     </Page>

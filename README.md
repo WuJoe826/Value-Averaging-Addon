@@ -1,74 +1,69 @@
-# Wealthfolio Value Averaging Addon
+# Value Averaging Addon for Wealthfolio
 
-A professional addon for [Wealthfolio](https://wealthfolio.app) that automates recurring investment calculations using the **value averaging** method – helping you grow your portfolio along a predefined target path, regardless of market fluctuations.
+This addon helps you run a value averaging strategy inside [Wealthfolio](https://wealthfolio.app).  
+It lets you configure portfolio weights, top-up rules, and growth schedule, then calculates ticker-level investment amounts based on your current holdings.
 
-## Features
+## What It Does
 
-### 🔧 Settings Page
+### Settings
 
-Configure your value averaging strategy with precision:
+- Configure top-up mode:
+  - Fixed amount
+  - Percentage
+- Set overflow gains behavior.
+- Choose purchase unit mode:
+  - Fractional unit
+  - Whole unit
+- Enable or disable maximum top-up limits with multiplier presets.
+- Configure growth schedule:
+  - Start date
+  - Interval
+  - End mode
+- Build your value averaging portfolio:
+  - Enable/disable tickers
+  - Set allocation percentages per ticker
+  - Use ticker logos from the app
 
-- **Top-up amount / percentage** – Define the base contribution per period (fixed amount or % of portfolio value)
-- **Maximum top-up multiplier** – Protect against extreme market drops by setting a cap:
-  - Preset multipliers: 1.5×, 2×, 3×, 4×, 5×
-  - Custom multiplier: adjustable via slider (**1× to 10×**)
-- **Growth schedule** – Set start date, interval, and ending mode to derive each cycle’s target portfolio value in the dashboard
-- **Portfolio allocation per ticker** – Add tickers from different accounts:
-  - Toggle switch to include/exclude each account
-  - Assign percentage weights to each ticker within the value averaging portfolio
-- **Confirm settings** – Save your strategy with a single confirmation
+### Allocation Validation
 
-### 📊 Dashboard Page
+- Portfolio allocation must stay in a valid range before saving:
+  - Minimum: `99.9%`
+  - Maximum: `100%`
+- If allocation is invalid:
+  - Total allocation value turns red
+  - Save button is disabled
+- If total is between `99.9%` and `100%`, it is treated as `100%` for display and save validation.
 
-Real‑time overview and control of your value averaging plan:
+### Dashboard
 
-#### Ticker / Asset List
-Each row displays:
-- **Ticker symbol** + asset name
-- **Cost basis** – Average purchase price per unit
-- **Market value** – Current price per unit
-- **Total invested** (accessible via drill‑down)
+- Shows enabled tickers with:
+  - Cost basis
+  - Market value
+  - Calculated amount to invest
+- Includes ticker detail panel for selected asset.
+- Supports:
+  - Refresh latest holdings/prices
+  - Auto-generate transaction suggestions
 
-#### Drill‑down Detail View (per ticker)
-- **Total invested via value averaging** – Cumulative contributions made specifically through this strategy
-- **Amount to invest** – Required top‑up for the current period to reach the target portfolio value
-- Historical contribution logs
+## Install
 
-#### Action Buttons
-- **Fetch latest prices** – Manually refresh market data for all or selected tickers
-- **Auto‑generate transaction** – Creates a ready‑to‑use transaction entry based on the calculated top‑up amount, respecting your maximum multiplier rule
+1. Install or update Wealthfolio.
+2. Download this addon package.
+3. Install it through Wealthfolio addon installation flow.
 
-## Installation
+## How To Use
 
-1. Ensure Wealthfolio is installed and up to date
-2. Download the latest release of this addon from the [Releases](../../releases) page
-3. Follow Wealthfolio’s addon installation guide (typically: place in `~/.wealthfolio/addons/` or use the built‑in addon manager)
-
-## Usage Example
-
-1. **Settings**:  
-   - Set base top‑up = $500  
-   - Max multiplier = 3× → maximum allowed top‑up = $1,500  
-   - Growth schedule = Start today, Monthly interval, 12 installments  
-   - Add tickers `VTI`, `BND`, `VXUS` with 50%, 30%, 20% weights
-
-2. **Dashboard**:  
-   - After price fetch, the addon calculates required contributions per ticker (max $1,500 total across all)  
-   - Click **Auto‑generate transaction** to create a single consolidated buy order or individual orders per ticker
+1. Open **Settings** and configure strategy parameters.
+2. In **Portfolio**, enable tickers and set allocations.
+3. Save changes when allocation is valid.
+4. Go to **Dashboard** to review suggested investment amounts.
+5. Generate transactions for execution in your workflow.
 
 ## Requirements
 
-- Wealthfolio v1.x or later
-- Active internet connection for price fetching (configurable data source – e.g., Yahoo Finance, Alpha Vantage)
+- Wealthfolio with addon support enabled.
+- At least one active account and holding in your portfolio.
 
 ## License
 
-MIT – see [LICENSE](LICENSE) file for details.
-
-## Contributing
-
-Pull requests and issue reports are welcome. Please follow the [contributing guidelines](CONTRIBUTING.md).
-
----
-
-*Built for disciplined investors who want systematic growth beyond dollar‑cost averaging.*
+MIT. See `LICENSE`.

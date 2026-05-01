@@ -98,32 +98,6 @@ export default function DashboardPage({
 
   const headerActions = <PageTabSelector currentPage={currentPage} onPageChange={onPageChange} />;
 
-  if (!settings.isConfigured) {
-    return (
-      <Page>
-        <PageHeader heading="Value Averaging" actions={headerActions} />
-        <PageContent>
-          <div className="flex justify-center">
-            <div className="w-full max-w-lg">
-              <EmptyPlaceholder className="mt-16">
-                <EmptyPlaceholder.Icon name="Settings" />
-                <EmptyPlaceholder.Title>Dashboard is empty</EmptyPlaceholder.Title>
-                <EmptyPlaceholder.Description>
-                  Please complete your value averaging setup first. After confirming settings, your selected
-                  tickers and investment recommendations will appear here.
-                </EmptyPlaceholder.Description>
-                <Button type="button" onClick={() => onPageChange("settings")}>
-                  <Icons.Settings className="mr-2 h-4 w-4" />
-                  Go to settings
-                </Button>
-              </EmptyPlaceholder>
-            </div>
-          </div>
-        </PageContent>
-      </Page>
-    );
-  }
-
   if (!enabledTickers.length) {
     return (
       <Page>
@@ -133,7 +107,7 @@ export default function DashboardPage({
             <div className="w-full max-w-lg">
               <EmptyPlaceholder className="mt-16">
                 <EmptyPlaceholder.Icon name="Activity2" />
-                <EmptyPlaceholder.Title>No ticker selected</EmptyPlaceholder.Title>
+                <EmptyPlaceholder.Title>Dashboard is empty</EmptyPlaceholder.Title>
                 <EmptyPlaceholder.Description>
                   Enable at least one ticker in settings to build your value averaging portfolio.
                 </EmptyPlaceholder.Description>

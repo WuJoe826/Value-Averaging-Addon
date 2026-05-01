@@ -36,14 +36,6 @@ export const DEFAULT_TICKERS: PortfolioTicker[] = [
 ];
 
 export function buildDefaultSettings(): ValueAveragingSettings {
-  const enabledTickers: Record<string, boolean> = {};
-  const tickerAllocations: Record<string, number> = {};
-
-  DEFAULT_TICKERS.forEach((ticker) => {
-    enabledTickers[ticker.id] = true;
-    tickerAllocations[ticker.id] = Number((100 / DEFAULT_TICKERS.length).toFixed(2));
-  });
-
   return {
     topUpMode: "amount",
     topUpAmount: 500,
@@ -51,8 +43,8 @@ export function buildDefaultSettings(): ValueAveragingSettings {
     maxTopUpEnabled: true,
     maxTopUpMultiplier: 3,
     growthPeriodMonths: 12,
-    enabledTickers,
-    tickerAllocations,
+    enabledTickers: {},
+    tickerAllocations: {},
     isConfigured: false,
   };
 }

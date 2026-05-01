@@ -16677,50 +16677,6 @@ var usePopperScope$4 = createPopperScope();
 var useRovingFocusGroupScope$3 = createRovingFocusGroupScope();
 var [MenuProvider, useMenuContext] = createMenuContext(MENU_NAME);
 var [MenuRootProvider, useMenuRootContext] = createMenuContext(MENU_NAME);
-var Menu = (props) => {
-  const { __scopeMenu, open = false, children, dir, onOpenChange, modal = true } = props;
-  const popperScope = usePopperScope$4(__scopeMenu);
-  const [content, setContent] = React.useState(null);
-  const isUsingKeyboardRef = React.useRef(false);
-  const handleOpenChange = useCallbackRef$1(onOpenChange);
-  const direction = useDirection(dir);
-  React.useEffect(() => {
-    const handleKeyDown = () => {
-      isUsingKeyboardRef.current = true;
-      document.addEventListener("pointerdown", handlePointer, { capture: true, once: true });
-      document.addEventListener("pointermove", handlePointer, { capture: true, once: true });
-    };
-    const handlePointer = () => isUsingKeyboardRef.current = false;
-    document.addEventListener("keydown", handleKeyDown, { capture: true });
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown, { capture: true });
-      document.removeEventListener("pointerdown", handlePointer, { capture: true });
-      document.removeEventListener("pointermove", handlePointer, { capture: true });
-    };
-  }, []);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root2$5, { ...popperScope, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-    MenuProvider,
-    {
-      scope: __scopeMenu,
-      open,
-      onOpenChange: handleOpenChange,
-      content,
-      onContentChange: setContent,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-        MenuRootProvider,
-        {
-          scope: __scopeMenu,
-          onClose: React.useCallback(() => handleOpenChange(false), [handleOpenChange]),
-          isUsingKeyboardRef,
-          dir: direction,
-          modal,
-          children
-        }
-      )
-    }
-  ) });
-};
-Menu.displayName = MENU_NAME;
 var ANCHOR_NAME$1 = "MenuAnchor";
 var MenuAnchor = React.forwardRef(
   (props, forwardedRef) => {
@@ -17415,7 +17371,6 @@ function isPointerInGraceArea(event, area) {
 function whenMouse(handler) {
   return (event) => event.pointerType === "mouse" ? handler(event) : void 0;
 }
-var Root3 = Menu;
 var Anchor2 = MenuAnchor;
 var Portal$2 = MenuPortal;
 var Content2$5 = MenuContent;
@@ -17437,40 +17392,6 @@ var [createDropdownMenuContext] = createContextScope$1(
 );
 var useMenuScope = createMenuScope();
 var [DropdownMenuProvider, useDropdownMenuContext] = createDropdownMenuContext(DROPDOWN_MENU_NAME);
-var DropdownMenu$1 = (props) => {
-  const {
-    __scopeDropdownMenu,
-    children,
-    dir,
-    open: openProp,
-    defaultOpen,
-    onOpenChange,
-    modal = true
-  } = props;
-  const menuScope = useMenuScope(__scopeDropdownMenu);
-  const triggerRef = React.useRef(null);
-  const [open, setOpen] = useControllableState({
-    prop: openProp,
-    defaultProp: defaultOpen ?? false,
-    onChange: onOpenChange,
-    caller: DROPDOWN_MENU_NAME
-  });
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    DropdownMenuProvider,
-    {
-      scope: __scopeDropdownMenu,
-      triggerId: useId(),
-      triggerRef,
-      contentId: useId(),
-      open,
-      onOpenChange: setOpen,
-      onOpenToggle: React.useCallback(() => setOpen((prevOpen) => !prevOpen), [setOpen]),
-      modal,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(Root3, { ...menuScope, open, onOpenChange: setOpen, dir, modal, children })
-    }
-  );
-};
-DropdownMenu$1.displayName = DROPDOWN_MENU_NAME;
 var TRIGGER_NAME$5 = "DropdownMenuTrigger";
 var DropdownMenuTrigger$1 = React.forwardRef(
   (props, forwardedRef) => {
@@ -17659,8 +17580,6 @@ var DropdownMenuSubContent$1 = React.forwardRef((props, forwardedRef) => {
   );
 });
 DropdownMenuSubContent$1.displayName = SUB_CONTENT_NAME;
-var Root2$4 = DropdownMenu$1;
-var Trigger$3 = DropdownMenuTrigger$1;
 var Portal2 = DropdownMenuPortal;
 var Content2$4 = DropdownMenuContent$1;
 var Label2$1 = DropdownMenuLabel$1;
@@ -25538,8 +25457,6 @@ var TableCaption = React.forwardRef(
   ({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx("caption", { ref, className: cn("text-muted-foreground mt-4 text-sm", className), ...props })
 );
 TableCaption.displayName = "TableCaption";
-var DropdownMenu = Root2$4;
-var DropdownMenuTrigger = Trigger$3;
 var DropdownMenuSubTrigger = React.forwardRef(({ className, inset, children, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
   SubTrigger2,
   {
@@ -26904,8 +26821,8 @@ const desktopTabs = [
   { value: "settings", label: "Settings" }
 ];
 const mobileTabs = [
-  { value: "dashboard", label: "Dash" },
-  { value: "settings", label: "Set" }
+  { value: "dashboard", label: "Dashboard", icon: Icons.LayoutDashboard },
+  { value: "settings", label: "Settings", icon: Icons.Settings }
 ];
 function PageTabSelector({ currentPage, onPageChange }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
@@ -26920,17 +26837,24 @@ function PageTabSelector({ currentPage, onPageChange }) {
         rounded: "full"
       }
     ) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "block sm:hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      AnimatedToggleGroup,
-      {
-        items: mobileTabs,
-        value: currentPage,
-        onValueChange: onPageChange,
-        variant: "secondary",
-        size: "xs",
-        rounded: "full"
-      }
-    ) })
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "block sm:hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bg-secondary/50 inline-flex items-center rounded-full border p-1", children: mobileTabs.map((tab) => {
+      const isSelected = currentPage === tab.value;
+      const Icon2 = tab.icon;
+      return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "button",
+        {
+          type: "button",
+          onClick: () => onPageChange(tab.value),
+          "aria-label": tab.label,
+          className: `inline-flex h-7 items-center rounded-full transition-all ${isSelected ? "bg-background px-2.5 text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground w-7 justify-center"}`,
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Icon2, { className: "size-4" }),
+            isSelected && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "ml-1 text-xs font-medium", children: tab.label })
+          ]
+        },
+        tab.value
+      );
+    }) }) })
   ] });
 }
 const PRESET_MULTIPLIERS = [1.5, 2, 3, 4, 5];
@@ -27208,33 +27132,7 @@ function DashboardPage({
   );
   const selectedTicker = enabledTickers.find((ticker) => ticker.id === selectedTickerId) ?? enabledTickers[0] ?? null;
   const selectedPlan = selectedTicker ? investmentPlan[selectedTicker.id] : null;
-  const headerActions = /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-center gap-2", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(PageTabSelector, { currentPage, onPageChange }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenu, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenuTrigger, { className: "bg-secondary/50 hover:bg-secondary inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-transparent transition-colors duration-200 focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background md:hover:scale-105", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.MoreVertical, { className: "size-5" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sr-only", children: "More actions" })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(
-        DropdownMenuContent,
-        {
-          align: "end",
-          sideOffset: 8,
-          className: "w-52 max-w-[calc(100vw-1rem)] sm:w-56",
-          children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenuItem, { className: "h-15 gap-2 px-2", onClick: onFetchLatestPrices, children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.Refresh, { className: "size-4" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Fetch newest price" })
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenuItem, { className: "h-15 gap-2 px-2", onClick: onAutoGenerateTransactions, children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.Plus, { className: "size-4" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Auto generate transaction" })
-            ] })
-          ]
-        }
-      )
-    ] })
-  ] });
+  const headerActions = /* @__PURE__ */ jsxRuntimeExports.jsx(PageTabSelector, { currentPage, onPageChange });
   if (!settings.isConfigured) {
     return /* @__PURE__ */ jsxRuntimeExports.jsxs(Page, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(PageHeader, { heading: "Value Averaging", actions: headerActions }),

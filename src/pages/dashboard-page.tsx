@@ -4,10 +4,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
   EmptyPlaceholder,
   Icons,
   Page,
@@ -103,31 +99,7 @@ export default function DashboardPage({
 
   const selectedPlan = selectedTicker ? investmentPlan[selectedTicker.id] : null;
 
-  const headerActions = (
-    <div className="flex flex-wrap items-center gap-2">
-      <PageTabSelector currentPage={currentPage} onPageChange={onPageChange} />
-      <DropdownMenu>
-        <DropdownMenuTrigger className="bg-secondary/50 hover:bg-secondary inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-transparent transition-colors duration-200 focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background md:hover:scale-105">
-          <Icons.MoreVertical className="size-5" />
-          <span className="sr-only">More actions</span>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          sideOffset={8}
-          className="w-52 max-w-[calc(100vw-1rem)] sm:w-56"
-        >
-          <DropdownMenuItem className="h-15 gap-2 px-2" onClick={onFetchLatestPrices}>
-            <Icons.Refresh className="size-4" />
-            <span>Fetch newest price</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem className="h-15 gap-2 px-2" onClick={onAutoGenerateTransactions}>
-            <Icons.Plus className="size-4" />
-            <span>Auto generate transaction</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  );
+  const headerActions = <PageTabSelector currentPage={currentPage} onPageChange={onPageChange} />;
 
   if (!settings.isConfigured) {
     return (

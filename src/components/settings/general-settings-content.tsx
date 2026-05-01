@@ -5,6 +5,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  DatePickerInput,
   Input,
   Label,
   Switch,
@@ -36,6 +37,13 @@ export function GeneralSettingsContent({ baseCurrency, draft, setDraft }: Genera
     growthSchedule.interval,
     growthSchedule.installments,
   );
+  const startDateValue = growthSchedule.startDate ? new Date(`${growthSchedule.startDate}T00:00:00`) : undefined;
+  const calculatedEndDateValue = calculatedEndDate ? new Date(`${calculatedEndDate}T00:00:00`) : undefined;
+
+  const toLocalIsoDate = (value: Date): string => {
+    const timezoneOffsetMs = value.getTimezoneOffset() * 60 * 1000;
+    return new Date(value.getTime() - timezoneOffsetMs).toISOString().slice(0, 10);
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -170,26 +178,28 @@ export function GeneralSettingsContent({ baseCurrency, draft, setDraft }: Genera
         <CardContent className="space-y-6 pt-2">
           <div className="flex flex-col gap-2">
             <Label htmlFor="va-growth-start-date">Start date</Label>
-            <Input
-              id="va-growth-start-date"
-              type="date"
-              className="w-full max-w-[360px]"
-              value={growthSchedule.startDate}
-              onChange={(event) =>
-                setDraft((prev) => ({
-                  ...prev,
-                  growthSchedule: {
-                    ...prev.growthSchedule,
-                    startDate: normalizeIsoDate(event.target.value || getTodayIsoDate()),
-                    endDate: calculateEndDate(
-                      normalizeIsoDate(event.target.value || getTodayIsoDate()),
-                      prev.growthSchedule.interval,
-                      prev.growthSchedule.installments,
-                    ),
-                  },
-                }))
-              }
-            />
+            <div id="va-growth-start-date" className="w-full max-w-[360px]">
+              <DatePickerInput
+                value={startDateValue}
+                onChange={(date) => {
+                  const nextStartDate = normalizeIsoDate(date ? toLocalIsoDate(date) : getTodayIsoDate());
+                  setDraft((prev) => ({
+                    ...prev,
+                    growthSchedule: {
+                      ...prev.growthSchedule,
+                      startDate: nextStartDate,
+                      endDate: calculateEndDate(
+                        nextStartDate,
+                        prev.growthSchedule.interval,
+                        prev.growthSchedule.installments,
+                      ),
+                    },
+                  }));
+                }}
+                enableTime={true}
+                timeGranularity="minute"
+              />
+            </div>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -240,7 +250,7 @@ export function GeneralSettingsContent({ baseCurrency, draft, setDraft }: Genera
 
           {growthSchedule.endDateEnabled && (
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="flex flex-col gap-3">
                 <Label>Ending On/After</Label>
                 <div className="flex flex-wrap gap-2">
                   <Button
@@ -275,7 +285,15 @@ export function GeneralSettingsContent({ baseCurrency, draft, setDraft }: Genera
               {growthSchedule.endingMode === "specific-date" ? (
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="va-growth-end-date">End Date (calculated)</Label>
-                  <Input id="va-growth-end-date" type="date" value={calculatedEndDate} readOnly />
+                  <div id="va-growth-end-date" className="w-full max-w-[360px]">
+                    <DatePickerInput
+                      value={calculatedEndDateValue}
+                      onChange={() => undefined}
+                      disabled={true}
+                      enableTime={true}
+                      timeGranularity="minute"
+                    />
+                  </div>
                 </div>
               ) : (
                 <div className="flex flex-col gap-2">

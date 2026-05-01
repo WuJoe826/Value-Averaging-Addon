@@ -26850,6 +26850,235 @@ function PageTabSelector({ currentPage, onPageChange }) {
     ) })
   ] });
 }
+const PRESET_MULTIPLIERS = [1.5, 2, 3, 4, 5];
+function GeneralSettingsContent({ draft, setDraft }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-4 pt-6 text-sm", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-medium", children: "Top-up mode" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            type: "button",
+            className: `inline-flex h-9 items-center rounded-md border px-3 ${draft.topUpMode === "amount" ? "bg-primary text-primary-foreground" : ""}`,
+            onClick: () => setDraft((prev) => ({ ...prev, topUpMode: "amount" })),
+            children: "Fixed amount"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            type: "button",
+            className: `inline-flex h-9 items-center rounded-md border px-3 ${draft.topUpMode === "percentage" ? "bg-primary text-primary-foreground" : ""}`,
+            onClick: () => setDraft((prev) => ({ ...prev, topUpMode: "percentage" })),
+            children: "Percentage"
+          }
+        )
+      ] })
+    ] }),
+    draft.topUpMode === "amount" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "block space-y-1", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: "Top-up amount (USD)" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "input",
+        {
+          type: "number",
+          min: 0,
+          value: draft.topUpAmount,
+          onChange: (event) => setDraft((prev) => ({
+            ...prev,
+            topUpAmount: Math.max(0, Number(event.target.value) || 0)
+          })),
+          className: "border-input bg-background h-9 w-full rounded-md border px-3"
+        }
+      )
+    ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "block space-y-1", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: "Top-up percentage (%)" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "input",
+        {
+          type: "number",
+          min: 0,
+          max: 100,
+          value: draft.topUpPercentage,
+          onChange: (event) => setDraft((prev) => ({
+            ...prev,
+            topUpPercentage: Math.min(100, Math.max(0, Number(event.target.value) || 0))
+          })),
+          className: "border-input bg-background h-9 w-full rounded-md border px-3"
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "flex items-center justify-between rounded-md border px-3 py-2", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Enable maximum top-up amount" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "input",
+        {
+          type: "checkbox",
+          checked: draft.maxTopUpEnabled,
+          onChange: (event) => setDraft((prev) => ({ ...prev, maxTopUpEnabled: event.target.checked })),
+          className: "h-4 w-4"
+        }
+      )
+    ] }),
+    draft.maxTopUpEnabled && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-2 font-medium", children: "Preset multipliers" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-wrap gap-2", children: PRESET_MULTIPLIERS.map((value) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "button",
+          {
+            type: "button",
+            onClick: () => setDraft((prev) => ({ ...prev, maxTopUpMultiplier: value })),
+            className: `inline-flex h-8 items-center rounded-md border px-2.5 ${draft.maxTopUpMultiplier === value ? "bg-primary text-primary-foreground" : ""}`,
+            children: [
+              value,
+              "x"
+            ]
+          },
+          value
+        )) })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "block space-y-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-medium", children: [
+          "Custom multiplier: ",
+          draft.maxTopUpMultiplier.toFixed(1),
+          "x"
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
+          {
+            type: "range",
+            min: 1,
+            max: 10,
+            step: 0.1,
+            value: draft.maxTopUpMultiplier,
+            onChange: (event) => setDraft((prev) => ({
+              ...prev,
+              maxTopUpMultiplier: Number(event.target.value)
+            })),
+            className: "w-full"
+          }
+        )
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "block space-y-1", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: "Growth period (months, for notification)" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "input",
+        {
+          type: "number",
+          min: 1,
+          max: 240,
+          value: draft.growthPeriodMonths,
+          onChange: (event) => setDraft((prev) => ({
+            ...prev,
+            growthPeriodMonths: Math.min(240, Math.max(1, Number(event.target.value) || 1))
+          })),
+          className: "border-input bg-background h-9 w-full rounded-md border px-3"
+        }
+      )
+    ] })
+  ] }) });
+}
+function PortfolioSettingsContent({
+  draft,
+  setDraft,
+  tickers,
+  totalAllocation,
+  onConfirm
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-3 pt-6 text-sm", children: [
+    tickers.map((ticker) => {
+      const enabled = draft.enabledTickers[ticker.id];
+      return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2 rounded-md border p-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "font-medium", children: [
+              ticker.symbol,
+              " - ",
+              ticker.name
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground text-xs", children: ticker.accountName })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs", children: "Enable" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "input",
+              {
+                type: "checkbox",
+                checked: enabled,
+                onChange: (event) => setDraft((prev) => ({
+                  ...prev,
+                  enabledTickers: {
+                    ...prev.enabledTickers,
+                    [ticker.id]: event.target.checked
+                  }
+                })),
+                className: "h-4 w-4"
+              }
+            )
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "block space-y-1", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground text-xs", children: "Allocation in value averaging portfolio (%)" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "input",
+            {
+              type: "number",
+              min: 0,
+              max: 100,
+              disabled: !enabled,
+              value: draft.tickerAllocations[ticker.id] ?? 0,
+              onChange: (event) => setDraft((prev) => ({
+                ...prev,
+                tickerAllocations: {
+                  ...prev.tickerAllocations,
+                  [ticker.id]: Math.min(100, Math.max(0, Number(event.target.value) || 0))
+                }
+              })),
+              className: "border-input bg-background disabled:bg-muted h-9 w-full rounded-md border px-3"
+            }
+          )
+        ] })
+      ] }, ticker.id);
+    }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-muted rounded-md px-3 py-2 text-xs", children: [
+      "Enabled allocation total: ",
+      totalAllocation.toFixed(2),
+      "%"
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "button",
+      {
+        type: "button",
+        onClick: onConfirm,
+        className: "bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 w-full items-center justify-center rounded-md px-3 text-sm font-medium",
+        children: "Confirm settings"
+      }
+    )
+  ] }) });
+}
+function AboutSettingsContent({ draft }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-4 pt-6 text-sm", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "Value Averaging addon helps you set a growth path and calculate top-up amounts based on current prices and your portfolio allocation." }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-md border p-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-medium", children: "Current status" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-muted-foreground mt-1 text-xs", children: [
+        "Configuration: ",
+        draft.isConfigured ? "Configured" : "Not configured"
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-muted-foreground text-xs", children: [
+        "Top-up mode: ",
+        draft.topUpMode === "amount" ? "Fixed amount" : "Percentage"
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-muted-foreground text-xs", children: [
+        "Growth period: ",
+        draft.growthPeriodMonths,
+        " months"
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-xs", children: "Tip: Set your General and Portfolio sections first, then confirm settings in Portfolio." })
+  ] }) });
+}
 function toCurrency$1(value) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -27036,7 +27265,59 @@ function DashboardPage({
     ] })
   ] });
 }
-const PRESET_MULTIPLIERS = [1.5, 2, 3, 4, 5];
+const SETTINGS_SECTIONS = [
+  {
+    title: "Preferences",
+    items: [
+      {
+        key: "general",
+        title: "General",
+        subtitle: "Top-up strategy and growth period",
+        icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.Settings, { className: "size-5" })
+      }
+    ]
+  },
+  {
+    title: "Portfolio",
+    items: [
+      {
+        key: "portfolio",
+        title: "Portfolio",
+        subtitle: "Ticker selection and allocations",
+        icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.PieChart, { className: "size-5" })
+      }
+    ]
+  },
+  {
+    title: "About",
+    items: [
+      {
+        key: "about",
+        title: "About",
+        subtitle: "Addon information and status",
+        icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.InfoCircle, { className: "size-5" })
+      }
+    ]
+  }
+];
+function getSectionMeta(section) {
+  if (section === "general") {
+    return {
+      title: "General",
+      description: "Configure top-up logic, risk limits, and growth period notifications."
+    };
+  }
+  if (section === "portfolio") {
+    return {
+      title: "Portfolio",
+      description: "Select tickers and assign allocation percentages for value averaging."
+    };
+  }
+  return {
+    title: "About",
+    description: "Basic information and current status of your value averaging setup."
+  };
+}
 function SettingsPage({
   ctx,
   currentPage,
@@ -27046,222 +27327,115 @@ function SettingsPage({
   onConfirmSettings
 }) {
   const [draft, setDraft] = React.useState(settings);
+  const [activeSection, setActiveSection] = React.useState("general");
+  const [mobileView, setMobileView] = React.useState("menu");
+  const allNavItems = SETTINGS_SECTIONS.flatMap((section) => section.items);
+  const activeNavItem = allNavItems.find((item) => item.key === activeSection);
+  const sectionMeta = getSectionMeta(activeSection);
   const totalAllocation = React.useMemo(
     () => tickers.filter((ticker) => draft.enabledTickers[ticker.id]).reduce((total, ticker) => total + (draft.tickerAllocations[ticker.id] ?? 0), 0),
     [draft, tickers]
   );
   const headerActions = /* @__PURE__ */ jsxRuntimeExports.jsx(PageTabSelector, { currentPage, onPageChange });
+  const selectSection = (section, isMobile) => {
+    setActiveSection(section);
+    if (isMobile) {
+      setMobileView("detail");
+    }
+  };
+  const renderSectionContent = () => {
+    if (activeSection === "general") {
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(GeneralSettingsContent, { draft, setDraft });
+    }
+    if (activeSection === "portfolio") {
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(
+        PortfolioSettingsContent,
+        {
+          draft,
+          setDraft,
+          tickers,
+          totalAllocation,
+          onConfirm: () => {
+            const next = { ...draft, isConfigured: true };
+            onConfirmSettings(next);
+            onPageChange("dashboard");
+            ctx.api.logger.info("Value averaging settings confirmed");
+          }
+        }
+      );
+    }
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(AboutSettingsContent, { draft });
+  };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Page, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(PageHeader, { heading: "Value Averaging Settings", actions: headerActions }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(PageContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-4 lg:grid-cols-2", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { children: "Top-up strategy" }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-4 text-sm", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-medium", children: "Top-up mode" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                "button",
-                {
-                  type: "button",
-                  className: `inline-flex h-9 items-center rounded-md border px-3 ${draft.topUpMode === "amount" ? "bg-primary text-primary-foreground" : ""}`,
-                  onClick: () => setDraft((prev) => ({ ...prev, topUpMode: "amount" })),
-                  children: "Fixed amount"
-                }
-              ),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                "button",
-                {
-                  type: "button",
-                  className: `inline-flex h-9 items-center rounded-md border px-3 ${draft.topUpMode === "percentage" ? "bg-primary text-primary-foreground" : ""}`,
-                  onClick: () => setDraft((prev) => ({ ...prev, topUpMode: "percentage" })),
-                  children: "Percentage"
-                }
-              )
-            ] })
-          ] }),
-          draft.topUpMode === "amount" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "block space-y-1", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: "Top-up amount (USD)" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "input",
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(PageContent, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden lg:flex lg:w-full lg:justify-start", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex w-full max-w-6xl flex-col px-2 py-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-10", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("aside", { className: "hidden w-[240px] shrink-0 lg:sticky lg:top-24 lg:flex lg:flex-col lg:self-start", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-6", children: SETTINGS_SECTIONS.map((section) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground pl-2 text-[11px] font-semibold uppercase tracking-[0.2em]", children: section.title }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("nav", { className: "flex flex-col space-y-1", children: section.items.map((item) => {
+            const isActive = activeSection === item.key;
+            return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "button",
               {
-                type: "number",
-                min: 0,
-                value: draft.topUpAmount,
-                onChange: (event) => setDraft((prev) => ({
-                  ...prev,
-                  topUpAmount: Math.max(0, Number(event.target.value) || 0)
-                })),
-                className: "border-input bg-background h-9 w-full rounded-md border px-3"
-              }
-            )
-          ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "block space-y-1", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: "Top-up percentage (%)" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "input",
-              {
-                type: "number",
-                min: 0,
-                max: 100,
-                value: draft.topUpPercentage,
-                onChange: (event) => setDraft((prev) => ({
-                  ...prev,
-                  topUpPercentage: Math.min(100, Math.max(0, Number(event.target.value) || 0))
-                })),
-                className: "border-input bg-background h-9 w-full rounded-md border px-3"
-              }
-            )
+                type: "button",
+                onClick: () => selectSection(item.key, false),
+                className: `inline-flex h-10 items-center justify-start gap-2.5 rounded-md px-2.5 text-left text-sm ${isActive ? "bg-muted text-foreground font-medium hover:bg-muted" : "text-muted-foreground font-normal hover:bg-muted/50 hover:text-foreground"}`,
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "inline-flex items-center justify-center [&_svg]:size-[15px]", children: item.icon }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: item.title })
+                ]
+              },
+              item.key
+            );
+          }) })
+        ] }, section.title)) }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-8 min-w-0 flex-1", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full max-w-4xl space-y-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-xl font-bold tracking-tight", children: sectionMeta.title }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-sm", children: sectionMeta.description })
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "flex items-center justify-between rounded-md border px-3 py-2", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Enable maximum top-up amount" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "input",
-              {
-                type: "checkbox",
-                checked: draft.maxTopUpEnabled,
-                onChange: (event) => setDraft((prev) => ({ ...prev, maxTopUpEnabled: event.target.checked })),
-                className: "h-4 w-4"
-              }
-            )
-          ] }),
-          draft.maxTopUpEnabled && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-2 font-medium", children: "Preset multipliers" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-wrap gap-2", children: PRESET_MULTIPLIERS.map((value) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                "button",
-                {
-                  type: "button",
-                  onClick: () => setDraft((prev) => ({ ...prev, maxTopUpMultiplier: value })),
-                  className: `inline-flex h-8 items-center rounded-md border px-2.5 ${draft.maxTopUpMultiplier === value ? "bg-primary text-primary-foreground" : ""}`,
-                  children: [
-                    value,
-                    "x"
-                  ]
-                },
-                value
-              )) })
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "block space-y-2", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-medium", children: [
-                "Custom multiplier: ",
-                draft.maxTopUpMultiplier.toFixed(1),
-                "x"
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border-border border-b" }),
+          renderSectionContent()
+        ] }) })
+      ] }) }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-4 lg:hidden", children: mobileView === "menu" ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-4", children: SETTINGS_SECTIONS.map((section) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground px-2 text-xs font-semibold uppercase tracking-widest", children: section.title }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: "p-2", children: section.items.map((item) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "button",
+          {
+            type: "button",
+            onClick: () => selectSection(item.key, true),
+            className: "hover:bg-accent hover:text-accent-foreground flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground", children: item.icon }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "min-w-0", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block font-medium", children: item.title }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground block truncate text-xs", children: item.subtitle })
               ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                "input",
-                {
-                  type: "range",
-                  min: 1,
-                  max: 10,
-                  step: 0.1,
-                  value: draft.maxTopUpMultiplier,
-                  onChange: (event) => setDraft((prev) => ({
-                    ...prev,
-                    maxTopUpMultiplier: Number(event.target.value)
-                  })),
-                  className: "w-full"
-                }
-              )
-            ] })
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "block space-y-1", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: "Growth period (months, for notification)" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "input",
-              {
-                type: "number",
-                min: 1,
-                max: 240,
-                value: draft.growthPeriodMonths,
-                onChange: (event) => setDraft((prev) => ({
-                  ...prev,
-                  growthPeriodMonths: Math.min(240, Math.max(1, Number(event.target.value) || 1))
-                })),
-                className: "border-input bg-background h-9 w-full rounded-md border px-3"
-              }
-            )
-          ] })
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { children: "Ticker selection and allocation" }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-3 text-sm", children: [
-          tickers.map((ticker) => {
-            const enabled = draft.enabledTickers[ticker.id];
-            return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2 rounded-md border p-3", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "font-medium", children: [
-                    ticker.symbol,
-                    " - ",
-                    ticker.name
-                  ] }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground text-xs", children: ticker.accountName })
-                ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "flex items-center gap-2", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs", children: "Enable" }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "input",
-                    {
-                      type: "checkbox",
-                      checked: enabled,
-                      onChange: (event) => setDraft((prev) => ({
-                        ...prev,
-                        enabledTickers: {
-                          ...prev.enabledTickers,
-                          [ticker.id]: event.target.checked
-                        }
-                      })),
-                      className: "h-4 w-4"
-                    }
-                  )
-                ] })
-              ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "block space-y-1", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground text-xs", children: "Allocation in value averaging portfolio (%)" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "input",
-                  {
-                    type: "number",
-                    min: 0,
-                    max: 100,
-                    disabled: !enabled,
-                    value: draft.tickerAllocations[ticker.id] ?? 0,
-                    onChange: (event) => setDraft((prev) => ({
-                      ...prev,
-                      tickerAllocations: {
-                        ...prev.tickerAllocations,
-                        [ticker.id]: Math.min(100, Math.max(0, Number(event.target.value) || 0))
-                      }
-                    })),
-                    className: "border-input bg-background disabled:bg-muted h-9 w-full rounded-md border px-3"
-                  }
-                )
-              ] })
-            ] }, ticker.id);
-          }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-muted rounded-md px-3 py-2 text-xs", children: [
-            "Enabled allocation total: ",
-            totalAllocation.toFixed(2),
-            "%"
-          ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.ChevronRight, { className: "text-muted-foreground ml-auto size-4" })
+            ]
+          },
+          item.key
+        )) }) })
+      ] }, section.title)) }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(
             "button",
             {
               type: "button",
-              onClick: () => {
-                const next = { ...draft, isConfigured: true };
-                onConfirmSettings(next);
-                onPageChange("dashboard");
-                ctx.api.logger.info("Value averaging settings confirmed");
-              },
-              className: "bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 w-full items-center justify-center rounded-md px-3 text-sm font-medium",
-              children: "Confirm settings"
+              onClick: () => setMobileView("menu"),
+              className: "hover:bg-accent inline-flex h-8 w-8 items-center justify-center rounded-md border",
+              children: /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.ArrowLeft, { className: "size-4" })
             }
-          )
-        ] })
-      ] })
-    ] }) })
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-lg font-bold tracking-tight", children: activeNavItem?.title ?? "Section" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground truncate text-xs", children: activeNavItem?.subtitle ?? sectionMeta.description })
+          ] })
+        ] }),
+        renderSectionContent()
+      ] }) })
+    ] })
   ] });
 }
 function toCurrency(value) {

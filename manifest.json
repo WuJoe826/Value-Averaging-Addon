@@ -1,7 +1,7 @@
 {
   "id": "value-averaging-addon",
   "name": "Value Averaging Calculator",
-  "version": "1.1.0",
+  "version": "1.0.0",
   "description": "Automates recurring investment calculations using the value averaging method – helping you grow your portfolio along a predefined target path, regardless of market fluctuations.",
   "author": "WuJoe826",
   "main": "dist/addon.js",

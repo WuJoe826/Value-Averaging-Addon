@@ -58,19 +58,19 @@ export function PortfolioSettingsContent({
     const enabled = draft.enabledTickers[ticker.id];
     return (
       <div key={ticker.id} className="space-y-3 p-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center justify-between gap-3">
           <div className="min-w-0 flex items-center gap-3">
             <div className="text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border">
               <Icons.Briefcase className="h-5 w-5" />
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-semibold">
                 {ticker.symbol} - {ticker.name}
               </div>
               <div className="text-muted-foreground truncate text-xs">{ticker.accountName}</div>
             </div>
           </div>
-          <label className="flex items-center gap-2 self-end sm:self-auto">
+          <label className="flex shrink-0 items-center gap-2">
             <span
               className={`rounded-md px-2 py-0.5 text-[11px] font-medium ${enabled ? "text-success" : "text-muted-foreground"}`}
             >

@@ -1,4 +1,7 @@
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
   Button,
   EmptyPlaceholder,
   Icons,
@@ -11,20 +14,49 @@ import React, { useMemo, useState } from "react";
 import type { PortfolioTicker, ValueAveragingSettings } from "../../types";
 
 export interface PortfolioSettingsContentProps {
+  layout: "desktop" | "mobile";
   draft: ValueAveragingSettings;
   setDraft: React.Dispatch<React.SetStateAction<ValueAveragingSettings>>;
   tickers: PortfolioTicker[];
   totalAllocation: number;
+  isAllocationValid: boolean;
+  onReset: () => void;
   onConfirm: () => void;
 }
 
 type FilterType = "all" | "enabled" | "disabled";
 
+function TickerLogo({ symbol }: { symbol: string }) {
+  const fullSymbol = symbol.toUpperCase();
+  const baseSymbol = fullSymbol.split(/[.:-]/)[0];
+  const primaryLogoUrl = `/ticker-logos/${fullSymbol}.png`;
+  const fallbackLogoUrl = `/ticker-logos/${baseSymbol}.png`;
+
+  return (
+    <Avatar className="bg-primary/80 border-white/20 h-10 w-10 shrink-0">
+      <AvatarImage src={primaryLogoUrl} alt={fullSymbol} className="object-contain p-2" />
+      <AvatarFallback>
+        <Avatar className="bg-primary/80 border-white/20 text-white">
+          <AvatarImage src={fallbackLogoUrl} alt={fullSymbol} className="object-contain p-2" />
+          <AvatarFallback className="bg-transparent text-xs font-medium">
+            <span className="p-1" title={fullSymbol}>
+              {baseSymbol ? baseSymbol.slice(0, 4) : "•"}
+            </span>
+          </AvatarFallback>
+        </Avatar>
+      </AvatarFallback>
+    </Avatar>
+  );
+}
+
 export function PortfolioSettingsContent({
+  layout,
   draft,
   setDraft,
   tickers,
   totalAllocation,
+  isAllocationValid,
+  onReset,
   onConfirm,
 }: PortfolioSettingsContentProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -60,9 +92,7 @@ export function PortfolioSettingsContent({
       <div key={ticker.id} className="space-y-3 p-4">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0 flex items-center gap-3">
-            <div className="text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border">
-              <Icons.Briefcase className="h-5 w-5" />
-            </div>
+            <TickerLogo symbol={ticker.symbol} />
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-semibold">
                 {ticker.symbol} - {ticker.name}
@@ -198,12 +228,32 @@ export function PortfolioSettingsContent({
 
         <div className="flex items-center justify-between rounded-md px-3 py-2">
           <span className="text-sm font-medium">Allocation total:</span>
-          <span className="text-lg font-semibold">{totalAllocation.toFixed(2)}%</span>
+          <span className={`text-lg font-semibold ${isAllocationValid ? "" : "text-destructive"}`}>
+            {totalAllocation.toFixed(2)}%
+          </span>
         </div>
 
-        <Button type="button" onClick={onConfirm} className="h-10 w-full">
-          Confirm settings
-        </Button>
+        <div>
+          {layout === "desktop" ? (
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={onReset} className="h-10 w-[140px]">
+                Reset changes
+              </Button>
+              <Button type="button" onClick={onConfirm} disabled={!isAllocationValid} className="h-10 w-[140px]">
+                Save changes
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <Button type="button" onClick={onConfirm} disabled={!isAllocationValid} className="h-10 w-[80%]">
+                Save changes
+              </Button>
+              <Button type="button" variant="outline" onClick={onReset} className="h-10 w-[80%]">
+                Reset changes
+              </Button>
+            </div>
+          )}
+        </div>
     </div>
   );
 }

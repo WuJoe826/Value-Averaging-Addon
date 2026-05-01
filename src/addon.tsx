@@ -201,31 +201,35 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
 
   if (currentPage === "settings") {
     return (
-      <SettingsPage
+      <div className="mb-5">
+        <SettingsPage
+          ctx={ctx}
+          baseCurrency={baseCurrency}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          settings={settings}
+          tickers={tickers}
+          onConfirmSettings={confirmSettings}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="pb-5">
+      <DashboardPage
         ctx={ctx}
         baseCurrency={baseCurrency}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
         settings={settings}
         tickers={tickers}
-        onConfirmSettings={confirmSettings}
+        isTickersLoading={isTickersLoading}
+        onFetchLatestPrices={fetchLatestPrices}
+        onAutoGenerateTransactions={autoGenerateTransactions}
+        generatedTransactions={generatedTransactions}
       />
-    );
-  }
-
-  return (
-    <DashboardPage
-      ctx={ctx}
-      baseCurrency={baseCurrency}
-      currentPage={currentPage}
-      onPageChange={setCurrentPage}
-      settings={settings}
-      tickers={tickers}
-      isTickersLoading={isTickersLoading}
-      onFetchLatestPrices={fetchLatestPrices}
-      onAutoGenerateTransactions={autoGenerateTransactions}
-      generatedTransactions={generatedTransactions}
-    />
+    </div>
   );
 }
 

@@ -46,10 +46,12 @@ export function buildDefaultSettings(): ValueAveragingSettings {
   const today = getTodayIsoDate();
   return {
     topUpMode: "amount",
+    overflowGainsAction: "hold-to-next-round",
+    purchaseUnit: "fractional-unit",
     topUpAmount: 500,
     topUpPercentage: 2,
     maxTopUpEnabled: true,
-    maxTopUpMultiplier: null,
+    maxTopUpMultiplier: 10,
     growthSchedule: {
       startDate: today,
       interval: "monthly",
@@ -96,6 +98,15 @@ export function readSettings(): ValueAveragingSettings {
     return {
       ...defaults,
       ...parsed,
+      maxTopUpMultiplier: parsed.maxTopUpMultiplier == null ? defaults.maxTopUpMultiplier : parsed.maxTopUpMultiplier,
+      overflowGainsAction:
+        parsed.overflowGainsAction === "sell" || parsed.overflowGainsAction === "hold-to-next-round"
+          ? parsed.overflowGainsAction
+          : defaults.overflowGainsAction,
+      purchaseUnit:
+        parsed.purchaseUnit === "whole-unit" || parsed.purchaseUnit === "fractional-unit"
+          ? parsed.purchaseUnit
+          : defaults.purchaseUnit,
       growthSchedule: {
         startDate,
         interval,

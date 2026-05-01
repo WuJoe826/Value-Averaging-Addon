@@ -27,6 +27,9 @@ export function AboutSettingsContent({ draft }: AboutSettingsContentProps) {
             Top-up mode: {draft.topUpMode === "amount" ? "Fixed amount" : "Percentage"}
           </div>
           <div className="text-muted-foreground text-xs">
+            Overflow gains: {draft.overflowGainsAction === "sell" ? "Sell" : "Hold to Next Round"}
+          </div>
+          <div className="text-muted-foreground text-xs">
             Growth schedule: {intervalLabel} from {draft.growthSchedule.startDate}
           </div>
         </div>

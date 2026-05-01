@@ -38,6 +38,27 @@ export default function SettingsPage({
 
   const persistRef = useRef(onConfirmSettings);
   persistRef.current = onConfirmSettings;
+  const totalAllocation = useMemo(
+    () =>
+      tickers
+        .filter((ticker) => draft.enabledTickers[ticker.id])
+        .reduce((total, ticker) => total + (draft.tickerAllocations[ticker.id] ?? 0), 0),
+    [draft, tickers],
+  );
+  const roundedAllocationTotal = useMemo(
+    () => (totalAllocation >= 99.9 && totalAllocation <= 100 ? 100 : totalAllocation),
+    [totalAllocation],
+  );
+  const isAllocationValid = useMemo(
+    () => totalAllocation >= 99.9 && totalAllocation <= 100,
+    [totalAllocation],
+  );
+  const hasPortfolioChanges = useMemo(
+    () =>
+      JSON.stringify(draft.enabledTickers) !== JSON.stringify(settings.enabledTickers) ||
+      JSON.stringify(draft.tickerAllocations) !== JSON.stringify(settings.tickerAllocations),
+    [draft.enabledTickers, draft.tickerAllocations, settings.enabledTickers, settings.tickerAllocations],
+  );
 
   useEffect(() => {
     setDraft(settings);
@@ -47,22 +68,18 @@ export default function SettingsPage({
     if (JSON.stringify(draft) === JSON.stringify(settings)) {
       return;
     }
+    if (hasPortfolioChanges && !isAllocationValid) {
+      return;
+    }
     const id = window.setTimeout(() => {
       persistRef.current({ ...draft });
       ctx.api.logger.info("Value averaging settings auto-saved (local storage)");
     }, 400);
     return () => window.clearTimeout(id);
-  }, [draft, settings]);
+  }, [draft, hasPortfolioChanges, isAllocationValid, settings]);
   const allNavItems = SETTINGS_SECTIONS.flatMap((section) => section.items);
   const activeNavItem = allNavItems.find((item) => item.key === activeSection);
   const sectionMeta = getSectionMeta(activeSection);
-  const totalAllocation = useMemo(
-    () =>
-      tickers
-        .filter((ticker) => draft.enabledTickers[ticker.id])
-        .reduce((total, ticker) => total + (draft.tickerAllocations[ticker.id] ?? 0), 0),
-    [draft, tickers],
-  );
 
   const headerActions = <PageTabSelector currentPage={currentPage} onPageChange={onPageChange} />;
 
@@ -73,6 +90,13 @@ export default function SettingsPage({
   const selectSectionMobile = (section: PreferenceSection) => {
     setActiveSection(section);
     setMobileView("detail");
+  };
+  const resetPortfolioDraft = () => {
+    setDraft((prev) => ({
+      ...prev,
+      enabledTickers: { ...settings.enabledTickers },
+      tickerAllocations: { ...settings.tickerAllocations },
+    }));
   };
 
   const renderDesktopBody = () => {
@@ -94,9 +118,11 @@ export default function SettingsPage({
           draft={draft}
           setDraft={setDraft}
           tickers={tickers}
-          totalAllocation={totalAllocation}
+          totalAllocation={roundedAllocationTotal}
+          isAllocationValid={isAllocationValid}
           title={sectionMeta.title}
           description={sectionMeta.description}
+          onReset={resetPortfolioDraft}
           onConfirmSettings={onConfirmSettings}
           onPageChange={onPageChange}
         />
@@ -131,9 +157,11 @@ export default function SettingsPage({
           draft={draft}
           setDraft={setDraft}
           tickers={tickers}
-          totalAllocation={totalAllocation}
+          totalAllocation={roundedAllocationTotal}
+          isAllocationValid={isAllocationValid}
           title={sectionMeta.title}
           description={sectionMeta.description}
+          onReset={resetPortfolioDraft}
           onConfirmSettings={onConfirmSettings}
           onPageChange={onPageChange}
         />

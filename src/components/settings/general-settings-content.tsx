@@ -19,10 +19,9 @@ import {
   normalizeIsoDate,
 } from "../../lib";
 import type { ValueAveragingSettings } from "../../types";
-import { InfinityGlyph } from "./infinity-glyph";
 import { IntervalInput } from "./interval-input";
 
-const PRESET_MULTIPLIERS = [2, 3, 4, 5] as const;
+const PRESET_MULTIPLIERS = [2, 3, 4, 5, 10] as const;
 
 export interface GeneralSettingsContentProps {
   baseCurrency: string;
@@ -117,6 +116,50 @@ export function GeneralSettingsContent({ baseCurrency, draft, setDraft }: Genera
             </div>
           )}
 
+          <div className="flex flex-col gap-3">
+            <Label className="text-base">Overflow Gains</Label>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant={draft.overflowGainsAction === "hold-to-next-round" ? "default" : "outline"}
+                onClick={() => setDraft((prev) => ({ ...prev, overflowGainsAction: "hold-to-next-round" }))}
+              >
+                Hold to Next Round
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={draft.overflowGainsAction === "sell" ? "default" : "outline"}
+                onClick={() => setDraft((prev) => ({ ...prev, overflowGainsAction: "sell" }))}
+              >
+                Sell
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <Label className="text-base">Purchase Unit</Label>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant={draft.purchaseUnit === "fractional-unit" ? "default" : "outline"}
+                onClick={() => setDraft((prev) => ({ ...prev, purchaseUnit: "fractional-unit" }))}
+              >
+                Fractional Unit
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={draft.purchaseUnit === "whole-unit" ? "default" : "outline"}
+                onClick={() => setDraft((prev) => ({ ...prev, purchaseUnit: "whole-unit" }))}
+              >
+                Whole Unit
+              </Button>
+            </div>
+          </div>
+
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0 space-y-0.5">
               <Label htmlFor="va-max-top-up" className="text-base">
@@ -139,16 +182,6 @@ export function GeneralSettingsContent({ baseCurrency, draft, setDraft }: Genera
             <div className="flex flex-col gap-3">
               <Label>Multipliers</Label>
               <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={draft.maxTopUpMultiplier === null ? "default" : "outline"}
-                  onClick={() => setDraft((prev) => ({ ...prev, maxTopUpMultiplier: null }))}
-                  className="gap-1.5"
-                  aria-label="No limit"
-                >
-                  <InfinityGlyph />
-                </Button>
                 {PRESET_MULTIPLIERS.map((value) => (
                   <Button
                     key={value}

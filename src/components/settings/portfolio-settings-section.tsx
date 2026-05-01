@@ -11,8 +11,10 @@ export interface PortfolioSettingsSectionProps {
   setDraft: React.Dispatch<React.SetStateAction<ValueAveragingSettings>>;
   tickers: PortfolioTicker[];
   totalAllocation: number;
+  isAllocationValid: boolean;
   title: string;
   description: string;
+  onReset: () => void;
   onConfirmSettings: (next: ValueAveragingSettings) => void;
   onPageChange: (nextPage: AddonPageTab) => void;
 }
@@ -24,22 +26,30 @@ export function PortfolioSettingsSection({
   setDraft,
   tickers,
   totalAllocation,
+  isAllocationValid,
   title,
   description,
+  onReset,
   onConfirmSettings,
   onPageChange,
 }: PortfolioSettingsSectionProps) {
   const content = (
     <PortfolioSettingsContent
+      layout={layout}
       draft={draft}
       setDraft={setDraft}
       tickers={tickers}
       totalAllocation={totalAllocation}
+      isAllocationValid={isAllocationValid}
+      onReset={onReset}
       onConfirm={() => {
+        if (!isAllocationValid) {
+          return;
+        }
         const next = { ...draft, isConfigured: true };
         onConfirmSettings(next);
         onPageChange("dashboard");
-        ctx.api.logger.info("Value averaging settings confirmed");
+        ctx.api.logger.info("Value averaging settings saved");
       }}
     />
   );

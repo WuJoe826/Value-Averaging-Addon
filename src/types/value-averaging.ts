@@ -32,6 +32,8 @@ export interface GrowthSchedule {
 
 export interface ValueAveragingSettings {
   topUpMode: "amount" | "percentage";
+  overflowGainsAction: "hold-to-next-round" | "sell";
+  purchaseUnit: "fractional-unit" | "whole-unit";
   topUpAmount: number;
   topUpPercentage: number;
   maxTopUpEnabled: boolean;

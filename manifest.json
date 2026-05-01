@@ -10,7 +10,7 @@
   "permissions": [
     {
       "category": "ui",
-      "functions": ["sidebar.addItem"],
+      "functions": ["sidebar.addItem", "router.add"],
       "purpose": "Add navigation items to the sidebar"
     }
   ],

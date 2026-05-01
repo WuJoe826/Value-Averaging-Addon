@@ -22,7 +22,7 @@ export default function enable(ctx: AddonContext) {
   const sidebarItem = ctx.sidebar.addItem({
     id: "value-averaging-addon",
     label: "Value Averaging",
-    icon: <Icons.Money className="h-5 w-5" />,
+    icon: <Icons.Activity2 className="h-5 w-5" />,
     route: "/addon/value-averaging-addon",
     order: 100,
   });

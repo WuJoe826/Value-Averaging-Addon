@@ -1044,41 +1044,51 @@ const createLucideIcon = (iconName, iconNode) => {
   return Component;
 };
 const __iconNode$c = [
+  [
+    "path",
+    {
+      d: "M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2",
+      key: "169zse"
+    }
+  ]
+];
+const Activity = createLucideIcon("activity", __iconNode$c);
+const __iconNode$b = [
   ["path", { d: "m12 19-7-7 7-7", key: "1l729n" }],
   ["path", { d: "M19 12H5", key: "x3x0zl" }]
 ];
-const ArrowLeft = createLucideIcon("arrow-left", __iconNode$c);
-const __iconNode$b = [
+const ArrowLeft = createLucideIcon("arrow-left", __iconNode$b);
+const __iconNode$a = [
   ["path", { d: "M5 12h14", key: "1ays0h" }],
   ["path", { d: "m12 5 7 7-7 7", key: "xquz4c" }]
 ];
-const ArrowRight = createLucideIcon("arrow-right", __iconNode$b);
-const __iconNode$a = [["path", { d: "M20 6 9 17l-5-5", key: "1gmf2c" }]];
-const Check = createLucideIcon("check", __iconNode$a);
-const __iconNode$9 = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
-const ChevronDown = createLucideIcon("chevron-down", __iconNode$9);
-const __iconNode$8 = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
-const ChevronRight = createLucideIcon("chevron-right", __iconNode$8);
-const __iconNode$7 = [["path", { d: "m18 15-6-6-6 6", key: "153udz" }]];
-const ChevronUp = createLucideIcon("chevron-up", __iconNode$7);
-const __iconNode$6 = [
+const ArrowRight = createLucideIcon("arrow-right", __iconNode$a);
+const __iconNode$9 = [["path", { d: "M20 6 9 17l-5-5", key: "1gmf2c" }]];
+const Check = createLucideIcon("check", __iconNode$9);
+const __iconNode$8 = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
+const ChevronDown = createLucideIcon("chevron-down", __iconNode$8);
+const __iconNode$7 = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
+const ChevronRight = createLucideIcon("chevron-right", __iconNode$7);
+const __iconNode$6 = [["path", { d: "m18 15-6-6-6 6", key: "153udz" }]];
+const ChevronUp = createLucideIcon("chevron-up", __iconNode$6);
+const __iconNode$5 = [
   ["path", { d: "m7 15 5 5 5-5", key: "1hf1tw" }],
   ["path", { d: "m7 9 5-5 5 5", key: "sgt6xg" }]
 ];
-const ChevronsUpDown = createLucideIcon("chevrons-up-down", __iconNode$6);
-const __iconNode$5 = [
+const ChevronsUpDown = createLucideIcon("chevrons-up-down", __iconNode$5);
+const __iconNode$4 = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
   ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
   ["path", { d: "m9 9 6 6", key: "z0biqf" }]
 ];
-const CircleX = createLucideIcon("circle-x", __iconNode$5);
-const __iconNode$4 = [["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }]];
-const Circle = createLucideIcon("circle", __iconNode$4);
-const __iconNode$3 = [
+const CircleX = createLucideIcon("circle-x", __iconNode$4);
+const __iconNode$3 = [["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }]];
+const Circle = createLucideIcon("circle", __iconNode$3);
+const __iconNode$2 = [
   ["line", { x1: "12", x2: "12", y1: "2", y2: "22", key: "7eqyqh" }],
   ["path", { d: "M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6", key: "1b0p4s" }]
 ];
-const DollarSign = createLucideIcon("dollar-sign", __iconNode$3);
+const DollarSign = createLucideIcon("dollar-sign", __iconNode$2);
 const __iconNode$1 = [
   ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
   ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
@@ -23636,29 +23646,9 @@ CommandItem.displayName = _e.Item.displayName;
 var Icons = {
   Check,
   Search,
+  Activity2: Activity,
   DollarSign,
-  XCircle: CircleX,
-  Money: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-    "svg",
-    {
-      xmlns: "http://www.w3.org/2000/svg",
-      ...props,
-      width: size2 ?? 32,
-      height: size2 ?? 32,
-      fill: "currentColor",
-      viewBox: "0 0 256 256",
-      children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "path",
-          {
-            d: "M160,128a32,32,0,1,1-32-32A32,32,0,0,1,160,128Zm40-64a48.85,48.85,0,0,0,40,40V64Zm0,128h40V152A48.85,48.85,0,0,0,200,192ZM16,152v40H56A48.85,48.85,0,0,0,16,152Zm0-48A48.85,48.85,0,0,0,56,64H16Z",
-            opacity: "0.2"
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M128,88a40,40,0,1,0,40,40A40,40,0,0,0,128,88Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,152ZM240,56H16a8,8,0,0,0-8,8V192a8,8,0,0,0,8,8H240a8,8,0,0,0,8-8V64A8,8,0,0,0,240,56ZM24,72H45.37A40.81,40.81,0,0,1,24,93.37Zm0,112V162.63A40.81,40.81,0,0,1,45.37,184Zm208,0H210.63A40.81,40.81,0,0,1,232,162.63Zm0-38.35A56.78,56.78,0,0,0,193.65,184H62.35A56.78,56.78,0,0,0,24,145.65v-35.3A56.78,56.78,0,0,0,62.35,72h131.3A56.78,56.78,0,0,0,232,110.35Zm0-52.28A40.81,40.81,0,0,1,210.63,72H232Z" })
-      ]
-    }
-  )
+  XCircle: CircleX
 };
 var Avatar = React.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(
   Root$9,
@@ -25332,7 +25322,7 @@ function enable(ctx) {
   const sidebarItem = ctx.sidebar.addItem({
     id: "value-averaging-addon",
     label: "Value Averaging",
-    icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.Money, { className: "h-5 w-5" }),
+    icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.Activity2, { className: "h-5 w-5" }),
     route: "/addon/value-averaging-addon",
     order: 100
   });

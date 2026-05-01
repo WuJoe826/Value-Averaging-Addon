@@ -1,3 +1,7 @@
-// Export your components here
-// Example:
-// export { default as MyComponent } from './MyComponent';
+export { PageTabSelector } from "./page-tab-selector";
+export type { AddonPageTab } from "./page-tab-selector";
+export {
+  AboutSettingsContent,
+  GeneralSettingsContent,
+  PortfolioSettingsContent,
+} from "./settings-content";

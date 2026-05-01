@@ -1,1 +1,7 @@
-export type { PortfolioTicker, ValueAveragingSettings } from "./value-averaging";
+export type {
+  GrowthEndingMode,
+  GrowthInterval,
+  GrowthSchedule,
+  PortfolioTicker,
+  ValueAveragingSettings,
+} from "./value-averaging";

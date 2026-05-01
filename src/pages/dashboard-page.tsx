@@ -13,7 +13,7 @@ import {
 } from "@wealthfolio/ui";
 import React, { useMemo, useState } from "react";
 import { PageTabSelector, type AddonPageTab } from "../components";
-import { formatCurrency } from "../lib";
+import { formatCurrency, getGrowthMonthsEquivalent } from "../lib";
 import type { PortfolioTicker, ValueAveragingSettings } from "../types";
 
 interface DashboardPageProps {
@@ -45,10 +45,11 @@ function buildInvestmentPlan(
         100;
 
   const plans: Record<string, InvestmentPlan> = {};
+  const growthMonths = getGrowthMonthsEquivalent(settings.growthSchedule);
 
   tickers.forEach((ticker) => {
     const allocation = (settings.tickerAllocations[ticker.id] ?? 0) / 100;
-    const growthRatio = settings.growthPeriodMonths / 120;
+    const growthRatio = growthMonths / 120;
     const targetValue = ticker.totalInvested * (1 + growthRatio);
     const valueGap = Math.max(0, targetValue - ticker.currentPrice);
 

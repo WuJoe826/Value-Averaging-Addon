@@ -56,6 +56,8 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
     ctx.api.logger.info(`Auto-generated ${generated.length} value averaging transactions`);
   };
 
+  // Addon-specific state → localStorage (saveSettings). Host app settings → ctx.api.settings:
+  // https://wealthfolio.app/docs/addons/api-reference/
   const confirmSettings = (nextSettings: ValueAveragingSettings) => {
     setSettings(nextSettings);
     saveSettings(nextSettings);

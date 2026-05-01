@@ -12,7 +12,7 @@ Configure your value averaging strategy with precision:
 - **Maximum top-up multiplier** – Protect against extreme market drops by setting a cap:
   - Preset multipliers: 1.5×, 2×, 3×, 4×, 5×
   - Custom multiplier: adjustable via slider (**1× to 10×**)
-- **Growth period** – Set the target time horizon; the addon notifies you when each period ends or when recalibration is needed
+- **Growth schedule** – Set start date, interval, and ending mode to derive each cycle’s target portfolio value in the dashboard
 - **Portfolio allocation per ticker** – Add tickers from different accounts:
   - Toggle switch to include/exclude each account
   - Assign percentage weights to each ticker within the value averaging portfolio
@@ -49,7 +49,7 @@ Each row displays:
 1. **Settings**:  
    - Set base top‑up = $500  
    - Max multiplier = 3× → maximum allowed top‑up = $1,500  
-   - Growth period = 12 months  
+   - Growth schedule = Start today, Monthly interval, 12 installments  
    - Add tickers `VTI`, `BND`, `VXUS` with 50%, 30%, 20% weights
 
 2. **Dashboard**:  

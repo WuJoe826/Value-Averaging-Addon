@@ -1,4 +1,11 @@
-import type { PortfolioTicker, ValueAveragingSettings } from "../types";
+import {
+  calculateEndDate,
+  clampInstallments,
+  getTodayIsoDate,
+  isGrowthInterval,
+  normalizeIsoDate,
+} from "./growth-schedule";
+import type { GrowthSchedule, PortfolioTicker, ValueAveragingSettings } from "../types";
 
 const SETTINGS_STORAGE_KEY = "value-averaging-addon:settings";
 
@@ -36,13 +43,21 @@ export const DEFAULT_TICKERS: PortfolioTicker[] = [
 ];
 
 export function buildDefaultSettings(): ValueAveragingSettings {
+  const today = getTodayIsoDate();
   return {
     topUpMode: "amount",
     topUpAmount: 500,
     topUpPercentage: 2,
     maxTopUpEnabled: true,
-    maxTopUpMultiplier: 3,
-    growthPeriodMonths: 12,
+    maxTopUpMultiplier: null,
+    growthSchedule: {
+      startDate: today,
+      interval: "monthly",
+      endDateEnabled: false,
+      endingMode: "number-of-installments",
+      installments: 1,
+      endDate: today,
+    },
     enabledTickers: {},
     tickerAllocations: {},
     isConfigured: false,
@@ -62,11 +77,33 @@ export function readSettings(): ValueAveragingSettings {
   }
 
   try {
-    const parsed = JSON.parse(rawSettings) as Partial<ValueAveragingSettings>;
+    const parsed = JSON.parse(rawSettings) as Partial<ValueAveragingSettings> & {
+      growthPeriodMonths?: number;
+      growthSchedule?: Partial<GrowthSchedule>;
+    };
+    const legacyInstallments = clampInstallments(parsed.growthPeriodMonths ?? 1);
+    const rawSchedule: Partial<GrowthSchedule> = parsed.growthSchedule ?? {};
+    const startDate = normalizeIsoDate(rawSchedule.startDate ?? defaults.growthSchedule.startDate);
+    const interval = rawSchedule.interval && isGrowthInterval(rawSchedule.interval) ? rawSchedule.interval : "monthly";
+    const installments = clampInstallments(rawSchedule.installments ?? legacyInstallments);
+    const endingMode =
+      rawSchedule.endingMode === "specific-date" || rawSchedule.endingMode === "number-of-installments"
+        ? rawSchedule.endingMode
+        : defaults.growthSchedule.endingMode;
+    const endDateEnabled = rawSchedule.endDateEnabled ?? defaults.growthSchedule.endDateEnabled;
+    const endDate = calculateEndDate(startDate, interval, installments);
 
     return {
       ...defaults,
       ...parsed,
+      growthSchedule: {
+        startDate,
+        interval,
+        endDateEnabled,
+        endingMode,
+        installments,
+        endDate,
+      },
       enabledTickers: {
         ...defaults.enabledTickers,
         ...(parsed.enabledTickers ?? {}),

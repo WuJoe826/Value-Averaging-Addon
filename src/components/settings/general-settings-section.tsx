@@ -3,7 +3,7 @@ import type { ValueAveragingSettings } from "../../types";
 import { GeneralSettingsContent } from "./general-settings-content";
 
 export const GENERAL_PAGE_DESCRIPTION =
-  "Configure top-up logic, risk limits, and growth period notifications.";
+  "Configure top-up logic, risk limits, and growth schedule for the value averaging path.";
 
 export interface GeneralSettingsSectionProps {
   layout: "desktop" | "mobile";

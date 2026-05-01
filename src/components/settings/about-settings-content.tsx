@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@wealthfolio/ui";
 import React from "react";
+import { GROWTH_INTERVAL_OPTIONS } from "../../lib";
 import type { ValueAveragingSettings } from "../../types";
 
 export interface AboutSettingsContentProps {
@@ -7,6 +8,9 @@ export interface AboutSettingsContentProps {
 }
 
 export function AboutSettingsContent({ draft }: AboutSettingsContentProps) {
+  const intervalLabel =
+    GROWTH_INTERVAL_OPTIONS.find((option) => option.value === draft.growthSchedule.interval)?.label ?? "Monthly";
+
   return (
     <Card>
       <CardContent className="space-y-4 pt-6 text-sm">
@@ -23,7 +27,7 @@ export function AboutSettingsContent({ draft }: AboutSettingsContentProps) {
             Top-up mode: {draft.topUpMode === "amount" ? "Fixed amount" : "Percentage"}
           </div>
           <div className="text-muted-foreground text-xs">
-            Growth period: {draft.growthPeriodMonths} months
+            Growth schedule: {intervalLabel} from {draft.growthSchedule.startDate}
           </div>
         </div>
         <p className="text-muted-foreground text-xs">

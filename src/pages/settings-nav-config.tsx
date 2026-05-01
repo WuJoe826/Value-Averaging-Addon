@@ -24,7 +24,7 @@ export const SETTINGS_SECTIONS: SettingsNavSection[] = [
       {
         key: "general" as const,
         title: "General",
-        subtitle: "Top-up strategy and growth period",
+        subtitle: "Top-up strategy and growth schedule",
         icon: <Icons.Settings className="size-5" />,
       },
       {

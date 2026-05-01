@@ -10,8 +10,16 @@ import {
   Switch,
 } from "@wealthfolio/ui";
 import React from "react";
+import {
+  calculateEndDate,
+  clampInstallments,
+  GROWTH_INTERVAL_OPTIONS,
+  getTodayIsoDate,
+  normalizeIsoDate,
+} from "../../lib";
 import type { ValueAveragingSettings } from "../../types";
 import { InfinityGlyph } from "./infinity-glyph";
+import { IntervalInput } from "./interval-input";
 
 const PRESET_MULTIPLIERS = [2, 3, 4, 5] as const;
 
@@ -22,6 +30,13 @@ export interface GeneralSettingsContentProps {
 }
 
 export function GeneralSettingsContent({ baseCurrency, draft, setDraft }: GeneralSettingsContentProps) {
+  const growthSchedule = draft.growthSchedule;
+  const calculatedEndDate = calculateEndDate(
+    growthSchedule.startDate,
+    growthSchedule.interval,
+    growthSchedule.installments,
+  );
+
   return (
     <div className="flex flex-col gap-4">
       <Card>
@@ -34,7 +49,7 @@ export function GeneralSettingsContent({ baseCurrency, draft, setDraft }: Genera
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 pt-2">
           <div className="flex flex-col gap-3">
             <Label className="text-base">Top-up mode</Label>
             <div className="flex flex-wrap gap-2">
@@ -113,7 +128,7 @@ export function GeneralSettingsContent({ baseCurrency, draft, setDraft }: Genera
           </div>
 
           {draft.maxTopUpEnabled && (
-            <div className="space-y-3">
+            <div className="flex flex-col gap-3">
               <Label>Multipliers</Label>
               <div className="flex flex-wrap gap-2">
                 <Button
@@ -146,31 +161,152 @@ export function GeneralSettingsContent({ baseCurrency, draft, setDraft }: Genera
       <Card>
         <CardHeader>
           <div>
-            <CardTitle className="text-lg">Growth period</CardTitle>
+            <CardTitle className="text-lg">Growth schedule</CardTitle>
             <CardDescription>
-              Set the number of months over which you expect the value averaging path to grow—used for
-              scheduling reminders and notification context.
+              Define the start date, cadence, and end condition used to derive your value averaging growth path.
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6 pt-2">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="va-growth-months">Months (for notification)</Label>
+            <Label htmlFor="va-growth-start-date">Start date</Label>
             <Input
-              id="va-growth-months"
-              type="number"
-              min={1}
-              max={240}
+              id="va-growth-start-date"
+              type="date"
               className="w-full max-w-[360px]"
-              value={draft.growthPeriodMonths}
+              value={growthSchedule.startDate}
               onChange={(event) =>
                 setDraft((prev) => ({
                   ...prev,
-                  growthPeriodMonths: Math.min(240, Math.max(1, Number(event.target.value) || 1)),
+                  growthSchedule: {
+                    ...prev.growthSchedule,
+                    startDate: normalizeIsoDate(event.target.value || getTodayIsoDate()),
+                    endDate: calculateEndDate(
+                      normalizeIsoDate(event.target.value || getTodayIsoDate()),
+                      prev.growthSchedule.interval,
+                      prev.growthSchedule.installments,
+                    ),
+                  },
                 }))
               }
             />
           </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="va-growth-interval">Interval</Label>
+            <div className="w-full max-w-[360px]" id="va-growth-interval">
+              <IntervalInput
+                value={growthSchedule.interval}
+                options={GROWTH_INTERVAL_OPTIONS}
+                onChange={(nextInterval) =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    growthSchedule: {
+                      ...prev.growthSchedule,
+                      interval: nextInterval,
+                      endDate: calculateEndDate(
+                        prev.growthSchedule.startDate,
+                        nextInterval,
+                        prev.growthSchedule.installments,
+                      ),
+                    },
+                  }))
+                }
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0 space-y-0.5">
+              <Label htmlFor="va-growth-end-date-switch" className="text-base">
+                End date
+              </Label>
+              <p className="text-muted-foreground text-xs">Enable to configure Ending On/After behavior.</p>
+            </div>
+            <Switch
+              id="va-growth-end-date-switch"
+              checked={growthSchedule.endDateEnabled}
+              onCheckedChange={(checked) =>
+                setDraft((prev) => ({
+                  ...prev,
+                  growthSchedule: {
+                    ...prev.growthSchedule,
+                    endDateEnabled: checked,
+                  },
+                }))
+              }
+            />
+          </div>
+
+          {growthSchedule.endDateEnabled && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Ending On/After</Label>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={growthSchedule.endingMode === "specific-date" ? "default" : "outline"}
+                    onClick={() =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        growthSchedule: { ...prev.growthSchedule, endingMode: "specific-date" },
+                      }))
+                    }
+                  >
+                    Specific Date
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={growthSchedule.endingMode === "number-of-installments" ? "default" : "outline"}
+                    onClick={() =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        growthSchedule: { ...prev.growthSchedule, endingMode: "number-of-installments" },
+                      }))
+                    }
+                  >
+                    Number of Installments
+                  </Button>
+                </div>
+              </div>
+
+              {growthSchedule.endingMode === "specific-date" ? (
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="va-growth-end-date">End Date (calculated)</Label>
+                  <Input id="va-growth-end-date" type="date" value={calculatedEndDate} readOnly />
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="va-growth-amounts">Amounts</Label>
+                  <Input
+                    id="va-growth-amounts"
+                    type="number"
+                    min={1}
+                    max={240}
+                    className="w-full max-w-[360px]"
+                    value={growthSchedule.installments}
+                    onChange={(event) => {
+                      const installments = clampInstallments(Number(event.target.value) || 1);
+                      setDraft((prev) => ({
+                        ...prev,
+                        growthSchedule: {
+                          ...prev.growthSchedule,
+                          installments,
+                          endDate: calculateEndDate(
+                            prev.growthSchedule.startDate,
+                            prev.growthSchedule.interval,
+                            installments,
+                          ),
+                        },
+                      }));
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -1,6 +1,6 @@
 import type { AddonContext } from "@wealthfolio/addon-sdk";
 import { Page, PageContent, PageHeader } from "@wealthfolio/ui";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   AboutSettingsSection,
   GeneralSettingsSection,
@@ -36,6 +36,23 @@ export default function SettingsPage({
   const [activeSection, setActiveSection] = useState<PreferenceSection>("general");
   const [mobileView, setMobileView] = useState<MobileView>("menu");
 
+  const persistRef = useRef(onConfirmSettings);
+  persistRef.current = onConfirmSettings;
+
+  useEffect(() => {
+    setDraft(settings);
+  }, [settings]);
+
+  useEffect(() => {
+    if (JSON.stringify(draft) === JSON.stringify(settings)) {
+      return;
+    }
+    const id = window.setTimeout(() => {
+      persistRef.current({ ...draft });
+      ctx.api.logger.info("Value averaging settings auto-saved (local storage)");
+    }, 400);
+    return () => window.clearTimeout(id);
+  }, [draft, settings]);
   const allNavItems = SETTINGS_SECTIONS.flatMap((section) => section.items);
   const activeNavItem = allNavItems.find((item) => item.key === activeSection);
   const sectionMeta = getSectionMeta(activeSection);

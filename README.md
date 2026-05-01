@@ -66,4 +66,4 @@ It lets you configure portfolio weights, top-up rules, and growth schedule, then
 
 ## License
 
-MIT. See `LICENSE`.
+MIT

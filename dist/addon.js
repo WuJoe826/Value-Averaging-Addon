@@ -686,7 +686,7 @@ function getState$6(open) {
   return open ? "open" : "closed";
 }
 var Root$b = Collapsible;
-var Trigger$4 = CollapsibleTrigger;
+var Trigger$5 = CollapsibleTrigger;
 var Content$3 = CollapsibleContent;
 var DirectionContext = React.createContext(void 0);
 function useDirection(localDir) {
@@ -937,7 +937,7 @@ var AccordionTrigger$1 = React.forwardRef(
     const collapsibleContext = useAccordionCollapsibleContext(TRIGGER_NAME$9, __scopeAccordion);
     const collapsibleScope = useCollapsibleScope(__scopeAccordion);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(Collection$3.ItemSlot, { scope: __scopeAccordion, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Trigger$4,
+      Trigger$5,
       {
         "aria-disabled": itemContext.open && !collapsibleContext.collapsible || void 0,
         "data-orientation": accordionContext.orientation,
@@ -1469,7 +1469,7 @@ const __iconNode$D = [
   ["path", { d: "M4 12h16", key: "1lakjw" }],
   ["path", { d: "M4 19h16", key: "1djgab" }]
 ];
-const Menu = createLucideIcon("menu", __iconNode$D);
+const Menu$1 = createLucideIcon("menu", __iconNode$D);
 const __iconNode$C = [
   ["rect", { width: "20", height: "14", x: "2", y: "3", rx: "2", key: "48i651" }],
   ["line", { x1: "8", x2: "16", y1: "21", y2: "21", key: "1svkeh" }],
@@ -3381,7 +3381,7 @@ var DescriptionWarning$1 = ({ contentRef, descriptionId }) => {
   return null;
 };
 var Root$a = Dialog;
-var Trigger$3 = DialogTrigger;
+var Trigger$4 = DialogTrigger;
 var Portal$3 = DialogPortal$1;
 var Overlay = DialogOverlay$1;
 var Content$2 = DialogContent$1;
@@ -3398,7 +3398,7 @@ var AlertDialogTrigger = React.forwardRef(
   (props, forwardedRef) => {
     const { __scopeAlertDialog, ...triggerProps } = props;
     const dialogScope = useDialogScope(__scopeAlertDialog);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Trigger$3, { ...dialogScope, ...triggerProps, ref: forwardedRef });
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Trigger$4, { ...dialogScope, ...triggerProps, ref: forwardedRef });
   }
 );
 AlertDialogTrigger.displayName = TRIGGER_NAME$7;
@@ -16441,7 +16441,7 @@ function getSideAndAlignFromPlacement(placement) {
   const [side, align = "center"] = placement.split("-");
   return [side, align];
 }
-var Root2$4 = Popper;
+var Root2$5 = Popper;
 var Anchor = PopperAnchor;
 var Content$1 = PopperContent;
 var Arrow = PopperArrow;
@@ -16677,6 +16677,50 @@ var usePopperScope$4 = createPopperScope();
 var useRovingFocusGroupScope$3 = createRovingFocusGroupScope();
 var [MenuProvider, useMenuContext] = createMenuContext(MENU_NAME);
 var [MenuRootProvider, useMenuRootContext] = createMenuContext(MENU_NAME);
+var Menu = (props) => {
+  const { __scopeMenu, open = false, children, dir, onOpenChange, modal = true } = props;
+  const popperScope = usePopperScope$4(__scopeMenu);
+  const [content, setContent] = React.useState(null);
+  const isUsingKeyboardRef = React.useRef(false);
+  const handleOpenChange = useCallbackRef$1(onOpenChange);
+  const direction = useDirection(dir);
+  React.useEffect(() => {
+    const handleKeyDown = () => {
+      isUsingKeyboardRef.current = true;
+      document.addEventListener("pointerdown", handlePointer, { capture: true, once: true });
+      document.addEventListener("pointermove", handlePointer, { capture: true, once: true });
+    };
+    const handlePointer = () => isUsingKeyboardRef.current = false;
+    document.addEventListener("keydown", handleKeyDown, { capture: true });
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown, { capture: true });
+      document.removeEventListener("pointerdown", handlePointer, { capture: true });
+      document.removeEventListener("pointermove", handlePointer, { capture: true });
+    };
+  }, []);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root2$5, { ...popperScope, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    MenuProvider,
+    {
+      scope: __scopeMenu,
+      open,
+      onOpenChange: handleOpenChange,
+      content,
+      onContentChange: setContent,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        MenuRootProvider,
+        {
+          scope: __scopeMenu,
+          onClose: React.useCallback(() => handleOpenChange(false), [handleOpenChange]),
+          isUsingKeyboardRef,
+          dir: direction,
+          modal,
+          children
+        }
+      )
+    }
+  ) });
+};
+Menu.displayName = MENU_NAME;
 var ANCHOR_NAME$1 = "MenuAnchor";
 var MenuAnchor = React.forwardRef(
   (props, forwardedRef) => {
@@ -17371,6 +17415,7 @@ function isPointerInGraceArea(event, area) {
 function whenMouse(handler) {
   return (event) => event.pointerType === "mouse" ? handler(event) : void 0;
 }
+var Root3 = Menu;
 var Anchor2 = MenuAnchor;
 var Portal$2 = MenuPortal;
 var Content2$5 = MenuContent;
@@ -17392,8 +17437,42 @@ var [createDropdownMenuContext] = createContextScope$1(
 );
 var useMenuScope = createMenuScope();
 var [DropdownMenuProvider, useDropdownMenuContext] = createDropdownMenuContext(DROPDOWN_MENU_NAME);
+var DropdownMenu$1 = (props) => {
+  const {
+    __scopeDropdownMenu,
+    children,
+    dir,
+    open: openProp,
+    defaultOpen,
+    onOpenChange,
+    modal = true
+  } = props;
+  const menuScope = useMenuScope(__scopeDropdownMenu);
+  const triggerRef = React.useRef(null);
+  const [open, setOpen] = useControllableState({
+    prop: openProp,
+    defaultProp: defaultOpen ?? false,
+    onChange: onOpenChange,
+    caller: DROPDOWN_MENU_NAME
+  });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    DropdownMenuProvider,
+    {
+      scope: __scopeDropdownMenu,
+      triggerId: useId(),
+      triggerRef,
+      contentId: useId(),
+      open,
+      onOpenChange: setOpen,
+      onOpenToggle: React.useCallback(() => setOpen((prevOpen) => !prevOpen), [setOpen]),
+      modal,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(Root3, { ...menuScope, open, onOpenChange: setOpen, dir, modal, children })
+    }
+  );
+};
+DropdownMenu$1.displayName = DROPDOWN_MENU_NAME;
 var TRIGGER_NAME$5 = "DropdownMenuTrigger";
-var DropdownMenuTrigger = React.forwardRef(
+var DropdownMenuTrigger$1 = React.forwardRef(
   (props, forwardedRef) => {
     const { __scopeDropdownMenu, disabled = false, ...triggerProps } = props;
     const context = useDropdownMenuContext(TRIGGER_NAME$5, __scopeDropdownMenu);
@@ -17427,7 +17506,7 @@ var DropdownMenuTrigger = React.forwardRef(
     ) });
   }
 );
-DropdownMenuTrigger.displayName = TRIGGER_NAME$5;
+DropdownMenuTrigger$1.displayName = TRIGGER_NAME$5;
 var PORTAL_NAME$4 = "DropdownMenuPortal";
 var DropdownMenuPortal = (props) => {
   const { __scopeDropdownMenu, ...portalProps } = props;
@@ -17580,6 +17659,8 @@ var DropdownMenuSubContent$1 = React.forwardRef((props, forwardedRef) => {
   );
 });
 DropdownMenuSubContent$1.displayName = SUB_CONTENT_NAME;
+var Root2$4 = DropdownMenu$1;
+var Trigger$3 = DropdownMenuTrigger$1;
 var Portal2 = DropdownMenuPortal;
 var Content2$4 = DropdownMenuContent$1;
 var Label2$1 = DropdownMenuLabel$1;
@@ -17614,7 +17695,7 @@ var Popover$1 = (props) => {
     onChange: onOpenChange,
     caller: POPOVER_NAME
   });
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root2$4, { ...popperScope, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root2$5, { ...popperScope, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
     PopoverProvider,
     {
       scope: __scopePopover,
@@ -24511,7 +24592,7 @@ var Icons = {
   Wallet,
   WalletCards,
   StretchHorizontal,
-  Menu,
+  Menu: Menu$1,
   Import: Upload,
   FileText,
   FileX,
@@ -25457,6 +25538,8 @@ var TableCaption = React.forwardRef(
   ({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx("caption", { ref, className: cn("text-muted-foreground mt-4 text-sm", className), ...props })
 );
 TableCaption.displayName = "TableCaption";
+var DropdownMenu = Root2$4;
+var DropdownMenuTrigger = Trigger$3;
 var DropdownMenuSubTrigger = React.forwardRef(({ className, inset, children, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
   SubTrigger2,
   {
@@ -27127,28 +27210,34 @@ function DashboardPage({
   const selectedPlan = selectedTicker ? investmentPlan[selectedTicker.id] : null;
   const headerActions = /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-center gap-2", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(PageTabSelector, { currentPage, onPageChange }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "button",
-      {
-        type: "button",
-        onClick: onFetchLatestPrices,
-        className: "border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center rounded-md border px-3 text-sm font-medium",
-        children: "Fetch newest price"
-      }
-    ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "button",
-      {
-        type: "button",
-        onClick: onAutoGenerateTransactions,
-        className: "bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center rounded-md px-3 text-sm font-medium",
-        children: "Auto generate transaction"
-      }
-    )
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenu, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenuTrigger, { className: "bg-secondary/50 hover:bg-secondary inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-transparent transition-colors duration-200 focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background md:hover:scale-105", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.MoreVertical, { className: "size-5" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sr-only", children: "More actions" })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        DropdownMenuContent,
+        {
+          align: "end",
+          sideOffset: 8,
+          className: "w-52 max-w-[calc(100vw-1rem)] sm:w-56",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenuItem, { className: "h-15 gap-2 px-2", onClick: onFetchLatestPrices, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.Refresh, { className: "size-4" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Fetch newest price" })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenuItem, { className: "h-15 gap-2 px-2", onClick: onAutoGenerateTransactions, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.Plus, { className: "size-4" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Auto generate transaction" })
+            ] })
+          ]
+        }
+      )
+    ] })
   ] });
   if (!settings.isConfigured) {
     return /* @__PURE__ */ jsxRuntimeExports.jsxs(Page, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(PageHeader, { heading: "Value Averaging Dashboard", actions: headerActions }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(PageHeader, { heading: "Value Averaging", actions: headerActions }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(PageContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex h-[calc(100vh-200px)] items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
         EmptyPlaceholder,
         {
@@ -27171,7 +27260,7 @@ function DashboardPage({
   }
   if (!enabledTickers.length) {
     return /* @__PURE__ */ jsxRuntimeExports.jsxs(Page, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(PageHeader, { heading: "Value Averaging Dashboard", actions: headerActions }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(PageHeader, { heading: "Value Averaging", actions: headerActions }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(PageContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex h-[calc(100vh-200px)] items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
         EmptyPlaceholder,
         {
@@ -27184,7 +27273,7 @@ function DashboardPage({
     ] });
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Page, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(PageHeader, { heading: "Value Averaging Dashboard", actions: headerActions }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(PageHeader, { heading: "Value Averaging", actions: headerActions }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(PageContent, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-4 lg:grid-cols-3", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "lg:col-span-2", children: [
@@ -27367,7 +27456,7 @@ function SettingsPage({
     return /* @__PURE__ */ jsxRuntimeExports.jsx(AboutSettingsContent, { draft });
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Page, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(PageHeader, { heading: "Value Averaging Settings", actions: headerActions }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(PageHeader, { heading: "Value Averaging", actions: headerActions }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(PageContent, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden lg:flex lg:w-full lg:justify-start", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex w-full max-w-6xl flex-col px-2 py-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-10", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("aside", { className: "hidden w-[240px] shrink-0 lg:sticky lg:top-24 lg:flex lg:flex-col lg:self-start", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-6", children: SETTINGS_SECTIONS.map((section) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [

@@ -153,7 +153,7 @@ export default function SettingsPage({
 
   return (
     <Page>
-      <PageHeader heading="Value Averaging Settings" actions={headerActions} />
+      <PageHeader heading="Value Averaging" actions={headerActions} />
       <PageContent>
         <div className="hidden lg:flex lg:w-full lg:justify-start">
           <div className="flex w-full max-w-6xl flex-col px-2 py-2">

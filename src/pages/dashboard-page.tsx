@@ -4,6 +4,10 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   EmptyPlaceholder,
   Icons,
   Page,
@@ -102,27 +106,33 @@ export default function DashboardPage({
   const headerActions = (
     <div className="flex flex-wrap items-center gap-2">
       <PageTabSelector currentPage={currentPage} onPageChange={onPageChange} />
-      <button
-        type="button"
-        onClick={onFetchLatestPrices}
-        className="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center rounded-md border px-3 text-sm font-medium"
-      >
-        Fetch newest price
-      </button>
-      <button
-        type="button"
-        onClick={onAutoGenerateTransactions}
-        className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center rounded-md px-3 text-sm font-medium"
-      >
-        Auto generate transaction
-      </button>
+      <DropdownMenu>
+        <DropdownMenuTrigger className="bg-secondary/50 hover:bg-secondary inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-transparent transition-colors duration-200 focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background md:hover:scale-105">
+          <Icons.MoreVertical className="size-5" />
+          <span className="sr-only">More actions</span>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          sideOffset={8}
+          className="w-52 max-w-[calc(100vw-1rem)] sm:w-56"
+        >
+          <DropdownMenuItem className="h-15 gap-2 px-2" onClick={onFetchLatestPrices}>
+            <Icons.Refresh className="size-4" />
+            <span>Fetch newest price</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem className="h-15 gap-2 px-2" onClick={onAutoGenerateTransactions}>
+            <Icons.Plus className="size-4" />
+            <span>Auto generate transaction</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 
   if (!settings.isConfigured) {
     return (
       <Page>
-        <PageHeader heading="Value Averaging Dashboard" actions={headerActions} />
+        <PageHeader heading="Value Averaging" actions={headerActions} />
         <PageContent>
           <div className="flex h-[calc(100vh-200px)] items-center justify-center">
             <EmptyPlaceholder
@@ -148,7 +158,7 @@ export default function DashboardPage({
   if (!enabledTickers.length) {
     return (
       <Page>
-        <PageHeader heading="Value Averaging Dashboard" actions={headerActions} />
+        <PageHeader heading="Value Averaging" actions={headerActions} />
         <PageContent>
           <div className="flex h-[calc(100vh-200px)] items-center justify-center">
             <EmptyPlaceholder
@@ -165,7 +175,7 @@ export default function DashboardPage({
 
   return (
     <Page>
-      <PageHeader heading="Value Averaging Dashboard" actions={headerActions} />
+      <PageHeader heading="Value Averaging" actions={headerActions} />
       <PageContent>
         <div className="grid gap-4 lg:grid-cols-3">
           <Card className="lg:col-span-2">

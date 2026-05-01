@@ -23,7 +23,6 @@ export function SettingsPageMobile({
   detailContent,
 }: SettingsPageMobileProps) {
   const sectionMeta = getSectionMeta(activeSection);
-  const compactDetailSpacing = activeSection === "general" || activeSection === "portfolio";
 
   return (
     <div className="w-full max-w-full lg:hidden">
@@ -57,16 +56,8 @@ export function SettingsPageMobile({
           ))}
         </div>
       ) : (
-        <div
-          className={`w-full max-w-full overflow-x-hidden ${activeSection === "general" ? "pt-0" : "pt-safe"}`}
-        >
-          <div
-            className={`px-3 pb-[calc(var(--mobile-nav-ui-height)+max(var(--mobile-nav-gap),env(safe-area-inset-bottom)))] ${
-              compactDetailSpacing
-                ? "space-y-1 pt-0"
-                : "space-y-4 pt-2"
-            }`}
-          >
+        <div className="w-full max-w-full overflow-x-hidden pt-0">
+          <div className="space-y-1 px-3 pt-0 pb-[calc(var(--mobile-nav-ui-height)+max(var(--mobile-nav-gap),env(safe-area-inset-bottom)))]">
             <div className="flex items-center gap-2">
               <button
                 type="button"

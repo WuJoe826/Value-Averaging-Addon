@@ -1,10 +1,10 @@
-import { AnimatedToggleGroup, Icons } from "@wealthfolio/ui";
+import { Icons } from "@wealthfolio/ui";
 
 export type AddonPageTab = "dashboard" | "settings";
 
 const desktopTabs = [
-  { value: "dashboard" as const, label: "Dashboard" },
-  { value: "settings" as const, label: "Settings" },
+  { value: "dashboard" as const, label: "Dashboard", icon: Icons.LayoutDashboard },
+  { value: "settings" as const, label: "Settings", icon: Icons.Settings },
 ];
 
 const mobileTabs = [
@@ -21,14 +21,27 @@ export function PageTabSelector({ currentPage, onPageChange }: PageTabSelectorPr
   return (
     <>
       <div className="hidden sm:block">
-        <AnimatedToggleGroup
-          items={desktopTabs}
-          value={currentPage}
-          onValueChange={onPageChange}
-          variant="secondary"
-          size="sm"
-          rounded="full"
-        />
+        <div className="bg-secondary/50 inline-flex items-center rounded-full border p-1">
+          {desktopTabs.map((tab) => {
+            const isSelected = currentPage === tab.value;
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                onClick={() => onPageChange(tab.value)}
+                className={`inline-flex h-8 items-center rounded-full px-3 text-sm transition-all ${
+                  isSelected
+                    ? "bg-background text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Icon className="mr-1.5 size-4" />
+                <span className="font-medium">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
       <div className="block sm:hidden">
         <div className="bg-secondary/50 inline-flex items-center rounded-full border p-1">

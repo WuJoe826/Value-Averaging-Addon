@@ -24170,101 +24170,6 @@ var AlertDialogCancel = React.forwardRef(({ className, ...props }, ref) => /* @_
   }
 ));
 AlertDialogCancel.displayName = Cancel.displayName;
-var animatedToggleVariants = cva("relative inline-flex items-center scrollbar-hide overflow-x-auto touch-pan-x", {
-  variants: {
-    variant: {
-      default: "bg-muted",
-      secondary: "bg-secondary"
-    },
-    size: {
-      default: "gap-1 p-0.5",
-      xs: "gap-0.5 md:gap-0.5 p-0.5",
-      sm: "gap-0.5 p-0.5",
-      md: "gap-1 p-0.5",
-      lg: "gap-1.5 p-1"
-    },
-    rounded: {
-      full: "rounded-full",
-      lg: "rounded-lg",
-      md: "rounded-md",
-      sm: "rounded-sm",
-      none: "rounded-none"
-    }
-  },
-  defaultVariants: {
-    variant: "default",
-    size: "default",
-    rounded: "full"
-  }
-});
-var animatedToggleItemVariants = cva(
-  "relative z-10 flex-shrink-0 font-medium transition-colors cursor-pointer touch-manipulation select-none focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
-  {
-    variants: {
-      size: {
-        default: "h-8 px-4 text-sm",
-        xs: "h-7 px-2.5 md:px-3 text-xs",
-        sm: "h-8 px-3.5 text-xs",
-        md: "h-9 px-4.5 text-sm",
-        lg: "h-10 px-5 text-base"
-      },
-      rounded: {
-        full: "rounded-full",
-        lg: "rounded-lg",
-        md: "rounded-md",
-        sm: "rounded-sm",
-        none: "rounded-none"
-      }
-    },
-    defaultVariants: {
-      size: "default",
-      rounded: "full"
-    }
-  }
-);
-function AnimatedToggleGroup(props) {
-  const { items, defaultValue, value: controlledValue, onValueChange, variant, size: size2, rounded, className } = props;
-  const [internalValue, setInternalValue] = React.useState(defaultValue ?? items[0]?.value);
-  const uniqueId = React.useId();
-  const isControlled = controlledValue !== void 0;
-  const selected = controlledValue ?? internalValue;
-  const handleSelect = (value) => {
-    if (!isControlled) {
-      setInternalValue(value);
-    }
-    onValueChange?.(value);
-  };
-  const roundedClass = rounded === "lg" ? "rounded-lg" : rounded === "md" ? "rounded-md" : rounded === "sm" ? "rounded-sm" : rounded === "none" ? "rounded-none" : "rounded-full";
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: cn(animatedToggleVariants({ variant, size: size2, rounded }), className), children: items.map((item) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-    "button",
-    {
-      onClick: () => handleSelect(item.value),
-      title: item.title,
-      className: cn(
-        animatedToggleItemVariants({ size: size2, rounded }),
-        selected === item.value ? "text-foreground" : "text-foreground/90 hover:text-foreground/80"
-      ),
-      type: "button",
-      children: [
-        selected === item.value && /* @__PURE__ */ jsxRuntimeExports.jsx(
-          motion.div,
-          {
-            layoutId: `toggle-indicator-${uniqueId}`,
-            className: cn("bg-background absolute inset-0 -z-10 shadow-sm", roundedClass),
-            initial: false,
-            transition: {
-              type: "spring",
-              stiffness: 400,
-              damping: 30
-            }
-          }
-        ),
-        item.label
-      ]
-    },
-    item.value
-  )) });
-}
 var Sheet = Root$a;
 var SheetPortal = Portal$3;
 var SheetOverlay = React.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -26817,8 +26722,8 @@ function saveSettings(settings) {
   window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
 }
 const desktopTabs = [
-  { value: "dashboard", label: "Dashboard" },
-  { value: "settings", label: "Settings" }
+  { value: "dashboard", label: "Dashboard", icon: Icons.LayoutDashboard },
+  { value: "settings", label: "Settings", icon: Icons.Settings }
 ];
 const mobileTabs = [
   { value: "dashboard", label: "Dashboard", icon: Icons.LayoutDashboard },
@@ -26826,17 +26731,23 @@ const mobileTabs = [
 ];
 function PageTabSelector({ currentPage, onPageChange }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden sm:block", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      AnimatedToggleGroup,
-      {
-        items: desktopTabs,
-        value: currentPage,
-        onValueChange: onPageChange,
-        variant: "secondary",
-        size: "sm",
-        rounded: "full"
-      }
-    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden sm:block", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bg-secondary/50 inline-flex items-center rounded-full border p-1", children: desktopTabs.map((tab) => {
+      const isSelected = currentPage === tab.value;
+      const Icon2 = tab.icon;
+      return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "button",
+        {
+          type: "button",
+          onClick: () => onPageChange(tab.value),
+          className: `inline-flex h-8 items-center rounded-full px-3 text-sm transition-all ${isSelected ? "bg-background text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"}`,
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Icon2, { className: "mr-1.5 size-4" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: tab.label })
+          ]
+        },
+        tab.value
+      );
+    }) }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "block sm:hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bg-secondary/50 inline-flex items-center rounded-full border p-1", children: mobileTabs.map((tab) => {
       const isSelected = currentPage === tab.value;
       const Icon2 = tab.icon;

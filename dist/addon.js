@@ -41,6 +41,21 @@ function requireJsxRuntime() {
   return jsxRuntime.exports;
 }
 var jsxRuntimeExports = requireJsxRuntime();
+var QueryClientContext = React.createContext(
+  void 0
+);
+var QueryClientProvider = ({
+  client,
+  children
+}) => {
+  React.useEffect(() => {
+    client.mount();
+    return () => {
+      client.unmount();
+    };
+  }, [client]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(QueryClientContext.Provider, { value: client, children });
+};
 function createContext2(rootComponentName, defaultContext) {
   const Context = React.createContext(defaultContext);
   const Provider = (props) => {
@@ -1043,7 +1058,7 @@ const createLucideIcon = (iconName, iconNode) => {
   Component.displayName = toPascalCase(iconName);
   return Component;
 };
-const __iconNode$c = [
+const __iconNode$1y = [
   [
     "path",
     {
@@ -1052,48 +1067,735 @@ const __iconNode$c = [
     }
   ]
 ];
-const Activity = createLucideIcon("activity", __iconNode$c);
-const __iconNode$b = [
+const Activity = createLucideIcon("activity", __iconNode$1y);
+const __iconNode$1x = [
+  ["path", { d: "M12 5v14", key: "s699le" }],
+  ["path", { d: "m19 12-7 7-7-7", key: "1idqje" }]
+];
+const ArrowDown = createLucideIcon("arrow-down", __iconNode$1x);
+const __iconNode$1w = [
+  ["path", { d: "M8 3 4 7l4 4", key: "9rb6wj" }],
+  ["path", { d: "M4 7h16", key: "6tx8e3" }],
+  ["path", { d: "m16 21 4-4-4-4", key: "siv7j2" }],
+  ["path", { d: "M20 17H4", key: "h6l3hr" }]
+];
+const ArrowLeftRight = createLucideIcon("arrow-left-right", __iconNode$1w);
+const __iconNode$1v = [
   ["path", { d: "m12 19-7-7 7-7", key: "1l729n" }],
   ["path", { d: "M19 12H5", key: "x3x0zl" }]
 ];
-const ArrowLeft = createLucideIcon("arrow-left", __iconNode$b);
-const __iconNode$a = [
+const ArrowLeft = createLucideIcon("arrow-left", __iconNode$1v);
+const __iconNode$1u = [
+  ["path", { d: "m16 3 4 4-4 4", key: "1x1c3m" }],
+  ["path", { d: "M20 7H4", key: "zbl0bi" }],
+  ["path", { d: "m8 21-4-4 4-4", key: "h9nckh" }],
+  ["path", { d: "M4 17h16", key: "g4d7ey" }]
+];
+const ArrowRightLeft = createLucideIcon("arrow-right-left", __iconNode$1u);
+const __iconNode$1t = [
   ["path", { d: "M5 12h14", key: "1ays0h" }],
   ["path", { d: "m12 5 7 7-7 7", key: "xquz4c" }]
 ];
-const ArrowRight = createLucideIcon("arrow-right", __iconNode$a);
-const __iconNode$9 = [["path", { d: "M20 6 9 17l-5-5", key: "1gmf2c" }]];
-const Check = createLucideIcon("check", __iconNode$9);
-const __iconNode$8 = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
-const ChevronDown = createLucideIcon("chevron-down", __iconNode$8);
-const __iconNode$7 = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
-const ChevronRight = createLucideIcon("chevron-right", __iconNode$7);
-const __iconNode$6 = [["path", { d: "m18 15-6-6-6 6", key: "153udz" }]];
-const ChevronUp = createLucideIcon("chevron-up", __iconNode$6);
-const __iconNode$5 = [
+const ArrowRight = createLucideIcon("arrow-right", __iconNode$1t);
+const __iconNode$1s = [
+  ["path", { d: "m5 12 7-7 7 7", key: "hav0vg" }],
+  ["path", { d: "M12 19V5", key: "x0mq9r" }]
+];
+const ArrowUp = createLucideIcon("arrow-up", __iconNode$1s);
+const __iconNode$1r = [
+  [
+    "path",
+    {
+      d: "M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727",
+      key: "yr8idg"
+    }
+  ]
+];
+const Bitcoin = createLucideIcon("bitcoin", __iconNode$1r);
+const __iconNode$1q = [
+  [
+    "path",
+    {
+      d: "M10 22V7a1 1 0 0 0-1-1H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5a1 1 0 0 0-1-1H2",
+      key: "1ah6g2"
+    }
+  ],
+  ["rect", { x: "14", y: "2", width: "8", height: "8", rx: "1", key: "88lufb" }]
+];
+const Blocks = createLucideIcon("blocks", __iconNode$1q);
+const __iconNode$1p = [
+  ["path", { d: "M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16", key: "jecpp" }],
+  ["rect", { width: "20", height: "14", x: "2", y: "6", rx: "2", key: "i6l2r4" }]
+];
+const Briefcase = createLucideIcon("briefcase", __iconNode$1p);
+const __iconNode$1o = [
+  ["path", { d: "M8 2v4", key: "1cmpym" }],
+  ["path", { d: "M16 2v4", key: "4m81vk" }],
+  ["rect", { width: "18", height: "18", x: "3", y: "4", rx: "2", key: "1hopcy" }],
+  ["path", { d: "M3 10h18", key: "8toen8" }],
+  ["path", { d: "M8 14h.01", key: "6423bh" }],
+  ["path", { d: "M12 14h.01", key: "1etili" }],
+  ["path", { d: "M16 14h.01", key: "1gbofw" }],
+  ["path", { d: "M8 18h.01", key: "lrp35t" }],
+  ["path", { d: "M12 18h.01", key: "mhygvu" }],
+  ["path", { d: "M16 18h.01", key: "kzsmim" }]
+];
+const CalendarDays = createLucideIcon("calendar-days", __iconNode$1o);
+const __iconNode$1n = [
+  [
+    "path",
+    {
+      d: "M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z",
+      key: "18u6gg"
+    }
+  ],
+  ["circle", { cx: "12", cy: "13", r: "3", key: "1vg3eu" }]
+];
+const Camera = createLucideIcon("camera", __iconNode$1n);
+const __iconNode$1m = [
+  ["path", { d: "M5 21v-6", key: "1hz6c0" }],
+  ["path", { d: "M12 21V9", key: "uvy0l4" }],
+  ["path", { d: "M19 21V3", key: "11j9sm" }]
+];
+const ChartNoAxesColumnIncreasing = createLucideIcon("chart-no-axes-column-increasing", __iconNode$1m);
+const __iconNode$1l = [
+  [
+    "path",
+    {
+      d: "M21 12c.552 0 1.005-.449.95-.998a10 10 0 0 0-8.953-8.951c-.55-.055-.998.398-.998.95v8a1 1 0 0 0 1 1z",
+      key: "pzmjnu"
+    }
+  ],
+  ["path", { d: "M21.21 15.89A10 10 0 1 1 8 2.83", key: "k2fpak" }]
+];
+const ChartPie = createLucideIcon("chart-pie", __iconNode$1l);
+const __iconNode$1k = [["path", { d: "M20 6 9 17l-5-5", key: "1gmf2c" }]];
+const Check = createLucideIcon("check", __iconNode$1k);
+const __iconNode$1j = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
+const ChevronDown = createLucideIcon("chevron-down", __iconNode$1j);
+const __iconNode$1i = [["path", { d: "m15 18-6-6 6-6", key: "1wnfg3" }]];
+const ChevronLeft = createLucideIcon("chevron-left", __iconNode$1i);
+const __iconNode$1h = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
+const ChevronRight = createLucideIcon("chevron-right", __iconNode$1h);
+const __iconNode$1g = [["path", { d: "m18 15-6-6-6 6", key: "153udz" }]];
+const ChevronUp = createLucideIcon("chevron-up", __iconNode$1g);
+const __iconNode$1f = [
+  ["path", { d: "m11 17-5-5 5-5", key: "13zhaf" }],
+  ["path", { d: "m18 17-5-5 5-5", key: "h8a8et" }]
+];
+const ChevronsLeft = createLucideIcon("chevrons-left", __iconNode$1f);
+const __iconNode$1e = [
+  ["path", { d: "m6 17 5-5-5-5", key: "xnjwq" }],
+  ["path", { d: "m13 17 5-5-5-5", key: "17xmmf" }]
+];
+const ChevronsRight = createLucideIcon("chevrons-right", __iconNode$1e);
+const __iconNode$1d = [
   ["path", { d: "m7 15 5 5 5-5", key: "1hf1tw" }],
   ["path", { d: "m7 9 5-5 5 5", key: "sgt6xg" }]
 ];
-const ChevronsUpDown = createLucideIcon("chevrons-up-down", __iconNode$5);
-const __iconNode$4 = [
+const ChevronsUpDown = createLucideIcon("chevrons-up-down", __iconNode$1d);
+const __iconNode$1c = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["line", { x1: "12", x2: "12", y1: "8", y2: "12", key: "1pkeuh" }],
+  ["line", { x1: "12", x2: "12.01", y1: "16", y2: "16", key: "4dfq90" }]
+];
+const CircleAlert = createLucideIcon("circle-alert", __iconNode$1c);
+const __iconNode$1b = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
+];
+const CircleCheck = createLucideIcon("circle-check", __iconNode$1b);
+const __iconNode$1a = [
+  ["path", { d: "M15.6 2.7a10 10 0 1 0 5.7 5.7", key: "1e0p6d" }],
+  ["circle", { cx: "12", cy: "12", r: "2", key: "1c9p78" }],
+  ["path", { d: "M13.4 10.6 19 5", key: "1kr7tw" }]
+];
+const CircleGauge = createLucideIcon("circle-gauge", __iconNode$1a);
+const __iconNode$19 = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "M8 12h8", key: "1wcyev" }]
+];
+const CircleMinus = createLucideIcon("circle-minus", __iconNode$19);
+const __iconNode$18 = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["line", { x1: "10", x2: "10", y1: "15", y2: "9", key: "c1nkhi" }],
+  ["line", { x1: "14", x2: "14", y1: "15", y2: "9", key: "h65svq" }]
+];
+const CirclePause = createLucideIcon("circle-pause", __iconNode$18);
+const __iconNode$17 = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "M8 12h8", key: "1wcyev" }],
+  ["path", { d: "M12 8v8", key: "napkw2" }]
+];
+const CirclePlus = createLucideIcon("circle-plus", __iconNode$17);
+const __iconNode$16 = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3", key: "1u773s" }],
+  ["path", { d: "M12 17h.01", key: "p32p05" }]
+];
+const CircleQuestionMark = createLucideIcon("circle-question-mark", __iconNode$16);
+const __iconNode$15 = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
   ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
   ["path", { d: "m9 9 6 6", key: "z0biqf" }]
 ];
-const CircleX = createLucideIcon("circle-x", __iconNode$4);
-const __iconNode$3 = [["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }]];
-const Circle = createLucideIcon("circle", __iconNode$3);
-const __iconNode$2 = [
+const CircleX = createLucideIcon("circle-x", __iconNode$15);
+const __iconNode$14 = [["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }]];
+const Circle = createLucideIcon("circle", __iconNode$14);
+const __iconNode$13 = [
+  ["path", { d: "M12 6v6l4 2", key: "mmk7yg" }],
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }]
+];
+const Clock = createLucideIcon("clock", __iconNode$13);
+const __iconNode$12 = [
+  ["rect", { width: "14", height: "14", x: "8", y: "8", rx: "2", ry: "2", key: "17jyea" }],
+  ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2", key: "zix9uf" }]
+];
+const Copy = createLucideIcon("copy", __iconNode$12);
+const __iconNode$11 = [
+  ["rect", { width: "20", height: "14", x: "2", y: "5", rx: "2", key: "ynyp8z" }],
+  ["line", { x1: "2", x2: "22", y1: "10", y2: "10", key: "1b3vmo" }]
+];
+const CreditCard = createLucideIcon("credit-card", __iconNode$11);
+const __iconNode$10 = [
   ["line", { x1: "12", x2: "12", y1: "2", y2: "22", key: "7eqyqh" }],
   ["path", { d: "M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6", key: "1b0p4s" }]
 ];
-const DollarSign = createLucideIcon("dollar-sign", __iconNode$2);
-const __iconNode$1 = [
+const DollarSign = createLucideIcon("dollar-sign", __iconNode$10);
+const __iconNode$$ = [
+  ["path", { d: "M12 15V3", key: "m9g1x1" }],
+  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
+  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
+];
+const Download = createLucideIcon("download", __iconNode$$);
+const __iconNode$_ = [
+  ["path", { d: "M21.54 15H17a2 2 0 0 0-2 2v4.54", key: "1djwo0" }],
+  [
+    "path",
+    {
+      d: "M7 3.34V5a3 3 0 0 0 3 3a2 2 0 0 1 2 2c0 1.1.9 2 2 2a2 2 0 0 0 2-2c0-1.1.9-2 2-2h3.17",
+      key: "1tzkfa"
+    }
+  ],
+  ["path", { d: "M11 21.95V18a2 2 0 0 0-2-2a2 2 0 0 1-2-2v-1a2 2 0 0 0-2-2H2.05", key: "14pb5j" }],
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }]
+];
+const Earth = createLucideIcon("earth", __iconNode$_);
+const __iconNode$Z = [
+  ["circle", { cx: "12", cy: "12", r: "1", key: "41hilf" }],
+  ["circle", { cx: "12", cy: "5", r: "1", key: "gxeob9" }],
+  ["circle", { cx: "12", cy: "19", r: "1", key: "lyex9k" }]
+];
+const EllipsisVertical = createLucideIcon("ellipsis-vertical", __iconNode$Z);
+const __iconNode$Y = [
+  [
+    "path",
+    {
+      d: "M21 21H8a2 2 0 0 1-1.42-.587l-3.994-3.999a2 2 0 0 1 0-2.828l10-10a2 2 0 0 1 2.829 0l5.999 6a2 2 0 0 1 0 2.828L12.834 21",
+      key: "g5wo59"
+    }
+  ],
+  ["path", { d: "m5.082 11.09 8.828 8.828", key: "1wx5vj" }]
+];
+const Eraser = createLucideIcon("eraser", __iconNode$Y);
+const __iconNode$X = [
+  ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
+  ["path", { d: "M10 14 21 3", key: "gplh6r" }],
+  ["path", { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6", key: "a6xqqp" }]
+];
+const ExternalLink = createLucideIcon("external-link", __iconNode$X);
+const __iconNode$W = [
+  [
+    "path",
+    {
+      d: "M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49",
+      key: "ct8e1f"
+    }
+  ],
+  ["path", { d: "M14.084 14.158a3 3 0 0 1-4.242-4.242", key: "151rxh" }],
+  [
+    "path",
+    {
+      d: "M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143",
+      key: "13bj9a"
+    }
+  ],
+  ["path", { d: "m2 2 20 20", key: "1ooewy" }]
+];
+const EyeOff = createLucideIcon("eye-off", __iconNode$W);
+const __iconNode$V = [
+  [
+    "path",
+    {
+      d: "M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0",
+      key: "1nclc0"
+    }
+  ],
+  ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
+];
+const Eye = createLucideIcon("eye", __iconNode$V);
+const __iconNode$U = [
+  ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
+  ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
+  ["path", { d: "M10 9H8", key: "b1mrlr" }],
+  ["path", { d: "M16 13H8", key: "t4e002" }],
+  ["path", { d: "M16 17H8", key: "z1uh3a" }]
+];
+const FileText = createLucideIcon("file-text", __iconNode$U);
+const __iconNode$T = [
+  ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
+  ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
+  ["path", { d: "M12 12v6", key: "3ahymv" }],
+  ["path", { d: "m15 15-3-3-3 3", key: "15xj92" }]
+];
+const FileUp = createLucideIcon("file-up", __iconNode$T);
+const __iconNode$S = [
+  ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
+  ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
+  ["path", { d: "m14.5 12.5-5 5", key: "b62r18" }],
+  ["path", { d: "m9.5 12.5 5 5", key: "1rk7el" }]
+];
+const FileX = createLucideIcon("file-x", __iconNode$S);
+const __iconNode$R = [
+  ["path", { d: "M12 13V2l8 4-8 4", key: "5wlwwj" }],
+  ["path", { d: "M20.561 10.222a9 9 0 1 1-12.55-5.29", key: "1c0wjv" }],
+  ["path", { d: "M8.002 9.997a5 5 0 1 0 8.9 2.02", key: "gb1g7m" }]
+];
+const Goal = createLucideIcon("goal", __iconNode$R);
+const __iconNode$Q = [
+  ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", key: "afitv7" }],
+  ["path", { d: "M3 9h18", key: "1pudct" }],
+  ["path", { d: "M3 15h18", key: "5xshup" }],
+  ["path", { d: "M9 3v18", key: "fh3hqa" }],
+  ["path", { d: "M15 3v18", key: "14nvp0" }]
+];
+const Grid3x3 = createLucideIcon("grid-3x3", __iconNode$Q);
+const __iconNode$P = [
+  ["path", { d: "M3 7V5c0-1.1.9-2 2-2h2", key: "adw53z" }],
+  ["path", { d: "M17 3h2c1.1 0 2 .9 2 2v2", key: "an4l38" }],
+  ["path", { d: "M21 17v2c0 1.1-.9 2-2 2h-2", key: "144t0e" }],
+  ["path", { d: "M7 21H5c-1.1 0-2-.9-2-2v-2", key: "rtnfgi" }],
+  ["rect", { width: "7", height: "5", x: "7", y: "7", rx: "1", key: "1eyiv7" }],
+  ["rect", { width: "7", height: "5", x: "10", y: "12", rx: "1", key: "1qlmkx" }]
+];
+const Group$1 = createLucideIcon("group", __iconNode$P);
+const __iconNode$O = [
+  ["path", { d: "M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17", key: "geh8rc" }],
+  [
+    "path",
+    {
+      d: "m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9",
+      key: "1fto5m"
+    }
+  ],
+  ["path", { d: "m2 16 6 6", key: "1pfhp9" }],
+  ["circle", { cx: "16", cy: "9", r: "2.9", key: "1n0dlu" }],
+  ["circle", { cx: "6", cy: "5", r: "3", key: "151irh" }]
+];
+const HandCoins = createLucideIcon("hand-coins", __iconNode$O);
+const __iconNode$N = [
+  ["line", { x1: "4", x2: "20", y1: "9", y2: "9", key: "4lhtct" }],
+  ["line", { x1: "4", x2: "20", y1: "15", y2: "15", key: "vyu0kd" }],
+  ["line", { x1: "10", x2: "8", y1: "3", y2: "21", key: "1ggp8o" }],
+  ["line", { x1: "16", x2: "14", y1: "3", y2: "21", key: "weycgp" }]
+];
+const Hash = createLucideIcon("hash", __iconNode$N);
+const __iconNode$M = [
+  ["path", { d: "M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8", key: "5wwlr5" }],
+  [
+    "path",
+    {
+      d: "M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
+      key: "r6nss1"
+    }
+  ]
+];
+const House = createLucideIcon("house", __iconNode$M);
+const __iconNode$L = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "M12 16v-4", key: "1dtifu" }],
+  ["path", { d: "M12 8h.01", key: "e9boi3" }]
+];
+const Info = createLucideIcon("info", __iconNode$L);
+const __iconNode$K = [
+  ["rect", { width: "7", height: "9", x: "3", y: "3", rx: "1", key: "10lvy0" }],
+  ["rect", { width: "7", height: "5", x: "14", y: "3", rx: "1", key: "16une8" }],
+  ["rect", { width: "7", height: "9", x: "14", y: "12", rx: "1", key: "1hutg5" }],
+  ["rect", { width: "7", height: "5", x: "3", y: "16", rx: "1", key: "ldoo1y" }]
+];
+const LayoutDashboard = createLucideIcon("layout-dashboard", __iconNode$K);
+const __iconNode$J = [
+  ["path", { d: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71", key: "1cjeqo" }],
+  ["path", { d: "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71", key: "19qd67" }]
+];
+const Link = createLucideIcon("link", __iconNode$J);
+const __iconNode$I = [
+  ["path", { d: "M13 5h8", key: "a7qcls" }],
+  ["path", { d: "M13 12h8", key: "h98zly" }],
+  ["path", { d: "M13 19h8", key: "c3s6r1" }],
+  ["path", { d: "m3 17 2 2 4-4", key: "1jhpwq" }],
+  ["path", { d: "m3 7 2 2 4-4", key: "1obspn" }]
+];
+const ListChecks = createLucideIcon("list-checks", __iconNode$I);
+const __iconNode$H = [
+  ["path", { d: "M10 5h11", key: "1hkqpe" }],
+  ["path", { d: "M10 12h11", key: "6m4ad9" }],
+  ["path", { d: "M10 19h11", key: "14g2nv" }],
+  ["path", { d: "m3 10 3-3-3-3", key: "i7pm08" }],
+  ["path", { d: "m3 20 3-3-3-3", key: "20gx1n" }]
+];
+const ListCollapse = createLucideIcon("list-collapse", __iconNode$H);
+const __iconNode$G = [
+  ["path", { d: "M2 5h20", key: "1fs1ex" }],
+  ["path", { d: "M6 12h12", key: "8npq4p" }],
+  ["path", { d: "M9 19h6", key: "456am0" }]
+];
+const ListFilter = createLucideIcon("list-filter", __iconNode$G);
+const __iconNode$F = [["path", { d: "M21 12a9 9 0 1 1-6.219-8.56", key: "13zald" }]];
+const LoaderCircle = createLucideIcon("loader-circle", __iconNode$F);
+const __iconNode$E = [
+  ["path", { d: "M12 2v4", key: "3427ic" }],
+  ["path", { d: "m16.2 7.8 2.9-2.9", key: "r700ao" }],
+  ["path", { d: "M18 12h4", key: "wj9ykh" }],
+  ["path", { d: "m16.2 16.2 2.9 2.9", key: "1bxg5t" }],
+  ["path", { d: "M12 18v4", key: "jadmvz" }],
+  ["path", { d: "m4.9 19.1 2.9-2.9", key: "bwix9q" }],
+  ["path", { d: "M2 12h4", key: "j09sii" }],
+  ["path", { d: "m4.9 4.9 2.9 2.9", key: "giyufr" }]
+];
+const Loader = createLucideIcon("loader", __iconNode$E);
+const __iconNode$D = [
+  ["path", { d: "M4 5h16", key: "1tepv9" }],
+  ["path", { d: "M4 12h16", key: "1lakjw" }],
+  ["path", { d: "M4 19h16", key: "1djgab" }]
+];
+const Menu = createLucideIcon("menu", __iconNode$D);
+const __iconNode$C = [
+  ["rect", { width: "20", height: "14", x: "2", y: "3", rx: "2", key: "48i651" }],
+  ["line", { x1: "8", x2: "16", y1: "21", y2: "21", key: "1svkeh" }],
+  ["line", { x1: "12", x2: "12", y1: "17", y2: "21", key: "vw1qmm" }]
+];
+const Monitor = createLucideIcon("monitor", __iconNode$C);
+const __iconNode$B = [
+  [
+    "path",
+    {
+      d: "M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401",
+      key: "kfwtm"
+    }
+  ]
+];
+const Moon = createLucideIcon("moon", __iconNode$B);
+const __iconNode$A = [
+  [
+    "path",
+    {
+      d: "M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z",
+      key: "1a0edw"
+    }
+  ],
+  ["path", { d: "M12 22V12", key: "d0xqtd" }],
+  ["polyline", { points: "3.29 7 12 12 20.71 7", key: "ousv84" }],
+  ["path", { d: "m7.5 4.27 9 5.15", key: "1c824w" }]
+];
+const Package = createLucideIcon("package", __iconNode$A);
+const __iconNode$z = [
+  [
+    "path",
+    {
+      d: "M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z",
+      key: "e79jfc"
+    }
+  ],
+  ["circle", { cx: "13.5", cy: "6.5", r: ".5", fill: "currentColor", key: "1okk4w" }],
+  ["circle", { cx: "17.5", cy: "10.5", r: ".5", fill: "currentColor", key: "f64h9f" }],
+  ["circle", { cx: "6.5", cy: "12.5", r: ".5", fill: "currentColor", key: "qy21gx" }],
+  ["circle", { cx: "8.5", cy: "7.5", r: ".5", fill: "currentColor", key: "fotxhn" }]
+];
+const Palette = createLucideIcon("palette", __iconNode$z);
+const __iconNode$y = [
+  ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", key: "afitv7" }],
+  ["path", { d: "M9 3v18", key: "fh3hqa" }],
+  ["path", { d: "m14 9 3 3-3 3", key: "8010ee" }]
+];
+const PanelLeftOpen = createLucideIcon("panel-left-open", __iconNode$y);
+const __iconNode$x = [
+  [
+    "path",
+    {
+      d: "M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z",
+      key: "1a8usu"
+    }
+  ],
+  ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
+];
+const Pencil = createLucideIcon("pencil", __iconNode$x);
+const __iconNode$w = [
+  ["line", { x1: "19", x2: "5", y1: "5", y2: "19", key: "1x9vlm" }],
+  ["circle", { cx: "6.5", cy: "6.5", r: "2.5", key: "4mh3h7" }],
+  ["circle", { cx: "17.5", cy: "17.5", r: "2.5", key: "1mdrzq" }]
+];
+const Percent = createLucideIcon("percent", __iconNode$w);
+const __iconNode$v = [
+  ["path", { d: "M5 12h14", key: "1ays0h" }],
+  ["path", { d: "M12 5v14", key: "s699le" }]
+];
+const Plus = createLucideIcon("plus", __iconNode$v);
+const __iconNode$u = [
+  ["rect", { width: "5", height: "5", x: "3", y: "3", rx: "1", key: "1tu5fj" }],
+  ["rect", { width: "5", height: "5", x: "16", y: "3", rx: "1", key: "1v8r4q" }],
+  ["rect", { width: "5", height: "5", x: "3", y: "16", rx: "1", key: "1x03jg" }],
+  ["path", { d: "M21 16h-3a2 2 0 0 0-2 2v3", key: "177gqh" }],
+  ["path", { d: "M21 21v.01", key: "ents32" }],
+  ["path", { d: "M12 7v3a2 2 0 0 1-2 2H7", key: "8crl2c" }],
+  ["path", { d: "M3 12h.01", key: "nlz23k" }],
+  ["path", { d: "M12 3h.01", key: "n36tog" }],
+  ["path", { d: "M12 16v.01", key: "133mhm" }],
+  ["path", { d: "M16 12h1", key: "1slzba" }],
+  ["path", { d: "M21 12v.01", key: "1lwtk9" }],
+  ["path", { d: "M12 21v-1", key: "1880an" }]
+];
+const QrCode = createLucideIcon("qr-code", __iconNode$u);
+const __iconNode$t = [
+  [
+    "path",
+    { d: "M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z", key: "q3az6g" }
+  ],
+  ["path", { d: "M14 8H8", key: "1l3xfs" }],
+  ["path", { d: "M16 12H8", key: "1fr5h0" }],
+  ["path", { d: "M13 16H8", key: "wsln4y" }]
+];
+const ReceiptText = createLucideIcon("receipt-text", __iconNode$t);
+const __iconNode$s = [
+  [
+    "path",
+    { d: "M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z", key: "q3az6g" }
+  ],
+  ["path", { d: "M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8", key: "1h4pet" }],
+  ["path", { d: "M12 17.5v-11", key: "1jc1ny" }]
+];
+const Receipt = createLucideIcon("receipt", __iconNode$s);
+const __iconNode$r = [
+  ["path", { d: "M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "14sxne" }],
+  ["path", { d: "M3 3v5h5", key: "1xhq8a" }],
+  ["path", { d: "M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16", key: "1hlbsb" }],
+  ["path", { d: "M16 16h5v5", key: "ccwih5" }]
+];
+const RefreshCcw = createLucideIcon("refresh-ccw", __iconNode$r);
+const __iconNode$q = [
+  ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", key: "afitv7" }],
+  ["path", { d: "M21 9H3", key: "1338ky" }],
+  ["path", { d: "M21 15H3", key: "9uk58r" }]
+];
+const Rows3 = createLucideIcon("rows-3", __iconNode$q);
+const __iconNode$p = [
+  [
+    "path",
+    {
+      d: "M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z",
+      key: "1c8476"
+    }
+  ],
+  ["path", { d: "M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7", key: "1ydtos" }],
+  ["path", { d: "M7 3v4a1 1 0 0 0 1 1h7", key: "t51u73" }]
+];
+const Save = createLucideIcon("save", __iconNode$p);
+const __iconNode$o = [
+  ["path", { d: "M15 12h-5", key: "r7krc0" }],
+  ["path", { d: "M15 8h-5", key: "1khuty" }],
+  ["path", { d: "M19 17V5a2 2 0 0 0-2-2H4", key: "zz82l3" }],
+  [
+    "path",
+    {
+      d: "M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3",
+      key: "1ph1d7"
+    }
+  ]
+];
+const ScrollText = createLucideIcon("scroll-text", __iconNode$o);
+const __iconNode$n = [
   ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
   ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
 ];
-const Search = createLucideIcon("search", __iconNode$1);
+const Search = createLucideIcon("search", __iconNode$n);
+const __iconNode$m = [
+  [
+    "path",
+    {
+      d: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z",
+      key: "oel41y"
+    }
+  ]
+];
+const Shield = createLucideIcon("shield", __iconNode$m);
+const __iconNode$l = [
+  ["rect", { width: "14", height: "20", x: "5", y: "2", rx: "2", ry: "2", key: "1yt0o3" }],
+  ["path", { d: "M12 18h.01", key: "mhygvu" }]
+];
+const Smartphone = createLucideIcon("smartphone", __iconNode$l);
+const __iconNode$k = [
+  [
+    "path",
+    {
+      d: "M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z",
+      key: "1s2grr"
+    }
+  ],
+  ["path", { d: "M20 2v4", key: "1rf3ol" }],
+  ["path", { d: "M22 4h-4", key: "gwowj6" }],
+  ["circle", { cx: "4", cy: "20", r: "2", key: "6kqj1y" }]
+];
+const Sparkles = createLucideIcon("sparkles", __iconNode$k);
+const __iconNode$j = [
+  ["path", { d: "M16 3h5v5", key: "1806ms" }],
+  ["path", { d: "M8 3H3v5", key: "15dfkv" }],
+  ["path", { d: "M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3", key: "1qrqzj" }],
+  ["path", { d: "m15 9 6-6", key: "ko1vev" }]
+];
+const Split = createLucideIcon("split", __iconNode$j);
+const __iconNode$i = [
+  [
+    "path",
+    {
+      d: "M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z",
+      key: "r04s7s"
+    }
+  ]
+];
+const Star = createLucideIcon("star", __iconNode$i);
+const __iconNode$h = [
+  ["path", { d: "M15 21v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5", key: "slp6dd" }],
+  [
+    "path",
+    {
+      d: "M17.774 10.31a1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.451 0 1.12 1.12 0 0 0-1.548 0 2.5 2.5 0 0 1-3.452 0 1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.77-3.248l2.889-4.184A2 2 0 0 1 7 2h10a2 2 0 0 1 1.653.873l2.895 4.192a2.5 2.5 0 0 1-3.774 3.244",
+      key: "o0xfot"
+    }
+  ],
+  ["path", { d: "M4 10.95V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.05", key: "wn3emo" }]
+];
+const Store = createLucideIcon("store", __iconNode$h);
+const __iconNode$g = [
+  ["rect", { width: "20", height: "6", x: "2", y: "4", rx: "2", key: "qdearl" }],
+  ["rect", { width: "20", height: "6", x: "2", y: "14", rx: "2", key: "1xrn6j" }]
+];
+const StretchHorizontal = createLucideIcon("stretch-horizontal", __iconNode$g);
+const __iconNode$f = [
+  ["circle", { cx: "12", cy: "12", r: "4", key: "4exip2" }],
+  ["path", { d: "M12 2v2", key: "tus03m" }],
+  ["path", { d: "M12 20v2", key: "1lh1kg" }],
+  ["path", { d: "m4.93 4.93 1.41 1.41", key: "149t6j" }],
+  ["path", { d: "m17.66 17.66 1.41 1.41", key: "ptbguv" }],
+  ["path", { d: "M2 12h2", key: "1t8f8n" }],
+  ["path", { d: "M20 12h2", key: "1q8mjw" }],
+  ["path", { d: "m6.34 17.66-1.41 1.41", key: "1m8zz5" }],
+  ["path", { d: "m19.07 4.93-1.41 1.41", key: "1shlcs" }]
+];
+const Sun = createLucideIcon("sun", __iconNode$f);
+const __iconNode$e = [
+  [
+    "path",
+    {
+      d: "M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z",
+      key: "vktsd0"
+    }
+  ],
+  ["circle", { cx: "7.5", cy: "7.5", r: ".5", fill: "currentColor", key: "kqv944" }]
+];
+const Tag = createLucideIcon("tag", __iconNode$e);
+const __iconNode$d = [
+  ["path", { d: "M21 5H3", key: "1fi0y6" }],
+  ["path", { d: "M15 12H3", key: "6jk70r" }],
+  ["path", { d: "M17 19H3", key: "z6ezky" }]
+];
+const TextAlignStart = createLucideIcon("text-align-start", __iconNode$d);
+const __iconNode$c = [
+  ["path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6", key: "miytrc" }],
+  ["path", { d: "M3 6h18", key: "d0wm0j" }],
+  ["path", { d: "M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2", key: "e791ji" }]
+];
+const Trash = createLucideIcon("trash", __iconNode$c);
+const __iconNode$b = [
+  ["path", { d: "M16 17h6v-6", key: "t6n2it" }],
+  ["path", { d: "m22 17-8.5-8.5-5 5L2 7", key: "x473p" }]
+];
+const TrendingDown = createLucideIcon("trending-down", __iconNode$b);
+const __iconNode$a = [
+  ["path", { d: "M16 7h6v6", key: "box55l" }],
+  ["path", { d: "m22 7-8.5 8.5-5-5L2 17", key: "1t1m79" }]
+];
+const TrendingUp = createLucideIcon("trending-up", __iconNode$a);
+const __iconNode$9 = [
+  [
+    "path",
+    {
+      d: "m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3",
+      key: "wmoenq"
+    }
+  ],
+  ["path", { d: "M12 9v4", key: "juzpu7" }],
+  ["path", { d: "M12 17h.01", key: "p32p05" }]
+];
+const TriangleAlert = createLucideIcon("triangle-alert", __iconNode$9);
+const __iconNode$8 = [
+  ["path", { d: "M12 4v16", key: "1654pz" }],
+  ["path", { d: "M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2", key: "e0r10z" }],
+  ["path", { d: "M9 20h6", key: "s66wpe" }]
+];
+const Type = createLucideIcon("type", __iconNode$8);
+const __iconNode$7 = [
+  ["path", { d: "M9 14 4 9l5-5", key: "102s5s" }],
+  ["path", { d: "M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11", key: "f3b9sd" }]
+];
+const Undo2 = createLucideIcon("undo-2", __iconNode$7);
+const __iconNode$6 = [
+  ["rect", { width: "8", height: "6", x: "5", y: "4", rx: "1", key: "nzclkv" }],
+  ["rect", { width: "8", height: "6", x: "11", y: "14", rx: "1", key: "4tytwb" }]
+];
+const Ungroup = createLucideIcon("ungroup", __iconNode$6);
+const __iconNode$5 = [
+  ["path", { d: "M12 3v12", key: "1x0j5s" }],
+  ["path", { d: "m17 8-5-5-5 5", key: "7q97r8" }],
+  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }]
+];
+const Upload = createLucideIcon("upload", __iconNode$5);
+const __iconNode$4 = [
+  ["path", { d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2", key: "1yyitq" }],
+  ["path", { d: "M16 3.128a4 4 0 0 1 0 7.744", key: "16gr8j" }],
+  ["path", { d: "M22 21v-2a4 4 0 0 0-3-3.87", key: "kshegd" }],
+  ["circle", { cx: "9", cy: "7", r: "4", key: "nufk8" }]
+];
+const Users = createLucideIcon("users", __iconNode$4);
+const __iconNode$3 = [
+  ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", key: "afitv7" }],
+  ["path", { d: "M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2", key: "4125el" }],
+  [
+    "path",
+    {
+      d: "M3 11h3c.8 0 1.6.3 2.1.9l1.1.9c1.6 1.6 4.1 1.6 5.7 0l1.1-.9c.5-.5 1.3-.9 2.1-.9H21",
+      key: "1dpki6"
+    }
+  ]
+];
+const WalletCards = createLucideIcon("wallet-cards", __iconNode$3);
+const __iconNode$2 = [
+  [
+    "path",
+    {
+      d: "M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1",
+      key: "18etb6"
+    }
+  ],
+  ["path", { d: "M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4", key: "xoc0q4" }]
+];
+const Wallet = createLucideIcon("wallet", __iconNode$2);
+const __iconNode$1 = [
+  ["path", { d: "M12 20h.01", key: "zekei9" }],
+  ["path", { d: "M2 8.82a15 15 0 0 1 20 0", key: "dnpr2z" }],
+  ["path", { d: "M5 12.859a10 10 0 0 1 14 0", key: "1x1e6c" }],
+  ["path", { d: "M8.5 16.429a5 5 0 0 1 7 0", key: "1bycff" }]
+];
+const Wifi = createLucideIcon("wifi", __iconNode$1);
 const __iconNode = [
   ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
   ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
@@ -23468,6 +24170,101 @@ var AlertDialogCancel = React.forwardRef(({ className, ...props }, ref) => /* @_
   }
 ));
 AlertDialogCancel.displayName = Cancel.displayName;
+var animatedToggleVariants = cva("relative inline-flex items-center scrollbar-hide overflow-x-auto touch-pan-x", {
+  variants: {
+    variant: {
+      default: "bg-muted",
+      secondary: "bg-secondary"
+    },
+    size: {
+      default: "gap-1 p-0.5",
+      xs: "gap-0.5 md:gap-0.5 p-0.5",
+      sm: "gap-0.5 p-0.5",
+      md: "gap-1 p-0.5",
+      lg: "gap-1.5 p-1"
+    },
+    rounded: {
+      full: "rounded-full",
+      lg: "rounded-lg",
+      md: "rounded-md",
+      sm: "rounded-sm",
+      none: "rounded-none"
+    }
+  },
+  defaultVariants: {
+    variant: "default",
+    size: "default",
+    rounded: "full"
+  }
+});
+var animatedToggleItemVariants = cva(
+  "relative z-10 flex-shrink-0 font-medium transition-colors cursor-pointer touch-manipulation select-none focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+  {
+    variants: {
+      size: {
+        default: "h-8 px-4 text-sm",
+        xs: "h-7 px-2.5 md:px-3 text-xs",
+        sm: "h-8 px-3.5 text-xs",
+        md: "h-9 px-4.5 text-sm",
+        lg: "h-10 px-5 text-base"
+      },
+      rounded: {
+        full: "rounded-full",
+        lg: "rounded-lg",
+        md: "rounded-md",
+        sm: "rounded-sm",
+        none: "rounded-none"
+      }
+    },
+    defaultVariants: {
+      size: "default",
+      rounded: "full"
+    }
+  }
+);
+function AnimatedToggleGroup(props) {
+  const { items, defaultValue, value: controlledValue, onValueChange, variant, size: size2, rounded, className } = props;
+  const [internalValue, setInternalValue] = React.useState(defaultValue ?? items[0]?.value);
+  const uniqueId = React.useId();
+  const isControlled = controlledValue !== void 0;
+  const selected = controlledValue ?? internalValue;
+  const handleSelect = (value) => {
+    if (!isControlled) {
+      setInternalValue(value);
+    }
+    onValueChange?.(value);
+  };
+  const roundedClass = rounded === "lg" ? "rounded-lg" : rounded === "md" ? "rounded-md" : rounded === "sm" ? "rounded-sm" : rounded === "none" ? "rounded-none" : "rounded-full";
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: cn(animatedToggleVariants({ variant, size: size2, rounded }), className), children: items.map((item) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "button",
+    {
+      onClick: () => handleSelect(item.value),
+      title: item.title,
+      className: cn(
+        animatedToggleItemVariants({ size: size2, rounded }),
+        selected === item.value ? "text-foreground" : "text-foreground/90 hover:text-foreground/80"
+      ),
+      type: "button",
+      children: [
+        selected === item.value && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          motion.div,
+          {
+            layoutId: `toggle-indicator-${uniqueId}`,
+            className: cn("bg-background absolute inset-0 -z-10 shadow-sm", roundedClass),
+            initial: false,
+            transition: {
+              type: "spring",
+              stiffness: 400,
+              damping: 30
+            }
+          }
+        ),
+        item.label
+      ]
+    },
+    item.value
+  )) });
+}
 var Sheet = Root$a;
 var SheetPortal = Portal$3;
 var SheetOverlay = React.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -23644,11 +24441,496 @@ var CommandItem = React.forwardRef(({ className, ...props }, ref) => /* @__PURE_
 ));
 CommandItem.displayName = _e.Item.displayName;
 var Icons = {
+  AlertCircle: CircleAlert,
+  AlertTriangle: TriangleAlert,
+  Blocks,
+  Grid3x3,
+  Rows3,
+  Calendar: CalendarDays,
   Check,
+  CheckCircle: CircleCheck,
+  Clock,
+  ListChecks,
+  LayoutDashboard,
+  HandCoins,
+  Home: House,
+  Copy,
+  HelpCircle: CircleQuestionMark,
+  ArrowRight,
+  ArrowLeft,
+  ArrowDown,
+  ArrowUp,
+  Billing: CreditCard,
+  CreditCard,
+  Bitcoin,
+  Briefcase,
   Search,
+  Save,
+  Group: Group$1,
+  Ungroup,
+  Globe: Earth,
+  Close: X$1,
+  Eye,
+  Info,
+  EyeOff,
+  Refresh: RefreshCcw,
+  PanelLeftOpen,
+  Download,
   Activity2: Activity,
   DollarSign,
-  XCircle: CircleX
+  Users,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Circle,
+  Plus,
+  Pencil,
+  PlusCircle: CirclePlus,
+  MinusCircle: CircleMinus,
+  PauseCircle: CirclePause,
+  Monitor,
+  QrCode,
+  Camera,
+  Wifi,
+  Smartphone,
+  PieChart: ChartPie,
+  BarChart: ChartNoAxesColumnIncreasing,
+  Spinner: LoaderCircle,
+  Loader,
+  MoreVertical: EllipsisVertical,
+  Goal,
+  Trash,
+  Tag,
+  Hash,
+  Type,
+  AlignLeft: TextAlignStart,
+  Wallet,
+  WalletCards,
+  StretchHorizontal,
+  Menu,
+  Import: Upload,
+  FileText,
+  FileX,
+  XCircle: CircleX,
+  ScrollText,
+  GaugeCircle: CircleGauge,
+  ListCollapse,
+  CircleGauge,
+  ArrowRightLeft,
+  ArrowLeftRight,
+  Receipt,
+  ReceiptText,
+  Percent,
+  Split,
+  FileUp,
+  Store,
+  Package,
+  Star,
+  Shield,
+  ExternalLink,
+  TrendingUp,
+  TrendingDown,
+  Link,
+  Eraser,
+  Sparkles,
+  Palette,
+  Moon,
+  Sun,
+  ListFilter,
+  Undo: Undo2,
+  Dashboard: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      width: size2 ?? 32,
+      height: size2 ?? 32,
+      fill: "currentColor",
+      viewBox: "0 0 256 256",
+      ...props,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "path",
+          {
+            d: "M232,152v24a8,8,0,0,1-8,8H32a8,8,0,0,1-8-8V153.13C24,95.65,70.15,48.2,127.63,48A104,104,0,0,1,232,152Z",
+            opacity: "0.2"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M207.06,72.67A111.24,111.24,0,0,0,128,40h-.4C66.07,40.21,16,91,16,153.13V176a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V152A111.25,111.25,0,0,0,207.06,72.67ZM224,176H119.71l54.76-75.3a8,8,0,0,0-12.94-9.42L99.92,176H32V153.13c0-3.08.15-6.12.43-9.13H56a8,8,0,0,0,0-16H35.27c10.32-38.86,44-68.24,84.73-71.66V80a8,8,0,0,0,16,0V56.33A96.14,96.14,0,0,1,221,128H200a8,8,0,0,0,0,16h23.67c.21,2.65.33,5.31.33,8Z" })
+      ]
+    }
+  ),
+  Performance: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      width: size2 ?? 32,
+      height: size2 ?? 32,
+      fill: "currentColor",
+      viewBox: "0 0 256 256",
+      ...props,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M224,56V208H32V48H216A8,8,0,0,1,224,56Z", opacity: "0.2" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M232,208a8,8,0,0,1-8,8H32a8,8,0,0,1-8-8V48a8,8,0,0,1,16,0V156.69l50.34-50.35a8,8,0,0,1,11.32,0L128,132.69,180.69,80H160a8,8,0,0,1,0-16h40a8,8,0,0,1,8,8v40a8,8,0,0,1-16,0V91.31l-58.34,58.35a8,8,0,0,1-11.32,0L96,123.31l-56,56V200H224A8,8,0,0,1,232,208Z" })
+      ]
+    }
+  ),
+  Goals: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      width: size2 ?? 32,
+      height: size2 ?? 32,
+      fill: "currentColor",
+      viewBox: "0 0 256 256",
+      ...props,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M176,128a48,48,0,1,1-48-48A48,48,0,0,1,176,128Z", opacity: "0.2" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M221.87,83.16A104.1,104.1,0,1,1,195.67,49l22.67-22.68a8,8,0,0,1,11.32,11.32l-96,96a8,8,0,0,1-11.32-11.32l27.72-27.72a40,40,0,1,0,17.87,31.09,8,8,0,1,1,16-.9,56,56,0,1,1-22.38-41.65L184.3,60.39a87.88,87.88,0,1,0,23.13,29.67,8,8,0,0,1,14.44-6.9Z" })
+      ]
+    }
+  ),
+  Database: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      width: size2 ?? 32,
+      height: size2 ?? 32,
+      fill: "currentColor",
+      viewBox: "0 0 256 256",
+      ...props,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M216,80c0,26.51-39.4,48-88,48S40,106.51,40,80s39.4-48,88-48S216,53.49,216,80Z", opacity: "0.2" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M128,24C74.17,24,32,48.6,32,80v96c0,31.4,42.17,56,96,56s96-24.6,96-56V80C224,48.6,181.83,24,128,24Zm80,104c0,9.62-7.88,19.43-21.61,26.92C170.93,163.35,150.19,168,128,168s-42.93-4.65-58.39-13.08C55.88,147.43,48,137.62,48,128V111.36c17.06,15,46.23,24.64,80,24.64s62.94-9.68,80-24.64ZM69.61,53.08C85.07,44.65,105.81,40,128,40s42.93,4.65,58.39,13.08C200.12,60.57,208,70.38,208,80s-7.88,19.43-21.61,26.92C170.93,115.35,150.19,120,128,120s-42.93-4.65-58.39-13.08C55.88,99.43,48,89.62,48,80S55.88,60.57,69.61,53.08ZM186.39,202.92C170.93,211.35,150.19,216,128,216s-42.93-4.65-58.39-13.08C55.88,195.43,48,185.62,48,176V159.36c17.06,15,46.23,24.64,80,24.64s62.94-9.68,80-24.64V176C208,185.62,200.12,195.43,186.39,202.92Z" })
+      ]
+    }
+  ),
+  FileCsv: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      width: size2 ?? 24,
+      height: size2 ?? 24,
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "2",
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      ...props,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M14 2v4a2 2 0 0 0 2 2h4" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 13h2" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M14 13h2" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 17h2" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M14 17h2" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { opacity: "0.2", d: "M19 7H15V3L19 7Z", fill: "black" })
+      ]
+    }
+  ),
+  FileJson: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      width: size2 ?? 24,
+      height: size2 ?? 24,
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "2",
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      ...props,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M14 2v4a2 2 0 0 0 2 2h4" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M10 12a1 1 0 0 0-1 1v1a1 1 0 0 1-1 1 1 1 0 0 1 1 1v1a1 1 0 0 0 1 1" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M14 18a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1 1 1 0 0 1-1-1v-1a1 1 0 0 0-1-1" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { opacity: "0.2", d: "M19 7H15V3L19 7Z", fill: "black" })
+      ]
+    }
+  ),
+  Files: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      width: size2 ?? 32,
+      height: size2 ?? 32,
+      fill: "currentColor",
+      viewBox: "0 0 256 256",
+      ...props,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M208,72V184a8,8,0,0,1-8,8H176V104L136,64H80V40a8,8,0,0,1,8-8h80Z", opacity: "0.2" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M213.66,66.34l-40-40A8,8,0,0,0,168,24H88A16,16,0,0,0,72,40V56H56A16,16,0,0,0,40,72V216a16,16,0,0,0,16,16H168a16,16,0,0,0,16-16V200h16a16,16,0,0,0,16-16V72A8,8,0,0,0,213.66,66.34ZM168,216H56V72h76.69L168,107.31v84.53c0,.06,0,.11,0,.16s0,.1,0,.16V216Zm32-32H184V104a8,8,0,0,0-2.34-5.66l-40-40A8,8,0,0,0,136,56H88V40h76.69L200,75.31Zm-56-32a8,8,0,0,1-8,8H88a8,8,0,0,1,0-16h48A8,8,0,0,1,144,152Zm0,32a8,8,0,0,1-8,8H88a8,8,0,0,1,0-16h48A8,8,0,0,1,144,184Z" })
+      ]
+    }
+  ),
+  Holdings: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      width: size2 ?? 32,
+      height: size2 ?? 32,
+      fill: "currentColor",
+      viewBox: "0 0 256 256",
+      ...props,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "path",
+          {
+            d: "M224,88V200a8,8,0,0,1-8,8H56a16,16,0,0,1-16-16V64A16,16,0,0,0,56,80H216A8,8,0,0,1,224,88Z",
+            opacity: "0.2"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M216,72H56a8,8,0,0,1,0-16H192a8,8,0,0,0,0-16H56A24,24,0,0,0,32,64V192a24,24,0,0,0,24,24H216a16,16,0,0,0,16-16V88A16,16,0,0,0,216,72Zm0,128H56a8,8,0,0,1-8-8V86.63A23.84,23.84,0,0,0,56,88H216Zm-48-60a12,12,0,1,1,12,12A12,12,0,0,1,168,140Z" })
+      ]
+    }
+  ),
+  Activity: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      width: size2 ?? 32,
+      height: size2 ?? 32,
+      fill: "currentColor",
+      viewBox: "0 0 256 256",
+      ...props,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M216,128a88,88,0,1,1-88-88A88,88,0,0,1,216,128Z", opacity: "0.2" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M136,80v43.47l36.12,21.67a8,8,0,0,1-8.24,13.72l-40-24A8,8,0,0,1,120,128V80a8,8,0,0,1,16,0Zm-8-48A95.44,95.44,0,0,0,60.08,60.15C52.81,67.51,46.35,74.59,40,82V64a8,8,0,0,0-16,0v40a8,8,0,0,0,8,8H72a8,8,0,0,0,0-16H49c7.15-8.42,14.27-16.35,22.39-24.57a80,80,0,1,1,1.66,114.75,8,8,0,1,0-11,11.64A96,96,0,1,0,128,32Z" })
+      ]
+    }
+  ),
+  Settings: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      width: size2 ?? 32,
+      height: size2 ?? 32,
+      fill: "currentColor",
+      viewBox: "0 0 256 256",
+      ...props,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "path",
+          {
+            d: "M207.86,123.18l16.78-21a99.14,99.14,0,0,0-10.07-24.29l-26.7-3a81,81,0,0,0-6.81-6.81l-3-26.71a99.43,99.43,0,0,0-24.3-10l-21,16.77a81.59,81.59,0,0,0-9.64,0l-21-16.78A99.14,99.14,0,0,0,77.91,41.43l-3,26.7a81,81,0,0,0-6.81,6.81l-26.71,3a99.43,99.43,0,0,0-10,24.3l16.77,21a81.59,81.59,0,0,0,0,9.64l-16.78,21a99.14,99.14,0,0,0,10.07,24.29l26.7,3a81,81,0,0,0,6.81,6.81l3,26.71a99.43,99.43,0,0,0,24.3,10l21-16.77a81.59,81.59,0,0,0,9.64,0l21,16.78a99.14,99.14,0,0,0,24.29-10.07l3-26.7a81,81,0,0,0,6.81-6.81l26.71-3a99.43,99.43,0,0,0,10-24.3l-16.77-21A81.59,81.59,0,0,0,207.86,123.18ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z",
+            opacity: "0.2"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.6,107.6,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.29,107.29,0,0,0-26.25-10.86,8,8,0,0,0-7.06,1.48L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.94,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.6,107.6,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.94,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06Zm-16.1-6.5a73.93,73.93,0,0,1,0,8.68,8,8,0,0,0,1.74,5.48l14.19,17.73a91.57,91.57,0,0,1-6.23,15L187,173.11a8,8,0,0,0-5.1,2.64,74.11,74.11,0,0,1-6.14,6.14,8,8,0,0,0-2.64,5.1l-2.51,22.58a91.32,91.32,0,0,1-15,6.23l-17.74-14.19a8,8,0,0,0-5-1.75h-.48a73.93,73.93,0,0,1-8.68,0,8.06,8.06,0,0,0-5.48,1.74L100.45,215.8a91.57,91.57,0,0,1-15-6.23L82.89,187a8,8,0,0,0-2.64-5.1,74.11,74.11,0,0,1-6.14-6.14,8,8,0,0,0-5.1-2.64L46.43,170.6a91.32,91.32,0,0,1-6.23-15l14.19-17.74a8,8,0,0,0,1.74-5.48,73.93,73.93,0,0,1,0-8.68,8,8,0,0,0-1.74-5.48L40.2,100.45a91.57,91.57,0,0,1,6.23-15L69,82.89a8,8,0,0,0,5.1-2.64,74.11,74.11,0,0,1,6.14-6.14A8,8,0,0,0,82.89,69L85.4,46.43a91.32,91.32,0,0,1,15-6.23l17.74,14.19a8,8,0,0,0,5.48,1.74,73.93,73.93,0,0,1,8.68,0,8.06,8.06,0,0,0,5.48-1.74L155.55,40.2a91.57,91.57,0,0,1,15,6.23L173.11,69a8,8,0,0,0,2.64,5.1,74.11,74.11,0,0,1,6.14,6.14,8,8,0,0,0,5.1,2.64l22.58,2.51a91.32,91.32,0,0,1,6.23,15l-14.19,17.74A8,8,0,0,0,199.87,123.66Z" })
+      ]
+    }
+  ),
+  Invoice: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      width: size2 ?? 32,
+      height: size2 ?? 32,
+      fill: "currentColor",
+      viewBox: "0 0 256 256",
+      ...props,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M224,104v88a8,8,0,0,1-8,8H168V104Z", opacity: "0.2" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M28,128a8,8,0,0,1,0-16H56a8,8,0,0,0,0-16H40a24,24,0,0,1,0-48,8,8,0,0,1,16,0h8a8,8,0,0,1,0,16H40a8,8,0,0,0,0,16H56a24,24,0,0,1,0,48,8,8,0,0,1-16,0ZM232,56V192a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V152a8,8,0,0,1,16,0v40H160V160H80a8,8,0,0,1,0-16h80V112H104a8,8,0,0,1,0-16H216V64H96a8,8,0,0,1,0-16H224A8,8,0,0,1,232,56Zm-56,88h40V112H176Zm40,48V160H176v32Z" })
+      ]
+    }
+  ),
+  Income: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      width: size2 ?? 32,
+      height: size2 ?? 32,
+      fill: "currentColor",
+      viewBox: "0 0 256 256",
+      ...props,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "path",
+          {
+            d: "M240,132c0,19.88-35.82,36-80,36-19.6,0-37.56-3.17-51.47-8.44h0C146.76,156.85,176,142,176,124V96.72h0C212.52,100.06,240,114.58,240,132ZM176,84c0-19.88-35.82-36-80-36S16,64.12,16,84s35.82,36,80,36S176,103.88,176,84Z",
+            opacity: "0.2"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M184,89.57V84c0-25.08-37.83-44-88-44S8,58.92,8,84v40c0,20.89,26.25,37.49,64,42.46V172c0,25.08,37.83,44,88,44s88-18.92,88-44V132C248,111.3,222.58,94.68,184,89.57ZM232,132c0,13.22-30.79,28-72,28-3.73,0-7.43-.13-11.08-.37C170.49,151.77,184,139,184,124V105.74C213.87,110.19,232,122.27,232,132ZM72,150.25V126.46A183.74,183.74,0,0,0,96,128a183.74,183.74,0,0,0,24-1.54v23.79A163,163,0,0,1,96,152,163,163,0,0,1,72,150.25Zm96-40.32V124c0,8.39-12.41,17.4-32,22.87V123.5C148.91,120.37,159.84,115.71,168,109.93ZM96,56c41.21,0,72,14.78,72,28s-30.79,28-72,28S24,97.22,24,84,54.79,56,96,56ZM24,124V109.93c8.16,5.78,19.09,10.44,32,13.57v23.37C36.41,141.4,24,132.39,24,124Zm64,48v-4.17c2.63.1,5.29.17,8,.17,3.88,0,7.67-.13,11.39-.35A121.92,121.92,0,0,0,120,171.41v23.46C100.41,189.4,88,180.39,88,172Zm48,26.25V174.4a179.48,179.48,0,0,0,24,1.6,183.74,183.74,0,0,0,24-1.54v23.79a165.45,165.45,0,0,1-48,0Zm64-3.38V171.5c12.91-3.13,23.84-7.79,32-13.57V172C232,180.39,219.59,189.4,200,194.87Z" })
+      ]
+    }
+  ),
+  Logo: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      width: size2 ?? 65,
+      height: size2 ?? 65,
+      fill: "none",
+      viewBox: "0 0 65 65",
+      ...props,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "path",
+          {
+            fill: "orange",
+            d: "M37 5c0 2.21-2.015 4-4.5 4S28 7.21 28 5s2.015-4 4.5-4S37 2.79 37 5zM56 13c0 2.21-2.015 4-4.5 4S47 15.21 47 13s2.015-4 4.5-4 4.5 1.79 4.5 4zM64 32.5a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM56 51.5a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM37 59.5a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18 52a5 5 0 11-10 0 5 5 0 0110 0zM10 32.5a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM17 13a4 4 0 11-8 0 4 4 0 018 0z"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "path",
+          {
+            fill: "#FECC81",
+            d: "M48 32.5C48 41.06 41.06 48 32.5 48 23.94 48 17 41.06 17 32.5 17 23.94 23.94 17 32.5 17 41.06 17 48 23.94 48 32.5z"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "path",
+          {
+            fill: "#111",
+            d: "M37.566 5.134C37.566 2.303 35.252 0 32.407 0c-2.844 0-5.158 2.303-5.158 5.134 0 2.83 2.314 5.134 5.158 5.134 2.845 0 5.159-2.303 5.159-5.134zm-8.696 0c0-1.938 1.587-3.514 3.537-3.514 1.951 0 3.538 1.576 3.538 3.514 0 1.937-1.587 3.513-3.538 3.513-1.95 0-3.537-1.576-3.537-3.513zM13.147 7.976h-.015a5.138 5.138 0 00-3.64 1.516 5.138 5.138 0 00-1.516 3.64 5.087 5.087 0 001.499 3.637 5.086 5.086 0 003.623 1.499h.014a5.134 5.134 0 003.64-1.516 5.134 5.134 0 001.516-3.64 5.086 5.086 0 00-1.499-3.637 5.086 5.086 0 00-3.622-1.499zm2.46 7.63a3.525 3.525 0 01-2.5 1.042 3.448 3.448 0 01-2.486-1.024 3.479 3.479 0 01-1.025-2.487 3.529 3.529 0 011.042-2.5 3.529 3.529 0 012.499-1.04h.01c.937 0 1.816.363 2.477 1.024a3.478 3.478 0 011.024 2.487 3.525 3.525 0 01-1.042 2.498zM0 32.407c0 2.845 2.303 5.159 5.134 5.159 2.83 0 5.134-2.314 5.134-5.159 0-2.844-2.303-5.158-5.134-5.158C2.303 27.25 0 29.563 0 32.407zm8.647 0c0 1.951-1.576 3.538-3.513 3.538-1.938 0-3.514-1.587-3.514-3.538 0-1.95 1.576-3.537 3.514-3.537 1.937 0 3.513 1.587 3.513 3.537zM13.132 56.839h.015c1.37 0 2.656-.532 3.622-1.5a5.086 5.086 0 001.499-3.636 5.134 5.134 0 00-1.516-3.64 5.134 5.134 0 00-3.64-1.516c-1.34.013-2.667.528-3.637 1.498a5.087 5.087 0 00-1.499 3.638 5.138 5.138 0 001.516 3.64 5.138 5.138 0 003.64 1.516zM10.62 49.19a3.478 3.478 0 012.476-1.024h.01c.943.003 1.83.372 2.5 1.041a3.525 3.525 0 011.04 2.5c.003.94-.36 1.823-1.023 2.486a3.48 3.48 0 01-2.478 1.024h-.01a3.53 3.53 0 01-2.498-1.04 3.529 3.529 0 01-1.042-2.5 3.478 3.478 0 011.025-2.487zM27.25 59.681c0 2.831 2.313 5.134 5.157 5.134 2.845 0 5.159-2.303 5.159-5.134 0-2.83-2.314-5.134-5.159-5.134-2.844 0-5.158 2.303-5.158 5.134zm8.695 0c0 1.937-1.587 3.513-3.538 3.513-1.95 0-3.537-1.576-3.537-3.513 0-1.938 1.587-3.514 3.537-3.514 1.951 0 3.538 1.576 3.538 3.514zM48.063 48.063a5.134 5.134 0 00-1.516 3.64 5.086 5.086 0 001.498 3.637 5.086 5.086 0 003.623 1.499h.015a5.138 5.138 0 003.64-1.516 5.137 5.137 0 001.516-3.64 5.087 5.087 0 00-1.5-3.638 5.024 5.024 0 00-3.636-1.498 5.134 5.134 0 00-3.64 1.516zm3.654.104c.937 0 1.816.363 2.477 1.024a3.478 3.478 0 011.024 2.487 3.53 3.53 0 01-1.04 2.5 3.53 3.53 0 01-2.5 1.04h-.01a3.479 3.479 0 01-2.477-1.024 3.478 3.478 0 01-1.024-2.487 3.525 3.525 0 011.041-2.498 3.524 3.524 0 012.5-1.042h.01zM59.681 27.25c-2.83 0-5.134 2.313-5.134 5.157 0 2.845 2.303 5.159 5.134 5.159 2.831 0 5.134-2.314 5.134-5.159 0-2.844-2.303-5.158-5.134-5.158zm0 8.695c-1.938 0-3.514-1.587-3.514-3.538 0-1.95 1.576-3.537 3.514-3.537 1.937 0 3.513 1.587 3.513 3.537 0 1.951-1.576 3.538-3.513 3.538zM51.683 7.976h-.015c-1.37 0-2.656.532-3.623 1.499a5.086 5.086 0 00-1.498 3.637 5.134 5.134 0 001.516 3.64 5.134 5.134 0 003.64 1.516h.014c1.37 0 2.656-.532 3.623-1.499a5.087 5.087 0 001.499-3.637 5.138 5.138 0 00-1.516-3.64 5.138 5.138 0 00-3.64-1.516zm2.511 7.648a3.479 3.479 0 01-2.477 1.024h-.01a3.525 3.525 0 01-2.498-1.042 3.525 3.525 0 01-1.042-2.498 3.478 3.478 0 011.024-2.487 3.479 3.479 0 012.477-1.025h.01c.943.003 1.83.373 2.5 1.042a3.53 3.53 0 011.04 2.499 3.478 3.478 0 01-1.024 2.487zM45.28 9.28a.81.81 0 10.79-1.415 27.954 27.954 0 00-5.64-2.378.811.811 0 00-.461 1.553 26.35 26.35 0 015.311 2.24zM19.503 9.19c.13 0 .263-.03.385-.097a26.391 26.391 0 015.34-2.171.81.81 0 10-.442-1.559 27.985 27.985 0 00-5.67 2.305.81.81 0 00.387 1.523zM5.588 24.283a.81.81 0 001.553.462 26.35 26.35 0 012.24-5.312.81.81 0 10-1.414-.79 27.95 27.95 0 00-2.38 5.64zM9.194 44.825a26.391 26.391 0 01-2.17-5.34.81.81 0 10-1.56.443 27.989 27.989 0 002.306 5.669.81.81 0 101.425-.772zM19.535 55.332a.81.81 0 10-.79 1.415 27.954 27.954 0 005.639 2.379.807.807 0 001.008-.546.81.81 0 00-.546-1.007 26.35 26.35 0 01-5.311-2.241zM44.926 55.52a26.395 26.395 0 01-5.34 2.17.81.81 0 10.443 1.56 27.98 27.98 0 005.669-2.306.81.81 0 00-.772-1.425zM55.746 46.281a.81.81 0 001.102-.313 27.95 27.95 0 002.379-5.638.81.81 0 10-1.553-.462 26.348 26.348 0 01-2.24 5.31.81.81 0 00.312 1.103zM55.62 19.787a26.395 26.395 0 012.172 5.34.81.81 0 101.558-.442 27.985 27.985 0 00-2.305-5.67.81.81 0 00-1.425.771zM32.407 48.611c8.935 0 16.204-7.269 16.204-16.204 0-8.934-7.269-16.203-16.204-16.203-8.934 0-16.203 7.269-16.203 16.203 0 8.935 7.269 16.204 16.203 16.204zm0-30.787c8.042 0 14.584 6.542 14.584 14.583 0 8.042-6.542 14.584-14.584 14.584-8.04 0-14.583-6.542-14.583-14.584 0-8.04 6.542-14.583 14.583-14.583z"
+          }
+        )
+      ]
+    }
+  ),
+  ChartBar: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      width: size2 ?? 32,
+      height: size2 ?? 32,
+      fill: "currentColor",
+      viewBox: "0 0 256 256",
+      ...props,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M208,40V208H152V40Z", opacity: "0.2" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M224,200h-8V40a8,8,0,0,0-8-8H152a8,8,0,0,0-8,8V80H96a8,8,0,0,0-8,8v40H48a8,8,0,0,0-8,8v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16ZM160,48h40V200H160ZM104,96h40V200H104ZM56,144H88v56H56Z" })
+      ]
+    }
+  ),
+  InfoCircle: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      width: size2 ?? 80,
+      height: size2 ?? 80,
+      fill: "currentColor",
+      viewBox: "0 0 80 80",
+      ...props,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M39.8202 79.1504C61.5976 79.1504 79.2734 61.5234 79.2734 39.7461C79.2734 17.9688 61.5976 0.341797 39.8202 0.341797C18.0917 0.341797 0.415894 17.9688 0.415894 39.7461C0.415894 61.5234 18.0917 79.1504 39.8202 79.1504ZM39.8202 71.7285C22.1445 71.7285 7.88655 57.4219 7.88655 39.7461C7.88655 22.0703 22.1445 7.7637 39.8202 7.7637C57.496 7.7637 71.8027 22.0703 71.8027 39.7461C71.8027 57.4219 57.496 71.7285 39.8202 71.7285Z" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M33.2284 61.377H48.7558C50.5136 61.377 51.9296 60.1074 51.9296 58.3008C51.9296 56.5918 50.5136 55.2734 48.7558 55.2734H44.4589V37.0117C44.4589 34.6191 43.287 33.1055 41.0898 33.1055H33.9609C32.203 33.1055 30.8359 34.4238 30.8359 36.084C30.8359 37.8906 32.203 39.1602 33.9609 39.1602H37.5253V55.2734H33.2284C31.4706 55.2734 30.0546 56.5918 30.0546 58.3008C30.0546 60.1074 31.4706 61.377 33.2284 61.377ZM39.4296 27.0996C42.5058 27.0996 44.8984 24.6582 44.8984 21.582C44.8984 18.5059 42.5058 16.1133 39.4296 16.1133C36.4023 16.1133 33.9609 18.5059 33.9609 21.582C33.9609 24.6582 36.4023 27.0996 39.4296 27.0996Z" })
+      ]
+    }
+  ),
+  CirclesFour: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      width: size2 ?? 32,
+      height: size2 ?? 32,
+      fill: "currentColor",
+      viewBox: "0 0 256 256",
+      ...props,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "path",
+          {
+            d: "M112,80A32,32,0,1,1,80,48,32,32,0,0,1,112,80Zm64,32a32,32,0,1,0-32-32A32,32,0,0,0,176,112ZM80,144a32,32,0,1,0,32,32A32,32,0,0,0,80,144Zm96,0a32,32,0,1,0,32,32A32,32,0,0,0,176,144Z",
+            opacity: "0.2"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M80,40a40,40,0,1,0,40,40A40,40,0,0,0,80,40Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,80,104Zm96,16a40,40,0,1,0-40-40A40,40,0,0,0,176,120Zm0-64a24,24,0,1,1-24,24A24,24,0,0,1,176,56ZM80,136a40,40,0,1,0,40,40A40,40,0,0,0,80,136Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,80,200Zm96-64a40,40,0,1,0,40,40A40,40,0,0,0,176,136Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,176,200Z" })
+      ]
+    }
+  ),
+  Money: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      ...props,
+      width: size2 ?? 32,
+      height: size2 ?? 32,
+      fill: "currentColor",
+      viewBox: "0 0 256 256",
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "path",
+          {
+            d: "M160,128a32,32,0,1,1-32-32A32,32,0,0,1,160,128Zm40-64a48.85,48.85,0,0,0,40,40V64Zm0,128h40V152A48.85,48.85,0,0,0,200,192ZM16,152v40H56A48.85,48.85,0,0,0,16,152Zm0-48A48.85,48.85,0,0,0,56,64H16Z",
+            opacity: "0.2"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M128,88a40,40,0,1,0,40,40A40,40,0,0,0,128,88Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,152ZM240,56H16a8,8,0,0,0-8,8V192a8,8,0,0,0,8,8H240a8,8,0,0,0,8-8V64A8,8,0,0,0,240,56ZM24,72H45.37A40.81,40.81,0,0,1,24,93.37Zm0,112V162.63A40.81,40.81,0,0,1,45.37,184Zm208,0H210.63A40.81,40.81,0,0,1,232,162.63Zm0-38.35A56.78,56.78,0,0,0,193.65,184H62.35A56.78,56.78,0,0,0,24,145.65v-35.3A56.78,56.78,0,0,0,62.35,72h131.3A56.78,56.78,0,0,0,232,110.35Zm0-52.28A40.81,40.81,0,0,1,210.63,72H232Z" })
+      ]
+    }
+  ),
+  Addons: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      ...props,
+      width: size2 ?? 32,
+      height: size2 ?? 32,
+      fill: "currentColor",
+      viewBox: "0 0 256 256",
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "path",
+          {
+            d: "M216,104v96a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V104a8,8,0,0,1,8-8H208A8,8,0,0,1,216,104Z",
+            opacity: "0.2"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M208,88H48a16,16,0,0,0-16,16v96a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V104A16,16,0,0,0,208,88Zm0,112H48V104H208v96ZM48,64a8,8,0,0,1,8-8H200a8,8,0,0,1,0,16H56A8,8,0,0,1,48,64ZM64,32a8,8,0,0,1,8-8H184a8,8,0,0,1,0,16H72A8,8,0,0,1,64,32Z" })
+      ]
+    }
+  ),
+  LogOut: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      ...props,
+      width: size2 ?? 32,
+      height: size2 ?? 32,
+      fill: "currentColor",
+      viewBox: "0 0 256 256",
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "path",
+          {
+            d: "M208,88H48a8,8,0,0,0-8,8V208a8,8,0,0,0,8,8H208a8,8,0,0,0,8-8V96A8,8,0,0,0,208,88Zm-80,72a20,20,0,1,1,20-20A20,20,0,0,1,128,160Z",
+            opacity: "0.2"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Zm-80-96a28,28,0,0,0-8,54.83V184a8,8,0,0,0,16,0V166.83A28,28,0,0,0,128,112Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,128,152Z" })
+      ]
+    }
+  ),
+  Launcher: ({ size: size2, ...props }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      ...props,
+      width: size2 ?? 32,
+      height: size2 ?? 32,
+      fill: "currentColor",
+      viewBox: "0 0 256 256",
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "path",
+          {
+            d: "M208,76h0a28,28,0,0,1-28,28H152V76a28,28,0,0,1,28-28h0A28,28,0,0,1,208,76ZM76,48h0A28,28,0,0,0,48,76h0a28,28,0,0,0,28,28h28V76A28,28,0,0,0,76,48ZM180,152H152v28a28,28,0,0,0,28,28h0a28,28,0,0,0,28-28h0A28,28,0,0,0,180,152ZM48,180h0a28,28,0,0,0,28,28h0a28,28,0,0,0,28-28V152H76A28,28,0,0,0,48,180Z",
+            opacity: "0.2"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M180,144H160V112h20a36,36,0,1,0-36-36V96H112V76a36,36,0,1,0-36,36H96v32H76a36,36,0,1,0,36,36V160h32v20a36,36,0,1,0,36-36ZM160,76a20,20,0,1,1,20,20H160ZM56,76a20,20,0,0,1,40,0V96H76A20,20,0,0,1,56,76ZM96,180a20,20,0,1,1-20-20H96Zm16-68h32v32H112Zm68,88a20,20,0,0,1-20-20V160h20a20,20,0,0,1,0,40Z" })
+      ]
+    }
+  )
 };
 var Avatar = React.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(
   Root$9,
@@ -24318,6 +25600,47 @@ var Separator2 = React.forwardRef(({ className, orientation = "horizontal", deco
   }
 ));
 Separator2.displayName = Root$6.displayName;
+function EmptyPlaceholder({ className, children, icon, title, description, ...props }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "div",
+    {
+      className: cn(
+        "animate-in fade-in-50 flex flex-col items-center justify-center rounded-md p-8 text-center",
+        className
+      ),
+      ...props,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mx-auto flex max-w-[420px] flex-col items-center justify-center text-center", children: [
+        icon && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bg-muted flex size-20 items-center justify-center rounded-full", children: icon }),
+        title && /* @__PURE__ */ jsxRuntimeExports.jsx(EmptyPlaceholder.Title, { children: title }),
+        description && /* @__PURE__ */ jsxRuntimeExports.jsx(EmptyPlaceholder.Description, { children: description }),
+        children
+      ] })
+    }
+  );
+}
+EmptyPlaceholder.Icon = function EmptyPlaceHolderIcon({ name, className, ...props }) {
+  const Icon2 = Icons[name];
+  if (!Icon2) {
+    return null;
+  }
+  const { children: _children, dominantBaseline: _dominantBaseline, ...validProps } = props;
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bg-muted flex h-20 w-20 items-center justify-center rounded-full", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Icon2, { className: cn("h-10 w-10", className), ...validProps }) });
+};
+EmptyPlaceholder.Title = function EmptyPlaceholderTitle({ className, ...props }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: cn("mt-6 text-xl font-semibold", className), ...props });
+};
+EmptyPlaceholder.Description = function EmptyPlaceholderDescription({
+  className,
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "p",
+    {
+      className: cn("text-muted-foreground mt-2 mb-8 text-center text-sm leading-6 font-normal", className),
+      ...props
+    }
+  );
+};
 var labelVariants = cva("text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70");
 var Label2 = React.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(Root$5, { ref, className: cn(labelVariants(), className), ...props }));
 Label2.displayName = Root$5.displayName;
@@ -24401,10 +25724,11 @@ var HoverCardContent = React.forwardRef(({ className, align = "center", sideOffs
   }
 ));
 HoverCardContent.displayName = Content2$2.displayName;
-React.createContext({
+var PageContext = React.createContext({
   scrollY: 0,
   isScrolled: false
 });
+var usePage = () => React.useContext(PageContext);
 var MOBILE_NAV_SCROLL_OFFSET = "calc(var(--mobile-nav-ui-height) + max(var(--mobile-nav-gap), env(safe-area-inset-bottom)))";
 var PageScrollContainer = React.forwardRef(
   function PageScrollContainer2({ className, children, withMobileNavOffset = false, style, ...props }, ref) {
@@ -24432,6 +25756,101 @@ var PageScrollContainer = React.forwardRef(
   }
 );
 PageScrollContainer.displayName = "PageScrollContainer";
+function Page({ children, className, containerMode = false, ...props }) {
+  const [scrollY, setScrollY] = React.useState(0);
+  const [isScrolled, setIsScrolled] = React.useState(false);
+  const scrollContainerRef = React.useRef(null);
+  React.useEffect(() => {
+    const container = scrollContainerRef.current?.closest("[data-page-scroll-container]");
+    if (!container) return;
+    const handleScroll2 = () => {
+      const currentScrollY = container.scrollTop;
+      setScrollY(currentScrollY);
+      setIsScrolled(currentScrollY > 10);
+    };
+    container.addEventListener("scroll", handleScroll2, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll2);
+  }, [containerMode]);
+  if (containerMode) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(PageContext.Provider, { value: { scrollY, isScrolled }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { ref: scrollContainerRef, className: cn("relative w-full", "bg-background", className), ...props, children }) });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(PageContext.Provider, { value: { scrollY, isScrolled }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { ref: scrollContainerRef, className: cn("relative w-full", "bg-background", className), ...props, children }) });
+}
+function PageHeader({
+  children,
+  heading,
+  headingPrefix,
+  text,
+  onBack,
+  className,
+  showBorderOnScroll = true,
+  actions,
+  dragRegion = true,
+  ...props
+}) {
+  const { isScrolled } = usePage();
+  const titleContent = heading ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { "data-tauri-drag-region": dragRegion ? "true" : void 0, className: "flex items-center gap-3", children: [
+    headingPrefix && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-muted-foreground text-lg font-semibold md:text-xl", children: headingPrefix }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bg-border h-5 w-px md:h-6" })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-lg font-semibold md:text-xl", children: heading }),
+      text && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-sm md:text-base", children: text })
+    ] })
+  ] }) : null;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "header",
+    {
+      className: cn(
+        "sticky top-0 z-50",
+        // Native app feel with backdrop blur
+        "bg-background/80 supports-[backdrop-filter]:bg-background/60 backdrop-blur-xl",
+        // Smooth transitions
+        "transition-all duration-300 ease-out",
+        // Border animation on scroll
+        showBorderOnScroll && ["border-b", isScrolled ? "border-border shadow-sm" : "border-transparent shadow-none"],
+        "pt-safe md:pt-2",
+        className
+      ),
+      ...props,
+      children: [
+        dragRegion && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { "data-tauri-drag-region": "true", className: "pointer-events-auto absolute inset-x-0 top-0 h-6 opacity-0" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mx-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex min-w-[200px] items-center gap-2 sm:min-w-0 sm:flex-1", children: [
+            onBack && /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "secondary", size: "icon", onClick: onBack, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.ArrowLeft, { className: "size-6" }) }),
+            titleContent ?? children
+          ] }),
+          actions && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-wrap items-center gap-2", children: actions })
+        ] }) }) })
+      ]
+    }
+  );
+}
+function PageContent({
+  children,
+  className,
+  withPadding = true,
+  containerMode = false,
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "div",
+    {
+      "data-ptr-content": true,
+      className: cn(
+        withPadding && "px-2 py-2 md:px-4 md:py-2",
+        // In containerMode, the scroll container handles bottom padding for mobile nav
+        // In standalone mode, add extra bottom padding on desktop
+        !containerMode && "pb-safe md:pb-6 lg:pb-8",
+        "min-h-[calc(100vh-4rem)] md:min-h-[calc(100vh-5rem)]",
+        className
+      ),
+      ...props,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mx-auto space-y-6", children })
+    }
+  );
+}
 var Progress = React.forwardRef(({ className, value, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(
   Root$4,
   {
@@ -25312,13 +26731,608 @@ CurrencyInput.displayName = "CurrencyInput";
     return this.props.children;
   }
 });
-function AddonExample({ ctx }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "p-6", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "p-6", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "mb-2 text-2xl font-semibold", children: "Value Averaging" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground", children: "Welcome to your new Wealthfolio addon! Start building amazing features." })
-  ] }) }) });
+const SETTINGS_STORAGE_KEY = "value-averaging-addon:settings";
+const DEFAULT_TICKERS = [
+  {
+    id: "vti-main",
+    symbol: "VTI",
+    name: "Vanguard Total Stock Market ETF",
+    accountName: "Interactive Brokers",
+    averageCost: 244.15,
+    currentPrice: 252.4,
+    totalInvested: 12e3,
+    valueAveragingInvested: 8800
+  },
+  {
+    id: "vxus-longterm",
+    symbol: "VXUS",
+    name: "Vanguard Total International Stock ETF",
+    accountName: "Fidelity",
+    averageCost: 59.22,
+    currentPrice: 61.48,
+    totalInvested: 6500,
+    valueAveragingInvested: 5200
+  },
+  {
+    id: "bnd-income",
+    symbol: "BND",
+    name: "Vanguard Total Bond Market ETF",
+    accountName: "Charles Schwab",
+    averageCost: 72.68,
+    currentPrice: 71.91,
+    totalInvested: 5300,
+    valueAveragingInvested: 4300
+  }
+];
+function buildDefaultSettings() {
+  const enabledTickers = {};
+  const tickerAllocations = {};
+  DEFAULT_TICKERS.forEach((ticker) => {
+    enabledTickers[ticker.id] = true;
+    tickerAllocations[ticker.id] = Number((100 / DEFAULT_TICKERS.length).toFixed(2));
+  });
+  return {
+    topUpMode: "amount",
+    topUpAmount: 500,
+    topUpPercentage: 2,
+    maxTopUpEnabled: true,
+    maxTopUpMultiplier: 3,
+    growthPeriodMonths: 12,
+    enabledTickers,
+    tickerAllocations,
+    isConfigured: false
+  };
 }
-function enable(ctx) {
+function readSettings() {
+  const defaults = buildDefaultSettings();
+  if (typeof window === "undefined") {
+    return defaults;
+  }
+  const rawSettings = window.localStorage.getItem(SETTINGS_STORAGE_KEY);
+  if (!rawSettings) {
+    return defaults;
+  }
+  try {
+    const parsed = JSON.parse(rawSettings);
+    return {
+      ...defaults,
+      ...parsed,
+      enabledTickers: {
+        ...defaults.enabledTickers,
+        ...parsed.enabledTickers ?? {}
+      },
+      tickerAllocations: {
+        ...defaults.tickerAllocations,
+        ...parsed.tickerAllocations ?? {}
+      }
+    };
+  } catch {
+    return defaults;
+  }
+}
+function saveSettings(settings) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+}
+const desktopTabs = [
+  { value: "dashboard", label: "Dashboard" },
+  { value: "settings", label: "Settings" }
+];
+const mobileTabs = [
+  { value: "dashboard", label: "Dash" },
+  { value: "settings", label: "Set" }
+];
+function PageTabSelector({ currentPage, onPageChange }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden sm:block", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      AnimatedToggleGroup,
+      {
+        items: desktopTabs,
+        value: currentPage,
+        onValueChange: onPageChange,
+        variant: "secondary",
+        size: "sm",
+        rounded: "full"
+      }
+    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "block sm:hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      AnimatedToggleGroup,
+      {
+        items: mobileTabs,
+        value: currentPage,
+        onValueChange: onPageChange,
+        variant: "secondary",
+        size: "xs",
+        rounded: "full"
+      }
+    ) })
+  ] });
+}
+function toCurrency$1(value) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2
+  }).format(value);
+}
+function buildInvestmentPlan(tickers, settings) {
+  const baseTopUp = settings.topUpMode === "amount" ? settings.topUpAmount : tickers.reduce((total, ticker) => total + ticker.currentPrice, 0) * settings.topUpPercentage / 100;
+  const plans = {};
+  tickers.forEach((ticker) => {
+    const allocation = (settings.tickerAllocations[ticker.id] ?? 0) / 100;
+    const growthRatio = settings.growthPeriodMonths / 120;
+    const targetValue = ticker.totalInvested * (1 + growthRatio);
+    const valueGap = Math.max(0, targetValue - ticker.currentPrice);
+    const uncappedTopUp = baseTopUp * allocation + valueGap * 0.2;
+    const maxAllowedTopUp = settings.maxTopUpEnabled ? baseTopUp * settings.maxTopUpMultiplier * allocation : Number.MAX_SAFE_INTEGER;
+    plans[ticker.id] = {
+      tickerId: ticker.id,
+      targetValue,
+      amountToInvest: Math.max(0, Math.min(uncappedTopUp, maxAllowedTopUp))
+    };
+  });
+  return plans;
+}
+function DashboardPage({
+  ctx,
+  currentPage,
+  onPageChange,
+  settings,
+  tickers,
+  onFetchLatestPrices,
+  onAutoGenerateTransactions,
+  generatedTransactions
+}) {
+  const [selectedTickerId, setSelectedTickerId] = React.useState(null);
+  const enabledTickers = React.useMemo(
+    () => tickers.filter((ticker) => settings.enabledTickers[ticker.id]),
+    [settings.enabledTickers, tickers]
+  );
+  const investmentPlan = React.useMemo(
+    () => buildInvestmentPlan(enabledTickers, settings),
+    [enabledTickers, settings]
+  );
+  const selectedTicker = enabledTickers.find((ticker) => ticker.id === selectedTickerId) ?? enabledTickers[0] ?? null;
+  const selectedPlan = selectedTicker ? investmentPlan[selectedTicker.id] : null;
+  const headerActions = /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-center gap-2", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(PageTabSelector, { currentPage, onPageChange }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "button",
+      {
+        type: "button",
+        onClick: onFetchLatestPrices,
+        className: "border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center rounded-md border px-3 text-sm font-medium",
+        children: "Fetch newest price"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "button",
+      {
+        type: "button",
+        onClick: onAutoGenerateTransactions,
+        className: "bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center rounded-md px-3 text-sm font-medium",
+        children: "Auto generate transaction"
+      }
+    )
+  ] });
+  if (!settings.isConfigured) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs(Page, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(PageHeader, { heading: "Value Averaging Dashboard", actions: headerActions }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(PageContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex h-[calc(100vh-200px)] items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        EmptyPlaceholder,
+        {
+          className: "border-border/50 w-full max-w-[520px] border border-dashed",
+          icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.Activity2, { className: "h-10 w-10" }),
+          title: "Dashboard is empty",
+          description: "Please complete your value averaging setup first. After confirming settings, your selected tickers and investment recommendations will appear here.",
+          children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "button",
+            {
+              type: "button",
+              onClick: () => onPageChange("settings"),
+              className: "bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center rounded-md px-3 text-sm font-medium",
+              children: "Go to settings"
+            }
+          )
+        }
+      ) }) })
+    ] });
+  }
+  if (!enabledTickers.length) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs(Page, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(PageHeader, { heading: "Value Averaging Dashboard", actions: headerActions }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(PageContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex h-[calc(100vh-200px)] items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        EmptyPlaceholder,
+        {
+          className: "border-border/50 w-full max-w-[520px] border border-dashed",
+          icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Icons.Activity2, { className: "h-10 w-10" }),
+          title: "No ticker selected",
+          description: "Enable at least one ticker in settings to build your value averaging portfolio."
+        }
+      ) }) })
+    ] });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Page, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(PageHeader, { heading: "Value Averaging Dashboard", actions: headerActions }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(PageContent, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-4 lg:grid-cols-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "lg:col-span-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { children: "Tickers / Assets" }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full text-sm", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "text-muted-foreground border-b text-left", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2 font-medium", children: "Ticker" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2 font-medium", children: "Cost basis" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2 font-medium", children: "Market value" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2 font-medium", children: "Amount to invest" })
+            ] }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: enabledTickers.map((ticker) => {
+              const plan = investmentPlan[ticker.id];
+              const isSelected = selectedTicker?.id === ticker.id;
+              return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "tr",
+                {
+                  className: `border-b last:border-b-0 ${isSelected ? "bg-muted/50" : ""}`,
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-2 py-3", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      "button",
+                      {
+                        type: "button",
+                        onClick: () => setSelectedTickerId(ticker.id),
+                        className: "text-left",
+                        children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-medium", children: ticker.symbol }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground text-xs", children: ticker.name })
+                        ]
+                      }
+                    ) }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-2 py-3", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-medium", children: toCurrency$1(ticker.averageCost) }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground text-xs", children: "Avg price" })
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-2 py-3", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-medium", children: toCurrency$1(ticker.currentPrice) }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground text-xs", children: "Current price" })
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-2 py-3 font-medium", children: toCurrency$1(plan?.amountToInvest ?? 0) })
+                  ]
+                },
+                ticker.id
+              );
+            }) })
+          ] }) }) })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { children: "Ticker details" }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: "space-y-3 text-sm", children: selectedTicker && selectedPlan ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground", children: "Ticker" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: selectedTicker.symbol })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground", children: "Account" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: selectedTicker.accountName })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground", children: "Total invested (VA)" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: toCurrency$1(selectedTicker.valueAveragingInvested) })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground", children: "Target portfolio value" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: toCurrency$1(selectedPlan.targetValue) })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground", children: "Amount to invest now" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: toCurrency$1(selectedPlan.amountToInvest) })
+            ] })
+          ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground", children: "Select a ticker to see details." }) })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { children: "Generated transactions" }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: !generatedTransactions.length ? /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-sm", children: 'No auto-generated transaction yet. Click "Auto generate transaction" to create one.' }) : /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "space-y-2 text-sm", children: generatedTransactions.map((transaction) => /* @__PURE__ */ jsxRuntimeExports.jsx("li", { className: "bg-muted rounded-md px-3 py-2", children: transaction }, transaction)) }) })
+      ] })
+    ] })
+  ] });
+}
+const PRESET_MULTIPLIERS = [1.5, 2, 3, 4, 5];
+function SettingsPage({
+  ctx,
+  currentPage,
+  onPageChange,
+  settings,
+  tickers,
+  onConfirmSettings
+}) {
+  const [draft, setDraft] = React.useState(settings);
+  const totalAllocation = React.useMemo(
+    () => tickers.filter((ticker) => draft.enabledTickers[ticker.id]).reduce((total, ticker) => total + (draft.tickerAllocations[ticker.id] ?? 0), 0),
+    [draft, tickers]
+  );
+  const headerActions = /* @__PURE__ */ jsxRuntimeExports.jsx(PageTabSelector, { currentPage, onPageChange });
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Page, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(PageHeader, { heading: "Value Averaging Settings", actions: headerActions }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(PageContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-4 lg:grid-cols-2", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { children: "Top-up strategy" }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-4 text-sm", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-medium", children: "Top-up mode" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  className: `inline-flex h-9 items-center rounded-md border px-3 ${draft.topUpMode === "amount" ? "bg-primary text-primary-foreground" : ""}`,
+                  onClick: () => setDraft((prev) => ({ ...prev, topUpMode: "amount" })),
+                  children: "Fixed amount"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  className: `inline-flex h-9 items-center rounded-md border px-3 ${draft.topUpMode === "percentage" ? "bg-primary text-primary-foreground" : ""}`,
+                  onClick: () => setDraft((prev) => ({ ...prev, topUpMode: "percentage" })),
+                  children: "Percentage"
+                }
+              )
+            ] })
+          ] }),
+          draft.topUpMode === "amount" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "block space-y-1", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: "Top-up amount (USD)" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "input",
+              {
+                type: "number",
+                min: 0,
+                value: draft.topUpAmount,
+                onChange: (event) => setDraft((prev) => ({
+                  ...prev,
+                  topUpAmount: Math.max(0, Number(event.target.value) || 0)
+                })),
+                className: "border-input bg-background h-9 w-full rounded-md border px-3"
+              }
+            )
+          ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "block space-y-1", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: "Top-up percentage (%)" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "input",
+              {
+                type: "number",
+                min: 0,
+                max: 100,
+                value: draft.topUpPercentage,
+                onChange: (event) => setDraft((prev) => ({
+                  ...prev,
+                  topUpPercentage: Math.min(100, Math.max(0, Number(event.target.value) || 0))
+                })),
+                className: "border-input bg-background h-9 w-full rounded-md border px-3"
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "flex items-center justify-between rounded-md border px-3 py-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Enable maximum top-up amount" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "input",
+              {
+                type: "checkbox",
+                checked: draft.maxTopUpEnabled,
+                onChange: (event) => setDraft((prev) => ({ ...prev, maxTopUpEnabled: event.target.checked })),
+                className: "h-4 w-4"
+              }
+            )
+          ] }),
+          draft.maxTopUpEnabled && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-2 font-medium", children: "Preset multipliers" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-wrap gap-2", children: PRESET_MULTIPLIERS.map((value) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => setDraft((prev) => ({ ...prev, maxTopUpMultiplier: value })),
+                  className: `inline-flex h-8 items-center rounded-md border px-2.5 ${draft.maxTopUpMultiplier === value ? "bg-primary text-primary-foreground" : ""}`,
+                  children: [
+                    value,
+                    "x"
+                  ]
+                },
+                value
+              )) })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "block space-y-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-medium", children: [
+                "Custom multiplier: ",
+                draft.maxTopUpMultiplier.toFixed(1),
+                "x"
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "input",
+                {
+                  type: "range",
+                  min: 1,
+                  max: 10,
+                  step: 0.1,
+                  value: draft.maxTopUpMultiplier,
+                  onChange: (event) => setDraft((prev) => ({
+                    ...prev,
+                    maxTopUpMultiplier: Number(event.target.value)
+                  })),
+                  className: "w-full"
+                }
+              )
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "block space-y-1", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-medium", children: "Growth period (months, for notification)" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "input",
+              {
+                type: "number",
+                min: 1,
+                max: 240,
+                value: draft.growthPeriodMonths,
+                onChange: (event) => setDraft((prev) => ({
+                  ...prev,
+                  growthPeriodMonths: Math.min(240, Math.max(1, Number(event.target.value) || 1))
+                })),
+                className: "border-input bg-background h-9 w-full rounded-md border px-3"
+              }
+            )
+          ] })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { children: "Ticker selection and allocation" }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-3 text-sm", children: [
+          tickers.map((ticker) => {
+            const enabled = draft.enabledTickers[ticker.id];
+            return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2 rounded-md border p-3", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "font-medium", children: [
+                    ticker.symbol,
+                    " - ",
+                    ticker.name
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground text-xs", children: ticker.accountName })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "flex items-center gap-2", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs", children: "Enable" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "input",
+                    {
+                      type: "checkbox",
+                      checked: enabled,
+                      onChange: (event) => setDraft((prev) => ({
+                        ...prev,
+                        enabledTickers: {
+                          ...prev.enabledTickers,
+                          [ticker.id]: event.target.checked
+                        }
+                      })),
+                      className: "h-4 w-4"
+                    }
+                  )
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "block space-y-1", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground text-xs", children: "Allocation in value averaging portfolio (%)" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "input",
+                  {
+                    type: "number",
+                    min: 0,
+                    max: 100,
+                    disabled: !enabled,
+                    value: draft.tickerAllocations[ticker.id] ?? 0,
+                    onChange: (event) => setDraft((prev) => ({
+                      ...prev,
+                      tickerAllocations: {
+                        ...prev.tickerAllocations,
+                        [ticker.id]: Math.min(100, Math.max(0, Number(event.target.value) || 0))
+                      }
+                    })),
+                    className: "border-input bg-background disabled:bg-muted h-9 w-full rounded-md border px-3"
+                  }
+                )
+              ] })
+            ] }, ticker.id);
+          }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-muted rounded-md px-3 py-2 text-xs", children: [
+            "Enabled allocation total: ",
+            totalAllocation.toFixed(2),
+            "%"
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "button",
+            {
+              type: "button",
+              onClick: () => {
+                const next = { ...draft, isConfigured: true };
+                onConfirmSettings(next);
+                onPageChange("dashboard");
+                ctx.api.logger.info("Value averaging settings confirmed");
+              },
+              className: "bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 w-full items-center justify-center rounded-md px-3 text-sm font-medium",
+              children: "Confirm settings"
+            }
+          )
+        ] })
+      ] })
+    ] }) })
+  ] });
+}
+function toCurrency(value) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2
+  }).format(value);
+}
+function ValueAveragingShell({ ctx }) {
+  const [currentPage, setCurrentPage] = React.useState("dashboard");
+  const [settings, setSettings] = React.useState(() => readSettings());
+  const [tickers, setTickers] = React.useState(DEFAULT_TICKERS);
+  const [generatedTransactions, setGeneratedTransactions] = React.useState([]);
+  const enabledTickers = React.useMemo(
+    () => tickers.filter((ticker) => settings.enabledTickers[ticker.id]),
+    [settings.enabledTickers, tickers]
+  );
+  const fetchLatestPrices = () => {
+    setTickers(
+      (prev) => prev.map((ticker) => {
+        const changeRate = (Math.random() * 6 - 3) / 100;
+        const nextPrice = Number((ticker.currentPrice * (1 + changeRate)).toFixed(2));
+        return { ...ticker, currentPrice: Math.max(0.01, nextPrice) };
+      })
+    );
+    ctx.api.logger.info("Value averaging prices refreshed");
+  };
+  const autoGenerateTransactions = () => {
+    const baseTopUp = settings.topUpMode === "amount" ? settings.topUpAmount : enabledTickers.reduce((sum, ticker) => sum + ticker.currentPrice, 0) * settings.topUpPercentage / 100;
+    const generated = enabledTickers.map((ticker) => {
+      const allocation = (settings.tickerAllocations[ticker.id] ?? 0) / 100;
+      const plannedAmount = baseTopUp * allocation;
+      const amount = settings.maxTopUpEnabled ? Math.min(plannedAmount, plannedAmount * settings.maxTopUpMultiplier) : plannedAmount;
+      return `BUY ${ticker.symbol} in ${ticker.accountName}: ${toCurrency(amount)}`;
+    });
+    setGeneratedTransactions(generated);
+    ctx.api.logger.info(`Auto-generated ${generated.length} value averaging transactions`);
+  };
+  const confirmSettings = (nextSettings) => {
+    setSettings(nextSettings);
+    saveSettings(nextSettings);
+  };
+  if (currentPage === "settings") {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      SettingsPage,
+      {
+        ctx,
+        currentPage,
+        onPageChange: setCurrentPage,
+        settings,
+        tickers,
+        onConfirmSettings: confirmSettings
+      }
+    );
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    DashboardPage,
+    {
+      ctx,
+      currentPage,
+      onPageChange: setCurrentPage,
+      settings,
+      tickers,
+      onFetchLatestPrices: fetchLatestPrices,
+      onAutoGenerateTransactions: autoGenerateTransactions,
+      generatedTransactions
+    }
+  );
+}
+const enable = (ctx) => {
   const sidebarItem = ctx.sidebar.addItem({
     id: "value-averaging-addon",
     label: "Value Averaging",
@@ -25326,10 +27340,13 @@ function enable(ctx) {
     route: "/addon/value-averaging-addon",
     order: 100
   });
-  const Wrapper = () => /* @__PURE__ */ jsxRuntimeExports.jsx(AddonExample, { ctx });
+  const AddonRoute = () => {
+    const sharedQueryClient = ctx.api.query.getClient();
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(QueryClientProvider, { client: sharedQueryClient, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ValueAveragingShell, { ctx }) });
+  };
   ctx.router.add({
     path: "/addon/value-averaging-addon",
-    component: React.lazy(() => Promise.resolve({ default: Wrapper }))
+    component: React.lazy(() => Promise.resolve({ default: AddonRoute }))
   });
   ctx.onDisable(() => {
     try {
@@ -25338,7 +27355,7 @@ function enable(ctx) {
       ctx.api.logger.error("Failed to remove sidebar item: " + err.message);
     }
   });
-}
+};
 export {
   enable as default
 };

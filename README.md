@@ -1,68 +1,65 @@
 # Value Averaging Addon for Wealthfolio
 
-This addon helps you run a value averaging strategy inside [Wealthfolio](https://wealthfolio.app).  
-It lets you configure portfolio weights, top-up rules, and growth schedule, then calculates ticker-level investment amounts based on your current holdings.
+Value averaging workflow addon for [Wealthfolio](https://wealthfolio.app), including order draft generation, account selection, confirmation before submit, and deploy record tracking.
 
-## What It Does
+## Core Features
 
-### Settings
+- Value averaging plan by ticker with configurable allocation and top-up rules.
+- Auto-generate order drafts from current holdings.
+- Confirm-first flow: no activity is created until user confirms.
+- Editable order fields:
+  - Account
+  - Price
+  - Amount
+  - Quantity (truncated to max 8 decimals)
+- Optional auto cash deposit before BUY.
+- Deploy records table with persisted local history.
+- Mobile-first deploy record UX:
+  - Compact list
+  - Detail sheet
+  - Pagination (10 records per page)
 
-- Configure top-up mode:
-  - Fixed amount
-  - Percentage
-- Set overflow gains behavior.
-- Choose purchase unit mode:
-  - Fractional unit
-  - Whole unit
-- Enable or disable maximum top-up limits with multiplier presets.
-- Configure growth schedule:
-  - Start date
-  - Interval
-  - End mode
-- Build your value averaging portfolio:
-  - Enable/disable tickers
-  - Set allocation percentages per ticker
-  - Use ticker logos from the app
+## Permissions
 
-### Allocation Validation
+This addon requests only the required host API permissions:
 
-- Portfolio allocation must stay in a valid range before saving:
-  - Minimum: `99.9%`
-  - Maximum: `100%`
-- If allocation is invalid:
-  - Total allocation value turns red
-  - Save button is disabled
-- If total is between `99.9%` and `100%`, it is treated as `100%` for display and save validation.
+- `accounts.getAll`: read active accounts
+- `portfolio.getHoldings`: read holdings for calculations
+- `settings.get`: read app base currency
+- `activities.create`: create confirmed BUY/SELL/DEPOSIT activities
+- `ui.sidebar.addItem`, `ui.router.add`: register addon navigation and route
 
-### Dashboard
+## Installation
 
-- Shows enabled tickers with:
-  - Cost basis
-  - Market value
-  - Calculated amount to invest
-- Includes ticker detail panel for selected asset.
-- Supports:
-  - Refresh latest holdings/prices
-  - Auto-generate transaction suggestions
+1. Build and bundle:
+   - `pnpm install`
+   - `pnpm bundle`
+2. Use the generated zip in `dist/` and install it through Wealthfolio addon installer.
 
-## Install
+## Usage
 
-1. Install or update Wealthfolio.
-2. Download this addon package.
-3. Install it through Wealthfolio addon installation flow.
+1. Open addon **Settings** and configure:
+   - Top-up mode and amount/percentage
+   - Allocation per enabled ticker
+   - Account mapping for auto-generated orders
+2. Open **Dashboard** and click **Auto generate transaction**.
+3. Review generated orders in the confirm modal/sheet.
+4. Adjust fields if needed, then confirm.
+5. Check **Deploy Records** for execution history.
 
-## How To Use
+## Notes
 
-1. Open **Settings** and configure strategy parameters.
-2. In **Portfolio**, enable tickers and set allocations.
-3. Save changes when allocation is valid.
-4. Go to **Dashboard** to review suggested investment amounts.
-5. Generate transactions for execution in your workflow.
+- Activity creation uses current timestamp (`activityDate`) at confirmation time.
+- Cost basis display is refreshed from latest holdings after successful creation.
+- Strategy supports continuous VA rounds by executed-period progression.
 
-## Requirements
+## Release Checklist (v1.0.0)
 
-- Wealthfolio with addon support enabled.
-- At least one active account and holding in your portfolio.
+- `manifest.json` points to `dist/addon.js`
+- `pnpm type-check` passes
+- `pnpm build` passes
+- `pnpm bundle` generates installable zip
+- README and changelog are updated
 
 ## License
 

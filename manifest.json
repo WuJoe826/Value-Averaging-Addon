@@ -2,7 +2,7 @@
   "id": "value-averaging-addon",
   "name": "Value Averaging Calculator",
   "version": "1.0.0",
-  "description": "Automates recurring investment calculations using the value averaging method – helping you grow your portfolio along a predefined target path, regardless of market fluctuations.",
+  "description": "Auto-generate and confirm value averaging BUY/SELL activities with editable order drafts, account selection, and deploy history.",
   "author": "WuJoe826",
   "main": "dist/addon.js",
   "sdkVersion": "2.0.0",
@@ -24,11 +24,16 @@
       "purpose": "Read base currency from host settings"
     },
     {
+      "category": "activities",
+      "functions": ["create"],
+      "purpose": "Create BUY, SELL, and optional DEPOSIT activities after user confirmation"
+    },
+    {
       "category": "ui",
       "functions": ["sidebar.addItem", "router.add"],
       "purpose": "Add navigation items to the sidebar"
     }
   ],
-  "keywords": ["wealthfolio", "addon", "value-averaging"],
+  "keywords": ["wealthfolio", "addon", "value-averaging", "dca", "portfolio-rebalancing"],
   "license": "MIT"
 }

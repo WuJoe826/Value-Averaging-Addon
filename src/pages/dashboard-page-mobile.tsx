@@ -18,6 +18,8 @@ interface DashboardPageMobileProps {
   baseCurrency: string;
   enabledTickers: PortfolioTicker[];
   investmentPlan: Record<string, InvestmentPlan>;
+  expectedWeightByTicker: Record<string, number>;
+  actualWeightByTicker: Record<string, number>;
   selectedTicker: PortfolioTicker | null;
   selectedPlan: InvestmentPlan | null;
   onSelectTicker: (tickerId: string) => void;
@@ -64,12 +66,29 @@ export function DashboardPageMobile({
   baseCurrency,
   enabledTickers,
   investmentPlan,
+  expectedWeightByTicker,
+  actualWeightByTicker,
   selectedTicker,
   selectedPlan,
   onSelectTicker,
   isTickerDetailSheetOpen,
   onTickerDetailSheetOpenChange,
 }: DashboardPageMobileProps) {
+  const selectedQuantity = toFiniteNumber(selectedTicker?.quantity);
+  const selectedCurrentPrice = toFiniteNumber(selectedTicker?.currentPrice);
+  const selectedVaCostBasis =
+    toFiniteNumber(selectedPlan?.initialDeploymentValue) + toFiniteNumber(selectedTicker?.valueAveragingInvested);
+  const selectedVaAverageCost =
+    selectedQuantity > 0 ? selectedVaCostBasis / selectedQuantity : toFiniteNumber(selectedTicker?.averageCost);
+  const selectedMarketValue = selectedCurrentPrice * selectedQuantity;
+  const selectedExpectedWeight = selectedTicker ? expectedWeightByTicker[selectedTicker.id] ?? 0 : 0;
+  const selectedActualWeight = selectedTicker ? actualWeightByTicker[selectedTicker.id] ?? 0 : 0;
+  const selectedAmountSign = selectedPlan?.action === "sell" ? "-" : "+";
+  const selectedSignedSharesLabel =
+    selectedCurrentPrice > 0 && selectedPlan && selectedPlan.action !== "hold"
+      ? `${selectedAmountSign}${formatShareCount(Math.abs(selectedPlan.amountToInvest) / selectedCurrentPrice)} Shares`
+      : "--.--";
+
   return (
     <div className="sm:hidden">
       <div className="min-h-0 flex-1 overflow-auto rounded-md border">
@@ -140,7 +159,7 @@ export function DashboardPageMobile({
           <SheetHeader className="border-border border-b px-6 py-4">
             <SheetTitle>Ticker details</SheetTitle>
           </SheetHeader>
-          <div className="space-y-3 overflow-auto px-6 py-4 text-sm">
+          <div className="space-y-3 overflow-auto px-6 pt-4 pb-20 text-sm">
             {selectedTicker && selectedPlan ? (
               <>
                 <div className="flex items-center justify-between">
@@ -148,20 +167,46 @@ export function DashboardPageMobile({
                   <span className="font-medium">{selectedTicker.symbol}</span>
                 </div>
                 <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Ticker shares</span>
+                  <span className="font-medium">{formatShareCount(selectedQuantity)} shares</span>
+                </div>
+                <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Account</span>
                   <span className="font-medium">{selectedTicker.accountName}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Shares</span>
-                  <span className="font-medium">{formatShareCount(toFiniteNumber(selectedTicker.quantity))}</span>
+                  <span className="text-muted-foreground">Allocation</span>
+                  <span className="font-medium">{selectedActualWeight.toFixed(2)}%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Expected allocation</span>
+                  <span className="font-medium">{selectedExpectedWeight.toFixed(2)}%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Cost basis</span>
+                  <span className="font-medium">{formatCurrency(selectedVaCostBasis, baseCurrency)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Average cost</span>
+                  <span className="font-medium">{formatCurrency(selectedVaAverageCost, baseCurrency)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Market value</span>
+                  <span className="font-medium">{formatCurrency(selectedMarketValue, baseCurrency)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Current price</span>
+                  <span className="font-medium">{formatCurrency(selectedCurrentPrice, baseCurrency)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Desired value</span>
                   <span className="font-medium">{formatCurrency(selectedPlan.targetValue, baseCurrency)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Current market value</span>
-                  <span className="font-medium">{formatCurrency(selectedPlan.currentPortfolioValue, baseCurrency)}</span>
+                  <span className="text-muted-foreground">Growth per period</span>
+                  <span className="font-medium">
+                    {formatCurrency(selectedPlan.growthPerPeriod, baseCurrency)} x {selectedPlan.periodIndex}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Amount to invest</span>
@@ -176,6 +221,10 @@ export function DashboardPageMobile({
                   ) : (
                     <Badge variant="success">+{formatCurrency(selectedPlan.amountToInvest, baseCurrency)}</Badge>
                   )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Shares change</span>
+                  <span className="font-medium">{selectedSignedSharesLabel}</span>
                 </div>
               </>
             ) : (

@@ -185,6 +185,8 @@ export default function DashboardPage({
             baseCurrency={baseCurrency}
             enabledTickers={enabledTickers}
             investmentPlan={investmentPlan}
+            expectedWeightByTicker={expectedWeightByTicker}
+            actualWeightByTicker={actualWeightByTicker}
             selectedTicker={selectedTicker}
             selectedPlan={selectedPlan}
             onSelectTicker={setSelectedTickerId}

@@ -555,7 +555,10 @@ export default function DashboardPage({
         </Dialog>
       ) : (
         <Sheet open={isOrderSheetOpen} onOpenChange={onOrderSheetOpenChange}>
-          <SheetContent side="bottom" className="mx-1 flex h-[80vh] flex-col rounded-t-4xl p-0">
+          <SheetContent
+            side="bottom"
+            className="mx-1 flex h-[80vh] flex-col rounded-t-4xl p-0 pb-20 [&>button.absolute]:hidden"
+          >
             <SheetHeader className="border-border border-b px-3 py-3 sm:px-6 sm:py-4">
               <SheetTitle>Confirm generated orders</SheetTitle>
             </SheetHeader>
@@ -636,7 +639,7 @@ export default function DashboardPage({
             }
           }}
         >
-          <SheetContent side="bottom" className="rounded-t-4xl mx-1 h-[75vh] p-0">
+          <SheetContent side="bottom" className="rounded-t-4xl mx-1 h-[75vh] p-0 pb-20 [&>button.absolute]:hidden">
             <SheetHeader className="border-border border-b px-6 py-4">
               <SheetTitle>Deploy record details</SheetTitle>
             </SheetHeader>

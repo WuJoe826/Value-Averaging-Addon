@@ -84,11 +84,12 @@ function applyMaxTopUpIfNeeded(
     return amountToInvest;
   }
 
-  if (!settings.maxTopUpEnabled || settings.maxTopUpMultiplier == null) {
+  if (!settings.maxTopUpEnabled) {
     return amountToInvest;
   }
 
-  const maxAllowedTopUp = baseTopUpAmount * settings.maxTopUpMultiplier * allocation;
+  const normalizedMultiplier = Math.max(1, toFiniteNumber(settings.maxTopUpMultiplier, 10));
+  const maxAllowedTopUp = baseTopUpAmount * normalizedMultiplier * allocation;
   return Math.min(amountToInvest, maxAllowedTopUp);
 }
 

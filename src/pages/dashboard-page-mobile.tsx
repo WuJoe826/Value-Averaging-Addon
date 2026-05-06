@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage, Badge, Sheet, SheetContent, SheetHeader, SheetTitle, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@wealthfolio/ui";
+import { Avatar, AvatarFallback, AvatarImage, Badge, Icons, Sheet, SheetContent, SheetHeader, SheetTitle, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@wealthfolio/ui";
 import React from "react";
 import { formatCurrency } from "../lib";
 import type { PortfolioTicker } from "../types";
@@ -134,7 +134,8 @@ export function DashboardPageMobile({
                     </div>
                   </TableCell>
                   <TableCell className="text-right font-medium">
-                    <div className="flex flex-col items-end">
+                    <div className="flex items-center justify-end gap-2">
+                      <div className="flex flex-col items-end">
                       {plan?.action === "hold" ? (
                         <Badge variant="outline" className="text-muted-foreground">
                           {baseCurrency} --.--
@@ -145,6 +146,8 @@ export function DashboardPageMobile({
                         <Badge variant="success">{signedAmountLabel}</Badge>
                       )}
                       <div className="text-muted-foreground mt-1 text-right text-xs leading-tight">{signedSharesLabel}</div>
+                      </div>
+                      <Icons.ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
                     </div>
                   </TableCell>
                 </TableRow>

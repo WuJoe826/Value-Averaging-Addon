@@ -197,7 +197,16 @@ export function GeneralSettingsContent({
             <Switch
               id="va-max-top-up"
               checked={draft.maxTopUpEnabled}
-              onCheckedChange={(checked) => setDraft((prev) => ({ ...prev, maxTopUpEnabled: checked }))}
+              onCheckedChange={(checked) =>
+                setDraft((prev) => ({
+                  ...prev,
+                  maxTopUpEnabled: checked,
+                  maxTopUpMultiplier:
+                    checked && (prev.maxTopUpMultiplier == null || prev.maxTopUpMultiplier <= 0)
+                      ? PRESET_MULTIPLIERS[PRESET_MULTIPLIERS.length - 1]
+                      : prev.maxTopUpMultiplier,
+                }))
+              }
               className="shrink-0"
             />
           </div>

@@ -100,6 +100,11 @@ export function readSettings(): ValueAveragingSettings {
         : defaults.growthSchedule.endingMode;
     const endDateEnabled = rawSchedule.endDateEnabled ?? defaults.growthSchedule.endDateEnabled;
     const endDate = calculateEndDate(startDate, interval, installments);
+    const parsedMaxTopUpMultiplier = Number(parsed.maxTopUpMultiplier);
+    const normalizedMaxTopUpMultiplier =
+      parsed.maxTopUpMultiplier == null || !Number.isFinite(parsedMaxTopUpMultiplier)
+        ? defaults.maxTopUpMultiplier
+        : Math.min(100, Math.max(1, parsedMaxTopUpMultiplier));
 
     return {
       ...defaults,
@@ -108,7 +113,7 @@ export function readSettings(): ValueAveragingSettings {
         parsed.calculatedTopUpAmount == null || !Number.isFinite(parsed.calculatedTopUpAmount)
           ? defaults.calculatedTopUpAmount
           : Math.max(0, Number(parsed.calculatedTopUpAmount)),
-      maxTopUpMultiplier: parsed.maxTopUpMultiplier == null ? defaults.maxTopUpMultiplier : parsed.maxTopUpMultiplier,
+      maxTopUpMultiplier: normalizedMaxTopUpMultiplier,
       overflowGainsAction:
         parsed.overflowGainsAction === "sell" || parsed.overflowGainsAction === "hold-to-next-round"
           ? parsed.overflowGainsAction

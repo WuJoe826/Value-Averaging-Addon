@@ -1,18 +1,32 @@
 import type { AddonContext } from "@wealthfolio/addon-sdk";
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Badge,
   Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   EmptyPlaceholder,
   Icons,
+  Input,
   Page,
   PageContent,
   PageHeader,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  Switch,
 } from "@wealthfolio/ui";
-import React, { useMemo, useState } from "react";
-import { PageTabSelector, type AddonPageTab } from "../components";
+import React, { useEffect, useMemo, useState } from "react";
+import { IntervalInput, PageTabSelector, type AddonPageTab } from "../components";
 import { calculateInvestmentPlanByTicker, formatCurrency } from "../lib";
 import type { PortfolioTicker, ValueAveragingSettings } from "../types";
 import { DashboardPageDesktop } from "./dashboard-page-desktop";
@@ -28,6 +42,28 @@ interface DashboardPageProps {
   isTickersLoading: boolean;
   onFetchLatestPrices: () => void | Promise<void>;
   onAutoGenerateTransactions: () => void;
+  orderDrafts: {
+    id: string;
+    symbol: string;
+    enabled: boolean;
+    action: "buy" | "sell";
+    accountId: string;
+    accountName: string;
+    accountOptions: { id: string; name: string }[];
+    amount: number;
+    quantity: number;
+    unitPrice: number;
+    currency: string;
+  }[];
+  isOrderSheetOpen: boolean;
+  isSubmittingOrders: boolean;
+  onOrderSheetOpenChange: (open: boolean) => void;
+  onOrderDraftChange: (
+    draftId: string,
+    field: "enabled" | "accountId" | "amount" | "quantity" | "unitPrice",
+    rawValue: string | number | boolean,
+  ) => void;
+  onConfirmGeneratedOrders: () => void | Promise<void>;
   generatedTransactions: string[];
 }
 
@@ -42,6 +78,29 @@ interface InvestmentPlan {
   action: "buy" | "sell" | "hold";
 }
 
+function TickerLogo({ symbol }: { symbol: string }) {
+  const fullSymbol = symbol.toUpperCase();
+  const baseSymbol = fullSymbol.split(/[.:-]/)[0];
+  const primaryLogoUrl = `/ticker-logos/${fullSymbol}.png`;
+  const fallbackLogoUrl = `/ticker-logos/${baseSymbol}.png`;
+
+  return (
+    <Avatar className="bg-primary/80 border-white/20 h-7 w-7 shrink-0">
+      <AvatarImage src={primaryLogoUrl} alt={fullSymbol} className="object-contain p-1.5" />
+      <AvatarFallback>
+        <Avatar className="bg-primary/80 border-white/20 text-white">
+          <AvatarImage src={fallbackLogoUrl} alt={fullSymbol} className="object-contain p-1.5" />
+          <AvatarFallback className="bg-transparent text-xs font-medium">
+            <span className="p-1" title={fullSymbol}>
+              {baseSymbol ? baseSymbol.slice(0, 4) : "•"}
+            </span>
+          </AvatarFallback>
+        </Avatar>
+      </AvatarFallback>
+    </Avatar>
+  );
+}
+
 export default function DashboardPage({
   ctx,
   baseCurrency,
@@ -52,10 +111,35 @@ export default function DashboardPage({
   isTickersLoading,
   onFetchLatestPrices,
   onAutoGenerateTransactions,
+  orderDrafts,
+  isOrderSheetOpen,
+  isSubmittingOrders,
+  onOrderSheetOpenChange,
+  onOrderDraftChange,
+  onConfirmGeneratedOrders,
   generatedTransactions,
 }: DashboardPageProps) {
   const [selectedTickerId, setSelectedTickerId] = useState<string | null>(null);
   const [isTickerDetailSheetOpen, setIsTickerDetailSheetOpen] = useState(false);
+  const [isDesktopViewport, setIsDesktopViewport] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+    return window.matchMedia("(min-width: 640px)").matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const mediaQuery = window.matchMedia("(min-width: 640px)");
+    const handleMediaChange = (event: MediaQueryListEvent) => {
+      setIsDesktopViewport(event.matches);
+    };
+    setIsDesktopViewport(mediaQuery.matches);
+    mediaQuery.addEventListener("change", handleMediaChange);
+    return () => mediaQuery.removeEventListener("change", handleMediaChange);
+  }, []);
 
   const enabledTickers = useMemo(
     () => tickers.filter((ticker) => settings.enabledTickers[ticker.id]),
@@ -167,6 +251,107 @@ export default function DashboardPage({
     );
   }
 
+  const orderEditorContent = (
+    <div className="min-h-0 flex-1 space-y-3 overflow-auto px-6 pt-4 pb-24">
+      {!orderDrafts.length ? (
+        <p className="text-muted-foreground text-sm">No buy/sell order generated yet.</p>
+      ) : (
+        <>
+          {orderDrafts.map((draft) => {
+            const canSubmit = Boolean(draft.accountId) && draft.amount > 0 && draft.quantity > 0;
+            return (
+              <div key={draft.id} className={`bg-card space-y-3 rounded-md border p-4 ${draft.enabled ? "" : "opacity-60"}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <TickerLogo symbol={draft.symbol} />
+                    <div className="font-medium">{draft.symbol}</div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge variant={draft.action === "sell" ? "destructive" : "success"}>
+                      {draft.action === "sell" ? "SELL" : "BUY"}
+                    </Badge>
+                    <Switch
+                      checked={draft.enabled}
+                      onCheckedChange={(checked) => onOrderDraftChange(draft.id, "enabled", checked)}
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-4">
+                  <label className="text-sm">
+                    <span className="text-muted-foreground mb-1 block text-xs">Account</span>
+                    <IntervalInput
+                      disabled={!draft.enabled}
+                      value={draft.accountId}
+                      onChange={(nextAccountId) => onOrderDraftChange(draft.id, "accountId", nextAccountId)}
+                      options={draft.accountOptions.map((option) => ({
+                        value: option.id,
+                        label: option.name,
+                      }))}
+                      placeholder="Select account"
+                      searchPlaceholder="Search account..."
+                      emptyText="No account found."
+                    />
+                  </label>
+                  <label className="text-sm">
+                    <span className="text-muted-foreground mb-1 block text-xs">Price</span>
+                    <Input
+                      type="number"
+                      min={0}
+                      disabled={!draft.enabled}
+                      value={draft.unitPrice}
+                      onChange={(event) => onOrderDraftChange(draft.id, "unitPrice", event.target.value)}
+                    />
+                  </label>
+                  <label className="text-sm">
+                    <span className="text-muted-foreground mb-1 block text-xs">Amount</span>
+                    <Input
+                      type="number"
+                      min={0}
+                      disabled={!draft.enabled}
+                      value={draft.amount}
+                      onChange={(event) => onOrderDraftChange(draft.id, "amount", event.target.value)}
+                    />
+                  </label>
+                  <label className="text-sm">
+                    <span className="text-muted-foreground mb-1 block text-xs">Quantity</span>
+                    <Input
+                      type="number"
+                      min={0}
+                      step="0.00000001"
+                      disabled={!draft.enabled}
+                      value={draft.quantity}
+                      onChange={(event) => onOrderDraftChange(draft.id, "quantity", event.target.value)}
+                    />
+                  </label>
+                </div>
+                {draft.enabled && !canSubmit ? (
+                  <p className="text-destructive text-xs">Account, amount, and quantity must be greater than zero.</p>
+                ) : null}
+              </div>
+            );
+          })}
+        </>
+      )}
+    </div>
+  );
+
+  const orderEditorFooter = (
+    <div className="bg-background sticky bottom-0 border-t px-6 py-4">
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={() => onOrderSheetOpenChange(false)}>
+          Cancel
+        </Button>
+        <Button
+          type="button"
+          onClick={onConfirmGeneratedOrders}
+          disabled={isSubmittingOrders || !orderDrafts.some((draft) => draft.enabled)}
+        >
+          {isSubmittingOrders ? "Submitting..." : "Confirm and create activity"}
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <Page>
       <PageHeader heading="Value Averaging" actions={headerActions} />
@@ -224,6 +409,27 @@ export default function DashboardPage({
           </Card>
         </div>
       </PageContent>
+      {isDesktopViewport ? (
+        <Dialog open={isOrderSheetOpen} onOpenChange={onOrderSheetOpenChange}>
+          <DialogContent className="flex max-h-[92vh] flex-col overflow-hidden p-0 sm:max-w-6xl">
+            <DialogHeader className="border-border border-b px-6 py-4">
+              <DialogTitle>Confirm generated orders</DialogTitle>
+            </DialogHeader>
+            {orderEditorContent}
+            {orderEditorFooter}
+          </DialogContent>
+        </Dialog>
+      ) : (
+        <Sheet open={isOrderSheetOpen} onOpenChange={onOrderSheetOpenChange}>
+          <SheetContent side="bottom" className="mx-1 flex h-[80vh] flex-col rounded-t-4xl p-0">
+            <SheetHeader className="border-border border-b px-6 py-4">
+              <SheetTitle>Confirm generated orders</SheetTitle>
+            </SheetHeader>
+            {orderEditorContent}
+            {orderEditorFooter}
+          </SheetContent>
+        </Sheet>
+      )}
     </Page>
   );
 }

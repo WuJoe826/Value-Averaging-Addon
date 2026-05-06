@@ -12,6 +12,7 @@ import {
 } from "@wealthfolio/ui";
 import React, { useMemo, useState } from "react";
 import type { PortfolioTicker, ValueAveragingSettings } from "../../types";
+import { IntervalInput } from "./interval-input";
 
 export interface PortfolioSettingsContentProps {
   layout: "desktop" | "mobile";
@@ -138,6 +139,31 @@ export function PortfolioSettingsContent({
             className="h-9 max-w-[360px]"
           />
         </div>
+        {ticker.accountOptions.length > 1 ? (
+          <div className="flex flex-col gap-2">
+            <label className="text-muted-foreground block text-xs">Default account for auto-generated order</label>
+            <IntervalInput
+              value={draft.tickerAccountSelection[ticker.id] ?? ticker.accountOptions[0]?.id ?? ""}
+              onChange={(nextAccountId) =>
+                setDraft((prev) => ({
+                  ...prev,
+                  tickerAccountSelection: {
+                    ...prev.tickerAccountSelection,
+                    [ticker.id]: nextAccountId,
+                  },
+                }))
+              }
+              options={ticker.accountOptions.map((option) => ({
+                value: option.id,
+                label: option.name,
+              }))}
+              placeholder="Select account"
+              searchPlaceholder="Search account..."
+              emptyText="No account found."
+              className="max-w-[360px]"
+            />
+          </div>
+        ) : null}
       </div>
     );
   };

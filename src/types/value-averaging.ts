@@ -1,8 +1,15 @@
+export interface TickerAccountOption {
+  id: string;
+  name: string;
+}
+
 export interface PortfolioTicker {
   id: string;
   symbol: string;
   name: string;
   accountName: string;
+  accountOptions: TickerAccountOption[];
+  instrumentId: string | null;
   quantity: number;
   averageCost: number;
   currentPrice: number;
@@ -44,6 +51,7 @@ export interface ValueAveragingSettings {
   growthSchedule: GrowthSchedule;
   enabledTickers: Record<string, boolean>;
   tickerAllocations: Record<string, number>;
+  tickerAccountSelection: Record<string, string>;
   initialDeploymentShares: Record<string, number>;
   initialDeploymentValue: Record<string, number>;
   isConfigured: boolean;

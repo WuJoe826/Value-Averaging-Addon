@@ -13,26 +13,33 @@ import {
   PopoverTrigger,
   ScrollArea,
 } from "@wealthfolio/ui";
-import type { GrowthInterval } from "../../types";
 
-interface IntervalOption {
-  value: GrowthInterval;
+interface IntervalOption<TValue extends string> {
+  value: TValue;
   label: string;
 }
 
-interface IntervalInputProps {
-  value: GrowthInterval;
-  onChange: (value: GrowthInterval) => void;
-  options: IntervalOption[];
+interface IntervalInputProps<TValue extends string> {
+  value: TValue;
+  onChange: (value: TValue) => void;
+  options: IntervalOption<TValue>[];
   placeholder?: string;
+  searchPlaceholder?: string;
+  emptyText?: string;
+  disabled?: boolean;
+  className?: string;
 }
 
-export function IntervalInput({
+export function IntervalInput<TValue extends string>({
   value,
   onChange,
   options,
   placeholder = "Select an interval",
-}: IntervalInputProps) {
+  searchPlaceholder = "Search option...",
+  emptyText = "No option found.",
+  disabled = false,
+  className,
+}: IntervalInputProps<TValue>) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -46,8 +53,8 @@ export function IntervalInput({
 
   const selectedLabel = options.find((option) => option.value === value)?.label ?? placeholder;
 
-  const handleSelect = (interval: GrowthInterval) => {
-    onChange(interval);
+  const handleSelect = (optionValue: TValue) => {
+    onChange(optionValue);
     setOpen(false);
     setSearchQuery("");
   };
@@ -60,7 +67,8 @@ export function IntervalInput({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("h-input-height w-full justify-between rounded-md", !value && "text-muted-foreground")}
+          disabled={disabled}
+          className={cn("h-input-height w-full justify-between rounded-md", !value && "text-muted-foreground", className)}
         >
           <span className="truncate">{selectedLabel}</span>
           <Icons.ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -69,13 +77,13 @@ export function IntervalInput({
       <PopoverContent className="w-[360px] max-w-[calc(100vw-2rem)] p-0">
         <Command shouldFilter={false}>
           <CommandInput
-            placeholder="Search interval..."
+            placeholder={searchPlaceholder}
             className="h-9"
             value={searchQuery}
             onValueChange={setSearchQuery}
           />
           <CommandList>
-            <CommandEmpty>No interval found.</CommandEmpty>
+            <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
               <ScrollArea className="max-h-72 overflow-y-auto">
                 {filteredOptions.map((option) => (

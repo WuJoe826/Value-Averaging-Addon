@@ -131,6 +131,7 @@ export default function SettingsPage({
       ...prev,
       enabledTickers: { ...settings.enabledTickers },
       tickerAllocations: { ...settings.tickerAllocations },
+      tickerAccountSelection: { ...settings.tickerAccountSelection },
     }));
   };
 

@@ -6,6 +6,7 @@ export {
   GENERAL_PAGE_DESCRIPTION,
   GeneralSettingsContent,
   GeneralSettingsSection,
+  IntervalInput,
   PortfolioSettingsContent,
   PortfolioSettingsSection,
   type AboutSettingsContentProps,

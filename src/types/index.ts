@@ -3,5 +3,6 @@ export type {
   GrowthInterval,
   GrowthSchedule,
   PortfolioTicker,
+  TickerAccountOption,
   ValueAveragingSettings,
 } from "./value-averaging";

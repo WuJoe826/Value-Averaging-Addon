@@ -297,7 +297,7 @@ export default function DashboardPage({
   }
 
   const orderEditorContent = (
-    <div className="min-h-0 flex-1 space-y-3 overflow-auto px-6 pt-4 pb-24">
+    <div className="min-h-0 flex-1 space-y-2 overflow-auto px-3 pt-2 pb-20 sm:space-y-3 sm:px-6 sm:pt-4 sm:pb-24">
       {!orderDrafts.length ? (
         <p className="text-muted-foreground text-sm">No buy/sell order generated yet.</p>
       ) : (
@@ -305,17 +305,17 @@ export default function DashboardPage({
           {orderDrafts.map((draft) => {
             const canSubmit = Boolean(draft.accountId) && draft.amount > 0 && draft.quantity > 0;
             return (
-              <div key={draft.id} className="bg-card space-y-3 rounded-md border p-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-2">
+              <div key={draft.id} className="bg-card space-y-2 rounded-md border p-3 sm:space-y-3 sm:p-4">
+                <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
                     <TickerLogo symbol={draft.symbol} />
                     <div className="font-medium">{draft.symbol}</div>
                     <Badge variant={draft.action === "sell" ? "destructive" : "success"}>
                       {draft.action === "sell" ? "SELL" : "BUY"}
                     </Badge>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 sm:justify-end">
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 sm:justify-end sm:gap-3">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
                       <span className="text-muted-foreground text-xs">Auto deposit cash</span>
                       <Switch
                         checked={draft.autoDepositCash}
@@ -325,7 +325,7 @@ export default function DashboardPage({
                     </div>
                   </div>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-4">
+                <div className="grid gap-2 sm:grid-cols-4 sm:gap-3">
                   <label className="text-sm">
                     <span className="text-muted-foreground mb-1 block text-xs">Account</span>
                     <IntervalInput
@@ -381,8 +381,8 @@ export default function DashboardPage({
   );
 
   const orderEditorFooter = (
-    <div className="bg-background sticky bottom-0 border-t px-6 py-4">
-      <div className="flex justify-end gap-2">
+    <div className="bg-background sticky bottom-0 border-t px-3 py-3 sm:px-6 sm:py-4">
+      <div className="flex justify-end gap-1.5 sm:gap-2">
         <Button type="button" variant="outline" onClick={() => onOrderSheetOpenChange(false)}>
           Cancel
         </Button>
@@ -556,7 +556,7 @@ export default function DashboardPage({
       ) : (
         <Sheet open={isOrderSheetOpen} onOpenChange={onOrderSheetOpenChange}>
           <SheetContent side="bottom" className="mx-1 flex h-[80vh] flex-col rounded-t-4xl p-0">
-            <SheetHeader className="border-border border-b px-6 py-4">
+            <SheetHeader className="border-border border-b px-3 py-3 sm:px-6 sm:py-4">
               <SheetTitle>Confirm generated orders</SheetTitle>
             </SheetHeader>
             {orderEditorContent}

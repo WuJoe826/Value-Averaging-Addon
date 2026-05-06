@@ -1,7 +1,7 @@
 {
   "id": "value-averaging-addon",
   "name": "Value Averaging Calculator",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Auto-generate and confirm value averaging BUY/SELL activities with editable order drafts, account selection, and deploy history.",
   "author": "WuJoe826",
   "main": "dist/addon.js",

@@ -84,6 +84,15 @@ export function DashboardPageMobile({
             {enabledTickers.map((ticker) => {
               const plan = investmentPlan[ticker.id];
               const currentPrice = toFiniteNumber(ticker.currentPrice);
+              const amountSign = plan?.action === "sell" ? "-" : "+";
+              const signedAmountLabel =
+                plan && plan.action !== "hold"
+                  ? `${amountSign}${formatCurrency(Math.abs(plan.amountToInvest), baseCurrency)}`
+                  : `${baseCurrency} --.--`;
+              const signedSharesLabel =
+                currentPrice > 0 && plan && plan.action !== "hold"
+                  ? `${amountSign}${formatShareCount(Math.abs(plan.amountToInvest) / currentPrice)} Shares`
+                  : "--.--";
 
               return (
                 <TableRow
@@ -112,16 +121,11 @@ export function DashboardPageMobile({
                           {baseCurrency} --.--
                         </Badge>
                       ) : plan && plan.amountToInvest < 0 ? (
-                        <Badge variant="destructive">{formatCurrency(Math.abs(plan.amountToInvest), baseCurrency)}</Badge>
+                        <Badge variant="destructive">{signedAmountLabel}</Badge>
                       ) : (
-                        <Badge variant="success">{formatCurrency(plan?.amountToInvest ?? 0, baseCurrency)}</Badge>
+                        <Badge variant="success">{signedAmountLabel}</Badge>
                       )}
-                      <div className="text-muted-foreground mt-1 text-right text-xs leading-tight">
-                        Shares:{" "}
-                        {currentPrice > 0 && plan
-                          ? formatShareCount(Math.abs(plan.amountToInvest) / currentPrice)
-                          : "--.--"}
-                      </div>
+                      <div className="text-muted-foreground mt-1 text-right text-xs leading-tight">{signedSharesLabel}</div>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -167,10 +171,10 @@ export function DashboardPageMobile({
                     </Badge>
                   ) : selectedPlan.amountToInvest < 0 ? (
                     <Badge variant="destructive">
-                      {formatCurrency(Math.abs(selectedPlan.amountToInvest), baseCurrency)}
+                      -{formatCurrency(Math.abs(selectedPlan.amountToInvest), baseCurrency)}
                     </Badge>
                   ) : (
-                    <Badge variant="success">{formatCurrency(selectedPlan.amountToInvest, baseCurrency)}</Badge>
+                    <Badge variant="success">+{formatCurrency(selectedPlan.amountToInvest, baseCurrency)}</Badge>
                   )}
                 </div>
               </>

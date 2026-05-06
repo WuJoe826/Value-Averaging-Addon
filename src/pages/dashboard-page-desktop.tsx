@@ -18,6 +18,8 @@ interface DashboardPageDesktopProps {
   baseCurrency: string;
   enabledTickers: PortfolioTicker[];
   investmentPlan: Record<string, InvestmentPlan>;
+  expectedWeightByTicker: Record<string, number>;
+  actualWeightByTicker: Record<string, number>;
   selectedTickerId: string | null;
   onSelectTicker: (tickerId: string) => void;
 }
@@ -61,6 +63,8 @@ export function DashboardPageDesktop({
   baseCurrency,
   enabledTickers,
   investmentPlan,
+  expectedWeightByTicker,
+  actualWeightByTicker,
   selectedTickerId,
   onSelectTicker,
 }: DashboardPageDesktopProps) {
@@ -71,6 +75,7 @@ export function DashboardPageDesktop({
           <TableHeader className="bg-muted-foreground/5 sticky top-0 z-10">
             <TableRow>
               <TableHead>Ticker</TableHead>
+              <TableHead>Allocation</TableHead>
               <TableHead>Cost basis</TableHead>
               <TableHead>Market value</TableHead>
               <TableHead>Desired Value</TableHead>
@@ -81,11 +86,23 @@ export function DashboardPageDesktop({
             {enabledTickers.map((ticker) => {
               const plan = investmentPlan[ticker.id];
               const quantity = toFiniteNumber(ticker.quantity);
-              const costBasis = toFiniteNumber(ticker.totalInvested);
-              const averageCost = quantity > 0 ? costBasis / quantity : toFiniteNumber(ticker.averageCost);
+              const vaCostBasis =
+                toFiniteNumber(plan?.initialDeploymentValue) + toFiniteNumber(ticker.valueAveragingInvested);
+              const vaAverageCost = quantity > 0 ? vaCostBasis / quantity : toFiniteNumber(ticker.averageCost);
               const currentPrice = toFiniteNumber(ticker.currentPrice);
               const marketValue = currentPrice * quantity;
+              const expectedWeight = expectedWeightByTicker[ticker.id] ?? 0;
+              const actualWeight = actualWeightByTicker[ticker.id] ?? 0;
               const isSelected = selectedTickerId === ticker.id;
+              const amountSign = plan?.action === "sell" ? "-" : "+";
+              const signedAmountLabel =
+                plan && plan.action !== "hold"
+                  ? `${amountSign}${formatCurrency(Math.abs(plan.amountToInvest), baseCurrency)}`
+                  : `${baseCurrency} --.--`;
+              const signedSharesLabel =
+                currentPrice > 0 && plan && plan.action !== "hold"
+                  ? `${amountSign}${formatShareCount(Math.abs(plan.amountToInvest) / currentPrice)} Shares`
+                  : "--.--";
 
               return (
                 <TableRow
@@ -102,9 +119,13 @@ export function DashboardPageDesktop({
                       </div>
                     </div>
                   </TableCell>
+                  <TableCell className="font-medium">
+                    <div>{actualWeight.toFixed(2)}%</div>
+                    <div className="text-muted-foreground text-xs">Expected {expectedWeight.toFixed(2)}%</div>
+                  </TableCell>
                   <TableCell>
-                    <div className="font-medium">{formatCurrency(costBasis, baseCurrency)}</div>
-                    <div className="text-muted-foreground text-xs">{formatCurrency(averageCost, baseCurrency)}</div>
+                    <div className="font-medium">{formatCurrency(vaCostBasis, baseCurrency)}</div>
+                    <div className="text-muted-foreground text-xs">{formatCurrency(vaAverageCost, baseCurrency)}</div>
                   </TableCell>
                   <TableCell>
                     <div className="font-medium">{formatCurrency(marketValue, baseCurrency)}</div>
@@ -113,7 +134,6 @@ export function DashboardPageDesktop({
                   <TableCell className="font-medium">
                     <div>{formatCurrency(plan?.targetValue ?? 0, baseCurrency)}</div>
                     <div className="text-muted-foreground text-xs">
-                      {formatCurrency(plan?.initialDeploymentValue ?? 0, baseCurrency)} +{" "}
                       {formatCurrency(plan?.growthPerPeriod ?? 0, baseCurrency)} x {plan?.periodIndex ?? 1}
                     </div>
                   </TableCell>
@@ -124,16 +144,11 @@ export function DashboardPageDesktop({
                           {baseCurrency} --.--
                         </Badge>
                       ) : plan && plan.amountToInvest < 0 ? (
-                        <Badge variant="destructive">{formatCurrency(Math.abs(plan.amountToInvest), baseCurrency)}</Badge>
+                        <Badge variant="destructive">{signedAmountLabel}</Badge>
                       ) : (
-                        <Badge variant="success">{formatCurrency(plan?.amountToInvest ?? 0, baseCurrency)}</Badge>
+                        <Badge variant="success">{signedAmountLabel}</Badge>
                       )}
-                      <div className="text-muted-foreground mt-1 text-right text-xs leading-tight">
-                        Shares:{" "}
-                        {currentPrice > 0 && plan
-                          ? formatShareCount(Math.abs(plan.amountToInvest) / currentPrice)
-                          : "--.--"}
-                      </div>
+                      <div className="text-muted-foreground mt-1 text-right text-xs leading-tight">{signedSharesLabel}</div>
                     </div>
                   </TableCell>
                 </TableRow>

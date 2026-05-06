@@ -66,6 +66,34 @@ export default function DashboardPage({
     () => calculateInvestmentPlanByTicker(settings, enabledTickers),
     [enabledTickers, settings],
   );
+  const totalEnabledMarketValue = useMemo(
+    () =>
+      enabledTickers.reduce((total, ticker) => {
+        const quantity = Number.isFinite(ticker.quantity) ? ticker.quantity : 0;
+        const price = Number.isFinite(ticker.currentPrice) ? ticker.currentPrice : 0;
+        return total + Math.max(0, quantity * price);
+      }, 0),
+    [enabledTickers],
+  );
+  const expectedWeightByTicker = useMemo(
+    () =>
+      enabledTickers.reduce<Record<string, number>>((acc, ticker) => {
+        acc[ticker.id] = settings.tickerAllocations[ticker.id] ?? 0;
+        return acc;
+      }, {}),
+    [enabledTickers, settings.tickerAllocations],
+  );
+  const actualWeightByTicker = useMemo(
+    () =>
+      enabledTickers.reduce<Record<string, number>>((acc, ticker) => {
+        const quantity = Number.isFinite(ticker.quantity) ? ticker.quantity : 0;
+        const price = Number.isFinite(ticker.currentPrice) ? ticker.currentPrice : 0;
+        const marketValue = Math.max(0, quantity * price);
+        acc[ticker.id] = totalEnabledMarketValue > 0 ? (marketValue / totalEnabledMarketValue) * 100 : 0;
+        return acc;
+      }, {}),
+    [enabledTickers, totalEnabledMarketValue],
+  );
   const selectedTicker =
     enabledTickers.find((ticker) => ticker.id === selectedTickerId) ?? enabledTickers[0] ?? null;
   const selectedPlan = selectedTicker ? investmentPlan[selectedTicker.id] : null;
@@ -143,11 +171,13 @@ export default function DashboardPage({
     <Page>
       <PageHeader heading="Value Averaging" actions={headerActions} />
       <PageContent withPadding={false} containerMode>
-        <div className="w-full min-w-0 space-y-2 px-3">
+        <div className="w-full min-w-0 space-y-3 px-3 pb-[calc(var(--mobile-nav-ui-height)+max(var(--mobile-nav-gap),env(safe-area-inset-bottom)))]">
           <DashboardPageDesktop
             baseCurrency={baseCurrency}
             enabledTickers={enabledTickers}
             investmentPlan={investmentPlan}
+            expectedWeightByTicker={expectedWeightByTicker}
+            actualWeightByTicker={actualWeightByTicker}
             selectedTickerId={selectedTickerId}
             onSelectTicker={setSelectedTickerId}
           />
@@ -161,28 +191,36 @@ export default function DashboardPage({
             isTickerDetailSheetOpen={isTickerDetailSheetOpen}
             onTickerDetailSheetOpenChange={setIsTickerDetailSheetOpen}
           />
+          <Card className="mb-5">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Deploy Records</CardTitle>
+              <Button
+                type="button"
+                size="sm"
+                className="h-10 w-10 rounded-full p-0 sm:h-9 sm:w-auto sm:rounded-md sm:px-3"
+                onClick={onAutoGenerateTransactions}
+              >
+                <span className="text-lg leading-none sm:hidden">+</span>
+                <span className="hidden sm:inline">+ Auto generate transaction</span>
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {!generatedTransactions.length ? (
+                <p className="text-muted-foreground text-sm">
+                  No auto-generated transaction yet. Click "Auto generate transaction" to create one.
+                </p>
+              ) : (
+                <ul className="space-y-2 text-sm">
+                  {generatedTransactions.map((transaction) => (
+                    <li key={transaction} className="bg-muted rounded-md px-3 py-2">
+                      {transaction}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
         </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Generated transactions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {!generatedTransactions.length ? (
-              <p className="text-muted-foreground text-sm">
-                No auto-generated transaction yet. Click "Auto generate transaction" to create one.
-              </p>
-            ) : (
-              <ul className="space-y-2 text-sm">
-                {generatedTransactions.map((transaction) => (
-                  <li key={transaction} className="bg-muted rounded-md px-3 py-2">
-                    {transaction}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
       </PageContent>
     </Page>
   );

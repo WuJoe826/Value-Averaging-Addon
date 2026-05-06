@@ -71,18 +71,7 @@ interface DashboardPageProps {
     rawValue: string | number | boolean,
   ) => void;
   onConfirmGeneratedOrders: () => void | Promise<void>;
-  deployRecords: {
-    id: string;
-    createdAt: string;
-    symbol: string;
-    action: "BUY" | "SELL";
-    accountName: string;
-    amount: number;
-    quantity: number;
-    unitPrice: number;
-    currency: string;
-    periodIndex: number;
-  }[];
+  deployRecords: DeployRecord[];
 }
 
 interface InvestmentPlan {
@@ -94,6 +83,19 @@ interface InvestmentPlan {
   currentPortfolioValue: number;
   amountToInvest: number;
   action: "buy" | "sell" | "hold";
+}
+
+interface DeployRecord {
+  id: string;
+  createdAt: string;
+  symbol: string;
+  action: "BUY" | "SELL";
+  accountName: string;
+  amount: number;
+  quantity: number;
+  unitPrice: number;
+  currency: string;
+  periodIndex: number;
 }
 
 function TickerLogo({ symbol }: { symbol: string }) {
@@ -137,8 +139,12 @@ export default function DashboardPage({
   onConfirmGeneratedOrders,
   deployRecords,
 }: DashboardPageProps) {
+  const RECORDS_PER_PAGE = 10;
   const [selectedTickerId, setSelectedTickerId] = useState<string | null>(null);
   const [isTickerDetailSheetOpen, setIsTickerDetailSheetOpen] = useState(false);
+  const [selectedDeployRecord, setSelectedDeployRecord] = useState<DeployRecord | null>(null);
+  const [isDeployRecordSheetOpen, setIsDeployRecordSheetOpen] = useState(false);
+  const [deployRecordsPage, setDeployRecordsPage] = useState(1);
   const [isDesktopViewport, setIsDesktopViewport] = useState(() => {
     if (typeof window === "undefined") {
       return false;
@@ -204,6 +210,17 @@ export default function DashboardPage({
   const selectedPlan = selectedTicker ? investmentPlan[selectedTicker.id] : null;
 
   const headerActions = <PageTabSelector currentPage={currentPage} onPageChange={onPageChange} />;
+  const deployRecordsTotalPages = Math.max(1, Math.ceil(deployRecords.length / RECORDS_PER_PAGE));
+  const normalizedDeployRecordsPage = Math.min(deployRecordsPage, deployRecordsTotalPages);
+  const paginatedDeployRecords = useMemo(() => {
+    const startIndex = (normalizedDeployRecordsPage - 1) * RECORDS_PER_PAGE;
+    return deployRecords.slice(startIndex, startIndex + RECORDS_PER_PAGE);
+  }, [deployRecords, normalizedDeployRecordsPage]);
+  useEffect(() => {
+    if (deployRecordsPage > deployRecordsTotalPages) {
+      setDeployRecordsPage(deployRecordsTotalPages);
+    }
+  }, [deployRecordsPage, deployRecordsTotalPages]);
   const formatRecordTime = (iso: string) => {
     const date = new Date(iso);
     if (Number.isNaN(date.getTime())) {
@@ -425,37 +442,101 @@ export default function DashboardPage({
                   No auto-generated transaction yet. Click "Auto generate transaction" to create one.
                 </p>
               ) : (
-                <div className="min-h-0 overflow-auto rounded-md border">
-                  <Table>
-                    <TableHeader className="bg-muted-foreground/5 sticky top-0 z-10">
-                      <TableRow>
-                        <TableHead>Time</TableHead>
-                        <TableHead>Ticker</TableHead>
-                        <TableHead>Action</TableHead>
-                        <TableHead>Account</TableHead>
-                        <TableHead>Period</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                        <TableHead className="text-right">Quantity</TableHead>
-                        <TableHead className="text-right">Price</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {deployRecords.map((record) => (
-                        <TableRow key={record.id}>
-                          <TableCell className="whitespace-nowrap text-xs">{formatRecordTime(record.createdAt)}</TableCell>
-                          <TableCell className="font-medium">{record.symbol}</TableCell>
-                          <TableCell>
-                            <Badge variant={record.action === "SELL" ? "destructive" : "success"}>{record.action}</Badge>
-                          </TableCell>
-                          <TableCell className="max-w-[200px] truncate">{record.accountName}</TableCell>
-                          <TableCell>{record.periodIndex}</TableCell>
-                          <TableCell className="text-right">{formatCurrency(record.amount, record.currency)}</TableCell>
-                          <TableCell className="text-right">{record.quantity.toFixed(8)}</TableCell>
-                          <TableCell className="text-right">{formatCurrency(record.unitPrice, record.currency)}</TableCell>
+                <div className="space-y-2">
+                  <div className="hidden min-h-0 overflow-auto rounded-md border sm:block">
+                    <Table>
+                      <TableHeader className="bg-muted-foreground/5 sticky top-0 z-10">
+                        <TableRow>
+                          <TableHead>Time</TableHead>
+                          <TableHead>Ticker</TableHead>
+                          <TableHead>Action</TableHead>
+                          <TableHead>Account</TableHead>
+                          <TableHead>Period</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                          <TableHead className="text-right">Quantity</TableHead>
+                          <TableHead className="text-right">Price</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedDeployRecords.map((record) => (
+                          <TableRow key={record.id}>
+                            <TableCell className="whitespace-nowrap text-xs">{formatRecordTime(record.createdAt)}</TableCell>
+                            <TableCell className="font-medium">{record.symbol}</TableCell>
+                            <TableCell>
+                              <Badge variant={record.action === "SELL" ? "destructive" : "success"}>{record.action}</Badge>
+                            </TableCell>
+                            <TableCell className="max-w-[200px] truncate">{record.accountName}</TableCell>
+                            <TableCell>{record.periodIndex}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(record.amount, record.currency)}</TableCell>
+                            <TableCell className="text-right">{record.quantity.toFixed(8)}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(record.unitPrice, record.currency)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <div className="space-y-2 sm:hidden">
+                    {paginatedDeployRecords.map((record) => (
+                      <div key={record.id} className="bg-card rounded-md border p-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <TickerLogo symbol={record.symbol} />
+                              <div className="font-medium">{record.symbol}</div>
+                            </div>
+                            <div className="mt-2 space-y-0.5">
+                              <div className="text-muted-foreground text-xs">{record.action}</div>
+                              <div className="text-muted-foreground text-xs">{formatRecordTime(record.createdAt)}</div>
+                              <div className="text-muted-foreground text-xs">{record.quantity.toFixed(8)} shares</div>
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <div className="font-medium text-left">{formatCurrency(record.amount, record.currency)}</div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              aria-label={`More details for ${record.symbol}`}
+                              onClick={() => {
+                                setSelectedDeployRecord(record);
+                                setIsDeployRecordSheetOpen(true);
+                              }}
+                            >
+                              <Icons.MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between border-t pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDeployRecordsPage((prev) => Math.max(1, prev - 1))}
+                      disabled={normalizedDeployRecordsPage <= 1}
+                    >
+                      <Icons.ChevronLeft className="mr-1 h-4 w-4" />
+                      Prev
+                    </Button>
+                    <span className="text-muted-foreground text-xs">
+                      Page {normalizedDeployRecordsPage} / {deployRecordsTotalPages}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setDeployRecordsPage((prev) => Math.min(deployRecordsTotalPages, prev + 1))
+                      }
+                      disabled={normalizedDeployRecordsPage >= deployRecordsTotalPages}
+                    >
+                      Next
+                      <Icons.ChevronRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -480,6 +561,131 @@ export default function DashboardPage({
             </SheetHeader>
             {orderEditorContent}
             {orderEditorFooter}
+          </SheetContent>
+        </Sheet>
+      )}
+      {isDesktopViewport ? (
+        <Dialog
+          open={isDeployRecordSheetOpen}
+          onOpenChange={(open) => {
+            setIsDeployRecordSheetOpen(open);
+            if (!open) {
+              setSelectedDeployRecord(null);
+            }
+          }}
+        >
+          <DialogContent className="max-h-[85vh] overflow-hidden p-0 sm:max-w-lg">
+            <DialogHeader className="border-border border-b px-6 py-4">
+              <DialogTitle>Deploy record details</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 overflow-auto px-6 pt-4 pb-6 text-sm">
+              {selectedDeployRecord ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Time</span>
+                    <span className="font-medium">{formatRecordTime(selectedDeployRecord.createdAt)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Ticker</span>
+                    <span className="font-medium">{selectedDeployRecord.symbol}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Action</span>
+                    <Badge variant={selectedDeployRecord.action === "SELL" ? "destructive" : "success"}>
+                      {selectedDeployRecord.action}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Account</span>
+                    <span className="font-medium">{selectedDeployRecord.accountName}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Period</span>
+                    <span className="font-medium">{selectedDeployRecord.periodIndex}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Amount</span>
+                    <span className="font-medium">
+                      {formatCurrency(selectedDeployRecord.amount, selectedDeployRecord.currency)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Quantity</span>
+                    <span className="font-medium">{selectedDeployRecord.quantity.toFixed(8)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Price</span>
+                    <span className="font-medium">
+                      {formatCurrency(selectedDeployRecord.unitPrice, selectedDeployRecord.currency)}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <p className="text-muted-foreground">Select a record to see details.</p>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      ) : (
+        <Sheet
+          open={isDeployRecordSheetOpen}
+          onOpenChange={(open) => {
+            setIsDeployRecordSheetOpen(open);
+            if (!open) {
+              setSelectedDeployRecord(null);
+            }
+          }}
+        >
+          <SheetContent side="bottom" className="rounded-t-4xl mx-1 h-[75vh] p-0">
+            <SheetHeader className="border-border border-b px-6 py-4">
+              <SheetTitle>Deploy record details</SheetTitle>
+            </SheetHeader>
+            <div className="space-y-3 overflow-auto px-6 pt-4 pb-20 text-sm">
+              {selectedDeployRecord ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Time</span>
+                    <span className="font-medium">{formatRecordTime(selectedDeployRecord.createdAt)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Ticker</span>
+                    <span className="font-medium">{selectedDeployRecord.symbol}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Action</span>
+                    <Badge variant={selectedDeployRecord.action === "SELL" ? "destructive" : "success"}>
+                      {selectedDeployRecord.action}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Account</span>
+                    <span className="font-medium">{selectedDeployRecord.accountName}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Period</span>
+                    <span className="font-medium">{selectedDeployRecord.periodIndex}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Amount</span>
+                    <span className="font-medium">
+                      {formatCurrency(selectedDeployRecord.amount, selectedDeployRecord.currency)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Quantity</span>
+                    <span className="font-medium">{selectedDeployRecord.quantity.toFixed(8)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Price</span>
+                    <span className="font-medium">
+                      {formatCurrency(selectedDeployRecord.unitPrice, selectedDeployRecord.currency)}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <p className="text-muted-foreground">Select a record to see details.</p>
+              )}
+            </div>
           </SheetContent>
         </Sheet>
       )}

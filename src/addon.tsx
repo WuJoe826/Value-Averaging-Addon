@@ -10,7 +10,6 @@ import {
   clearSettings,
   formatCurrency,
   getEffectiveGrowthPeriodIndex,
-  getTodayIsoDate,
   readDeployRecords,
   readSettings,
   saveDeployRecords,
@@ -436,7 +435,7 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
     const successfulBuyPeriods = new Map<string, number>();
     const successRecords: DeployRecord[] = [];
     const errors: string[] = [];
-    const activityDate = getTodayIsoDate();
+    const activityDate = new Date().toISOString();
 
     for (const draft of validDrafts) {
       try {

@@ -1,19 +1,29 @@
 import type { AddonContext } from "@wealthfolio/addon-sdk";
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
   Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  DonutChart,
   EmptyPlaceholder,
   Icons,
   Page,
   PageContent,
   PageHeader,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@wealthfolio/ui";
 import React, { useMemo, useState } from "react";
 import { PageTabSelector, type AddonPageTab } from "../components";
-import { formatCurrency, getGrowthMonthsEquivalent } from "../lib";
+import { formatCurrency, getGrowthMonthsEquivalent, resolveBaseTopUpAmount } from "../lib";
 import type { PortfolioTicker, ValueAveragingSettings } from "../types";
 
 interface DashboardPageProps {
@@ -35,15 +45,46 @@ interface InvestmentPlan {
   amountToInvest: number;
 }
 
+function formatShareCount(quantity: number): string {
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 8,
+  }).format(quantity);
+}
+
+function toFiniteNumber(value: unknown, fallback = 0): number {
+  const num = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(num) ? num : fallback;
+}
+
+function TickerLogo({ symbol }: { symbol: string }) {
+  const fullSymbol = symbol.toUpperCase();
+  const baseSymbol = fullSymbol.split(/[.:-]/)[0];
+  const primaryLogoUrl = `/ticker-logos/${fullSymbol}.png`;
+  const fallbackLogoUrl = `/ticker-logos/${baseSymbol}.png`;
+
+  return (
+    <Avatar className="bg-primary/80 border-white/20 h-7 w-7 shrink-0">
+      <AvatarImage src={primaryLogoUrl} alt={fullSymbol} className="object-contain p-1.5" />
+      <AvatarFallback>
+        <Avatar className="bg-primary/80 border-white/20 text-white">
+          <AvatarImage src={fallbackLogoUrl} alt={fullSymbol} className="object-contain p-1.5" />
+          <AvatarFallback className="bg-transparent text-xs font-medium">
+            <span className="p-1" title={fullSymbol}>
+              {baseSymbol ? baseSymbol.slice(0, 4) : "•"}
+            </span>
+          </AvatarFallback>
+        </Avatar>
+      </AvatarFallback>
+    </Avatar>
+  );
+}
+
 function buildInvestmentPlan(
   tickers: PortfolioTicker[],
   settings: ValueAveragingSettings,
 ): Record<string, InvestmentPlan> {
-  const baseTopUp =
-    settings.topUpMode === "amount"
-      ? settings.topUpAmount
-      : (tickers.reduce((total, ticker) => total + ticker.currentPrice, 0) * settings.topUpPercentage) /
-        100;
+  const baseTopUp = resolveBaseTopUpAmount(settings, tickers);
 
   const plans: Record<string, InvestmentPlan> = {};
   const growthMonths = getGrowthMonthsEquivalent(settings.growthSchedule);
@@ -52,9 +93,7 @@ function buildInvestmentPlan(
     const allocation = (settings.tickerAllocations[ticker.id] ?? 0) / 100;
     const growthRatio = growthMonths / 120;
     const targetValue = ticker.totalInvested * (1 + growthRatio);
-    const valueGap = Math.max(0, targetValue - ticker.currentPrice);
-
-    const uncappedTopUp = baseTopUp * allocation + valueGap * 0.2;
+    const uncappedTopUp = baseTopUp * allocation;
     const maxAllowedTopUp =
       settings.maxTopUpEnabled && settings.maxTopUpMultiplier != null
         ? baseTopUp * settings.maxTopUpMultiplier * allocation
@@ -98,6 +137,30 @@ export default function DashboardPage({
     enabledTickers.find((ticker) => ticker.id === selectedTickerId) ?? enabledTickers[0] ?? null;
 
   const selectedPlan = selectedTicker ? investmentPlan[selectedTicker.id] : null;
+  const allocationData = useMemo(
+    () =>
+      enabledTickers.map((ticker) => ({
+        tickerId: ticker.id,
+        symbol: ticker.symbol,
+        value: Math.max(0, toFiniteNumber(ticker.currentPrice) * toFiniteNumber(ticker.quantity)),
+      })),
+    [enabledTickers],
+  );
+  const totalAllocationValue = useMemo(
+    () => allocationData.reduce((total, item) => total + item.value, 0),
+    [allocationData],
+  );
+  const allocationChartData = useMemo(
+    () => allocationData.map((item) => ({ name: item.symbol, value: item.value, currency: baseCurrency })),
+    [allocationData, baseCurrency],
+  );
+  const selectedAllocationIndex = useMemo(() => {
+    if (!allocationData.length) return 0;
+    const selectedIndex = selectedTicker
+      ? allocationData.findIndex((item) => item.tickerId === selectedTicker.id)
+      : -1;
+    return selectedIndex >= 0 ? selectedIndex : 0;
+  }, [allocationData, selectedTicker]);
 
   const headerActions = <PageTabSelector currentPage={currentPage} onPageChange={onPageChange} />;
 
@@ -173,94 +236,162 @@ export default function DashboardPage({
       <PageHeader heading="Value Averaging" actions={headerActions} />
       <PageContent>
         <div className="grid gap-4 lg:grid-cols-3">
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Tickers / Assets</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-muted-foreground border-b text-left">
-                      <th className="px-2 py-2 font-medium">Ticker</th>
-                      <th className="px-2 py-2 font-medium">Cost basis</th>
-                      <th className="px-2 py-2 font-medium">Market value</th>
-                      <th className="px-2 py-2 font-medium">Amount to invest</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+          <div className="space-y-4 lg:col-span-2">
+            <div className="space-y-2">
+              <h2 className="text-sm font-medium">Holdings</h2>
+              <div className="min-h-0 flex-1 overflow-auto rounded-md border">
+                <Table>
+                  <TableHeader className="bg-muted-foreground/5 sticky top-0 z-10">
+                    <TableRow>
+                      <TableHead>Ticker</TableHead>
+                      <TableHead>Cost basis</TableHead>
+                      <TableHead>Market value</TableHead>
+                      <TableHead>Amount to invest</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {enabledTickers.map((ticker) => {
                       const plan = investmentPlan[ticker.id];
                       const isSelected = selectedTicker?.id === ticker.id;
+                      const quantity = toFiniteNumber(ticker.quantity);
+                      const costBasis = toFiniteNumber(ticker.totalInvested);
+                      const averageCost = quantity > 0 ? costBasis / quantity : toFiniteNumber(ticker.averageCost);
+                      const currentPrice = toFiniteNumber(ticker.currentPrice);
+                      const marketValue = currentPrice * quantity;
 
                       return (
-                        <tr
+                        <TableRow
                           key={ticker.id}
-                          className={`border-b last:border-b-0 ${isSelected ? "bg-muted/50" : ""}`}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => setSelectedTickerId(ticker.id)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              setSelectedTickerId(ticker.id);
+                            }
+                          }}
+                          className={isSelected ? "bg-muted/50 cursor-pointer" : "cursor-pointer"}
                         >
-                          <td className="px-2 py-3">
-                            <button
-                              type="button"
-                              onClick={() => setSelectedTickerId(ticker.id)}
-                              className="text-left"
-                            >
-                              <div className="font-medium">{ticker.symbol}</div>
-                              <div className="text-muted-foreground text-xs">{ticker.name}</div>
-                            </button>
-                          </td>
-                          <td className="px-2 py-3">
-                            <div className="font-medium">{formatCurrency(ticker.averageCost, baseCurrency)}</div>
-                            <div className="text-muted-foreground text-xs">Avg price</div>
-                          </td>
-                          <td className="px-2 py-3">
-                            <div className="font-medium">{formatCurrency(ticker.currentPrice, baseCurrency)}</div>
-                            <div className="text-muted-foreground text-xs">Current price</div>
-                          </td>
-                          <td className="px-2 py-3 font-medium">
+                          <TableCell>
+                            <div className="flex items-center gap-2 text-left">
+                              <TickerLogo symbol={ticker.symbol} />
+                              <div>
+                                <div className="font-medium">{ticker.symbol}</div>
+                                <div className="text-muted-foreground text-xs">
+                                  {formatShareCount(quantity)} shares
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">{formatCurrency(costBasis, baseCurrency)}</div>
+                            <div className="text-muted-foreground text-xs">
+                              {formatCurrency(averageCost, baseCurrency)}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">{formatCurrency(marketValue, baseCurrency)}</div>
+                            <div className="text-muted-foreground text-xs">
+                              {formatCurrency(currentPrice, baseCurrency)}
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium">
                             {formatCurrency(plan?.amountToInvest ?? 0, baseCurrency)}
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       );
                     })}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Ticker details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                {selectedTicker && selectedPlan ? (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Ticker</span>
+                      <span className="font-medium">{selectedTicker.symbol}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Account</span>
+                      <span className="font-medium">{selectedTicker.accountName}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Shares</span>
+                      <span className="font-medium">{formatShareCount(toFiniteNumber(selectedTicker.quantity))}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Cost basis</span>
+                      <span className="font-medium">
+                        {formatCurrency(toFiniteNumber(selectedTicker.totalInvested), baseCurrency)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Total invested (VA)</span>
+                      <span className="font-medium">
+                        {formatCurrency(selectedTicker.valueAveragingInvested, baseCurrency)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Target portfolio value</span>
+                      <span className="font-medium">{formatCurrency(selectedPlan.targetValue, baseCurrency)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Amount to invest now</span>
+                      <span className="font-medium">{formatCurrency(selectedPlan.amountToInvest, baseCurrency)}</span>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-muted-foreground">Select a ticker to see details.</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>Ticker details</CardTitle>
+              <CardTitle>Current allocation</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              {selectedTicker && selectedPlan ? (
-                <>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Ticker</span>
-                    <span className="font-medium">{selectedTicker.symbol}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Account</span>
-                    <span className="font-medium">{selectedTicker.accountName}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Total invested (VA)</span>
-                    <span className="font-medium">
-                      {formatCurrency(selectedTicker.valueAveragingInvested, baseCurrency)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Target portfolio value</span>
-                    <span className="font-medium">{formatCurrency(selectedPlan.targetValue, baseCurrency)}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Amount to invest now</span>
-                    <span className="font-medium">{formatCurrency(selectedPlan.amountToInvest, baseCurrency)}</span>
-                  </div>
-                </>
+            <CardContent className="space-y-4">
+              {totalAllocationValue > 0 ? (
+                <DonutChart
+                  data={allocationChartData}
+                  activeIndex={selectedAllocationIndex}
+                  displayTooltip
+                  onSectionClick={(_data, index) => {
+                    const tickerId = allocationData[index]?.tickerId;
+                    if (tickerId) {
+                      setSelectedTickerId(tickerId);
+                    }
+                  }}
+                />
               ) : (
-                <p className="text-muted-foreground">Select a ticker to see details.</p>
+                <p className="text-muted-foreground py-6 text-center text-sm">
+                  Allocation chart unavailable because current market value is zero.
+                </p>
               )}
+              <div className="space-y-2">
+                {allocationData.map((item) => {
+                  const ratio = totalAllocationValue > 0 ? (item.value / totalAllocationValue) * 100 : 0;
+                  return (
+                    <div key={item.tickerId} className="flex items-center justify-between text-sm">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedTickerId(item.tickerId)}
+                        className="hover:text-foreground text-muted-foreground text-left transition-colors"
+                      >
+                        {item.symbol}
+                      </button>
+                      <span className="font-medium">{ratio.toFixed(1)}%</span>
+                    </div>
+                  );
+                })}
+              </div>
             </CardContent>
           </Card>
         </div>

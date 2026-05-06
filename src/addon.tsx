@@ -3,7 +3,7 @@ import type { Account, AddonContext, AddonEnableFunction, Holding } from "@wealt
 import { Icons } from "@wealthfolio/ui";
 import React, { useEffect, useMemo, useState } from "react";
 import type { AddonPageTab } from "./components/page-tab-selector";
-import { formatCurrency, readSettings, saveSettings } from "./lib";
+import { formatCurrency, readSettings, resolveBaseTopUpAmount, saveSettings } from "./lib";
 import { DashboardPage, SettingsPage } from "./pages";
 import type { PortfolioTicker, ValueAveragingSettings } from "./types";
 
@@ -80,6 +80,7 @@ function aggregateTickers(snapshots: RawTickerSnapshot[]): PortfolioTicker[] {
       symbol: group.symbol,
       name: group.name,
       accountName: Array.from(group.accountNames).join(", "),
+      quantity: Number.isFinite(group.totalQuantity) ? group.totalQuantity : 0,
       averageCost: Number.isFinite(averageCost) ? averageCost : 0,
       currentPrice: Number.isFinite(currentPrice) ? currentPrice : 0,
       totalInvested: Number.isFinite(group.totalInvested) ? group.totalInvested : 0,
@@ -172,11 +173,7 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
   };
 
   const autoGenerateTransactions = () => {
-    const baseTopUp =
-      settings.topUpMode === "amount"
-        ? settings.topUpAmount
-        : (enabledTickers.reduce((sum, ticker) => sum + ticker.currentPrice, 0) * settings.topUpPercentage) /
-          100;
+    const baseTopUp = resolveBaseTopUpAmount(settings, enabledTickers);
 
     const generated = enabledTickers.map((ticker) => {
       const allocation = (settings.tickerAllocations[ticker.id] ?? 0) / 100;

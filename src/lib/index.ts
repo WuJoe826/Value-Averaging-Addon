@@ -1,5 +1,13 @@
 export { formatCurrency } from "./format-currency";
 export {
+  calculatePercentageTopUpAmount,
+  canCalculatePercentageTopUp,
+  getEnabledAllocationTotal,
+  getEnabledPortfolioWorth,
+  getTickerMarketValue,
+  resolveBaseTopUpAmount,
+} from "./top-up-calculation";
+export {
   calculateEndDate,
   clampInstallments,
   GROWTH_INTERVAL_OPTIONS,

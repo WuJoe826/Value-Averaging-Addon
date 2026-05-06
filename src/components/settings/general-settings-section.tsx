@@ -10,6 +10,8 @@ export interface GeneralSettingsSectionProps {
   baseCurrency: string;
   draft: ValueAveragingSettings;
   setDraft: React.Dispatch<React.SetStateAction<ValueAveragingSettings>>;
+  isPercentageTopUpAvailable: boolean;
+  percentageTopUpPreviewAmount: number;
 }
 
 /** General settings: same vertical rhythm as Portfolio / About (`space-y-4`, title block, bottom border). */
@@ -18,8 +20,18 @@ export function GeneralSettingsSection({
   baseCurrency,
   draft,
   setDraft,
+  isPercentageTopUpAvailable,
+  percentageTopUpPreviewAmount,
 }: GeneralSettingsSectionProps) {
-  const content = <GeneralSettingsContent baseCurrency={baseCurrency} draft={draft} setDraft={setDraft} />;
+  const content = (
+    <GeneralSettingsContent
+      baseCurrency={baseCurrency}
+      draft={draft}
+      setDraft={setDraft}
+      isPercentageTopUpAvailable={isPercentageTopUpAvailable}
+      percentageTopUpPreviewAmount={percentageTopUpPreviewAmount}
+    />
+  );
 
   if (layout === "mobile") {
     return (

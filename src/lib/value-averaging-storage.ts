@@ -15,6 +15,7 @@ export const DEFAULT_TICKERS: PortfolioTicker[] = [
     symbol: "VTI",
     name: "Vanguard Total Stock Market ETF",
     accountName: "Interactive Brokers",
+    quantity: 49.149,
     averageCost: 244.15,
     currentPrice: 252.4,
     totalInvested: 12000,
@@ -25,6 +26,7 @@ export const DEFAULT_TICKERS: PortfolioTicker[] = [
     symbol: "VXUS",
     name: "Vanguard Total International Stock ETF",
     accountName: "Fidelity",
+    quantity: 109.76,
     averageCost: 59.22,
     currentPrice: 61.48,
     totalInvested: 6500,
@@ -35,6 +37,7 @@ export const DEFAULT_TICKERS: PortfolioTicker[] = [
     symbol: "BND",
     name: "Vanguard Total Bond Market ETF",
     accountName: "Charles Schwab",
+    quantity: 72.922,
     averageCost: 72.68,
     currentPrice: 71.91,
     totalInvested: 5300,
@@ -50,6 +53,7 @@ export function buildDefaultSettings(): ValueAveragingSettings {
     purchaseUnit: "fractional-unit",
     topUpAmount: 500,
     topUpPercentage: 2,
+    calculatedTopUpAmount: 500,
     maxTopUpEnabled: true,
     maxTopUpMultiplier: 10,
     growthSchedule: {
@@ -98,6 +102,10 @@ export function readSettings(): ValueAveragingSettings {
     return {
       ...defaults,
       ...parsed,
+      calculatedTopUpAmount:
+        parsed.calculatedTopUpAmount == null || !Number.isFinite(parsed.calculatedTopUpAmount)
+          ? defaults.calculatedTopUpAmount
+          : Math.max(0, Number(parsed.calculatedTopUpAmount)),
       maxTopUpMultiplier: parsed.maxTopUpMultiplier == null ? defaults.maxTopUpMultiplier : parsed.maxTopUpMultiplier,
       overflowGainsAction:
         parsed.overflowGainsAction === "sell" || parsed.overflowGainsAction === "hold-to-next-round"

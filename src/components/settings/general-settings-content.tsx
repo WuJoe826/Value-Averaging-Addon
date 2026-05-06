@@ -14,6 +14,7 @@ import React from "react";
 import {
   calculateEndDate,
   clampInstallments,
+  formatCurrency,
   GROWTH_INTERVAL_OPTIONS,
   getTodayIsoDate,
   normalizeIsoDate,
@@ -27,9 +28,17 @@ export interface GeneralSettingsContentProps {
   baseCurrency: string;
   draft: ValueAveragingSettings;
   setDraft: React.Dispatch<React.SetStateAction<ValueAveragingSettings>>;
+  isPercentageTopUpAvailable: boolean;
+  percentageTopUpPreviewAmount: number;
 }
 
-export function GeneralSettingsContent({ baseCurrency, draft, setDraft }: GeneralSettingsContentProps) {
+export function GeneralSettingsContent({
+  baseCurrency,
+  draft,
+  setDraft,
+  isPercentageTopUpAvailable,
+  percentageTopUpPreviewAmount,
+}: GeneralSettingsContentProps) {
   const growthSchedule = draft.growthSchedule;
   const calculatedEndDate = calculateEndDate(
     growthSchedule.startDate,
@@ -72,11 +81,23 @@ export function GeneralSettingsContent({ baseCurrency, draft, setDraft }: Genera
                 type="button"
                 size="sm"
                 variant={draft.topUpMode === "percentage" ? "default" : "outline"}
-                onClick={() => setDraft((prev) => ({ ...prev, topUpMode: "percentage" }))}
+                disabled={!isPercentageTopUpAvailable}
+                onClick={() => {
+                  if (!isPercentageTopUpAvailable) {
+                    return;
+                  }
+                  setDraft((prev) => ({ ...prev, topUpMode: "percentage" }));
+                }}
               >
                 Percentage
               </Button>
             </div>
+            {!isPercentageTopUpAvailable ? (
+              <p className="text-muted-foreground text-xs">
+                Percentage mode requires at least one enabled holding and total portfolio allocation equal to
+                100%.
+              </p>
+            ) : null}
           </div>
 
           {draft.topUpMode === "amount" ? (
@@ -113,6 +134,9 @@ export function GeneralSettingsContent({ baseCurrency, draft, setDraft }: Genera
                   }))
                 }
               />
+              <p className="text-muted-foreground text-xs">
+                Estimated top-up amount: {formatCurrency(percentageTopUpPreviewAmount, baseCurrency)}
+              </p>
             </div>
           )}
 

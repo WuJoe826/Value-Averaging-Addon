@@ -8,6 +8,7 @@ import {
   PortfolioSettingsSection,
   type AddonPageTab,
 } from "../components";
+import { calculatePercentageTopUpAmount, canCalculatePercentageTopUp } from "../lib";
 import type { PortfolioTicker, ValueAveragingSettings } from "../types";
 import { SETTINGS_SECTIONS, getSectionMeta, type MobileView, type PreferenceSection } from "./settings-nav-config";
 import { SettingsPageDesktop } from "./settings-page-desktop";
@@ -59,10 +60,42 @@ export default function SettingsPage({
       JSON.stringify(draft.tickerAllocations) !== JSON.stringify(settings.tickerAllocations),
     [draft.enabledTickers, draft.tickerAllocations, settings.enabledTickers, settings.tickerAllocations],
   );
+  const enabledTickers = useMemo(
+    () => tickers.filter((ticker) => draft.enabledTickers[ticker.id]),
+    [draft.enabledTickers, tickers],
+  );
+  const isPercentageTopUpAvailable = useMemo(
+    () => canCalculatePercentageTopUp(draft, enabledTickers),
+    [draft, enabledTickers],
+  );
+  const percentageTopUpPreviewAmount = useMemo(
+    () => (isPercentageTopUpAvailable ? calculatePercentageTopUpAmount(draft, enabledTickers) : 0),
+    [draft, enabledTickers, isPercentageTopUpAvailable],
+  );
 
   useEffect(() => {
     setDraft(settings);
   }, [settings]);
+
+  useEffect(() => {
+    setDraft((prev) => {
+      const nextTopUpMode =
+        prev.topUpMode === "percentage" && !isPercentageTopUpAvailable ? "amount" : prev.topUpMode;
+      const nextCalculatedTopUpAmount =
+        nextTopUpMode === "percentage" ? percentageTopUpPreviewAmount : Math.max(0, prev.topUpAmount);
+      const sameTopUpMode = prev.topUpMode === nextTopUpMode;
+      const sameCalculatedAmount =
+        Math.abs((prev.calculatedTopUpAmount ?? 0) - nextCalculatedTopUpAmount) < 0.000001;
+      if (sameTopUpMode && sameCalculatedAmount) {
+        return prev;
+      }
+      return {
+        ...prev,
+        topUpMode: nextTopUpMode,
+        calculatedTopUpAmount: nextCalculatedTopUpAmount,
+      };
+    });
+  }, [draft.topUpAmount, draft.topUpMode, isPercentageTopUpAvailable, percentageTopUpPreviewAmount]);
 
   useEffect(() => {
     if (JSON.stringify(draft) === JSON.stringify(settings)) {
@@ -107,6 +140,8 @@ export default function SettingsPage({
           baseCurrency={baseCurrency}
           draft={draft}
           setDraft={setDraft}
+          isPercentageTopUpAvailable={isPercentageTopUpAvailable}
+          percentageTopUpPreviewAmount={percentageTopUpPreviewAmount}
         />
       );
     }
@@ -146,6 +181,8 @@ export default function SettingsPage({
           baseCurrency={baseCurrency}
           draft={draft}
           setDraft={setDraft}
+          isPercentageTopUpAvailable={isPercentageTopUpAvailable}
+          percentageTopUpPreviewAmount={percentageTopUpPreviewAmount}
         />
       );
     }

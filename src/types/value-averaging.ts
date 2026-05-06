@@ -3,6 +3,7 @@ export interface PortfolioTicker {
   symbol: string;
   name: string;
   accountName: string;
+  quantity: number;
   averageCost: number;
   currentPrice: number;
   totalInvested: number;
@@ -36,6 +37,7 @@ export interface ValueAveragingSettings {
   purchaseUnit: "fractional-unit" | "whole-unit";
   topUpAmount: number;
   topUpPercentage: number;
+  calculatedTopUpAmount: number;
   maxTopUpEnabled: boolean;
   /** Cap versus base plan; `null` means no limit when `maxTopUpEnabled` is on. */
   maxTopUpMultiplier: number | null;

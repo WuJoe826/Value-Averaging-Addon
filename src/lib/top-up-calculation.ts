@@ -1,11 +1,12 @@
 import type { PortfolioTicker, ValueAveragingSettings } from "../types";
+import { getGrowthPeriodIndex } from "./growth-schedule";
 
 const ALLOCATION_MIN = 99.9;
 const ALLOCATION_MAX = 100;
 
-function toFiniteNumber(value: unknown): number {
+function toFiniteNumber(value: unknown, fallback = 0): number {
   const parsed = typeof value === "number" ? value : Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
+  return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 export function getTickerMarketValue(ticker: PortfolioTicker): number {
@@ -35,12 +36,7 @@ export function canCalculatePercentageTopUp(
 
   const allocationTotal = getEnabledAllocationTotal(settings, enabledTickers);
   const isAllocationValid = allocationTotal >= ALLOCATION_MIN && allocationTotal <= ALLOCATION_MAX;
-  if (!isAllocationValid) {
-    return false;
-  }
-
-  const enabledPortfolioWorth = getEnabledPortfolioWorth(enabledTickers);
-  return enabledPortfolioWorth > 0;
+  return isAllocationValid;
 }
 
 export function calculatePercentageTopUpAmount(
@@ -64,4 +60,83 @@ export function resolveBaseTopUpAmount(
   }
 
   return Math.max(0, toFiniteNumber(settings.calculatedTopUpAmount));
+}
+
+interface HoldingInvestmentPlan {
+  tickerId: string;
+  periodIndex: number;
+  growthPerPeriod: number;
+  initialDeploymentValue: number;
+  targetValue: number;
+  currentPortfolioValue: number;
+  amountToInvest: number;
+  action: "buy" | "sell" | "hold";
+  hasOverflowBeyondTopUp: boolean;
+}
+
+function applyMaxTopUpIfNeeded(
+  settings: ValueAveragingSettings,
+  baseTopUpAmount: number,
+  allocation: number,
+  amountToInvest: number,
+): number {
+  if (amountToInvest <= 0) {
+    return amountToInvest;
+  }
+
+  if (!settings.maxTopUpEnabled || settings.maxTopUpMultiplier == null) {
+    return amountToInvest;
+  }
+
+  const maxAllowedTopUp = baseTopUpAmount * settings.maxTopUpMultiplier * allocation;
+  return Math.min(amountToInvest, maxAllowedTopUp);
+}
+
+export function calculateHoldingInvestmentPlan(
+  ticker: PortfolioTicker,
+  settings: ValueAveragingSettings,
+  enabledTickers: PortfolioTicker[],
+): HoldingInvestmentPlan {
+  const baseTopUpAmount = resolveBaseTopUpAmount(settings, enabledTickers);
+  const periodIndex = getGrowthPeriodIndex(settings.growthSchedule);
+  const allocation = Math.max(0, toFiniteNumber(settings.tickerAllocations[ticker.id]) / 100);
+  const growthPerPeriod = baseTopUpAmount * allocation;
+  const initialDeploymentValue = Math.max(
+    0,
+    toFiniteNumber(settings.initialDeploymentValue[ticker.id], 0),
+  );
+  const targetValue = initialDeploymentValue + growthPerPeriod * periodIndex;
+  const currentPortfolioValue = getTickerMarketValue(ticker);
+  const rawAmountToInvest = targetValue - currentPortfolioValue;
+  const overflowAmount = Math.max(0, currentPortfolioValue - targetValue);
+  const hasOverflowBeyondTopUp = overflowAmount > growthPerPeriod;
+
+  let amountToInvest = applyMaxTopUpIfNeeded(settings, baseTopUpAmount, allocation, rawAmountToInvest);
+  let action: "buy" | "sell" | "hold" = amountToInvest < 0 ? "sell" : "buy";
+  if (hasOverflowBeyondTopUp && settings.overflowGainsAction === "hold-to-next-round") {
+    amountToInvest = 0;
+    action = "hold";
+  }
+
+  return {
+    tickerId: ticker.id,
+    periodIndex,
+    growthPerPeriod,
+    initialDeploymentValue,
+    targetValue,
+    currentPortfolioValue,
+    amountToInvest,
+    action,
+    hasOverflowBeyondTopUp,
+  };
+}
+
+export function calculateInvestmentPlanByTicker(
+  settings: ValueAveragingSettings,
+  enabledTickers: PortfolioTicker[],
+): Record<string, HoldingInvestmentPlan> {
+  return enabledTickers.reduce<Record<string, HoldingInvestmentPlan>>((acc, ticker) => {
+    acc[ticker.id] = calculateHoldingInvestmentPlan(ticker, settings, enabledTickers);
+    return acc;
+  }, {});
 }

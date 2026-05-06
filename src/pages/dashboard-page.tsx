@@ -3,12 +3,12 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
+  Badge,
   Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  DonutChart,
   EmptyPlaceholder,
   Icons,
   Page,
@@ -23,7 +23,7 @@ import {
 } from "@wealthfolio/ui";
 import React, { useMemo, useState } from "react";
 import { PageTabSelector, type AddonPageTab } from "../components";
-import { formatCurrency, getGrowthMonthsEquivalent, resolveBaseTopUpAmount } from "../lib";
+import { calculateInvestmentPlanByTicker, formatCurrency } from "../lib";
 import type { PortfolioTicker, ValueAveragingSettings } from "../types";
 
 interface DashboardPageProps {
@@ -41,7 +41,11 @@ interface DashboardPageProps {
 
 interface InvestmentPlan {
   tickerId: string;
+  periodIndex: number;
+  growthPerPeriod: number;
+  initialDeploymentValue: number;
   targetValue: number;
+  currentPortfolioValue: number;
   amountToInvest: number;
 }
 
@@ -80,35 +84,6 @@ function TickerLogo({ symbol }: { symbol: string }) {
   );
 }
 
-function buildInvestmentPlan(
-  tickers: PortfolioTicker[],
-  settings: ValueAveragingSettings,
-): Record<string, InvestmentPlan> {
-  const baseTopUp = resolveBaseTopUpAmount(settings, tickers);
-
-  const plans: Record<string, InvestmentPlan> = {};
-  const growthMonths = getGrowthMonthsEquivalent(settings.growthSchedule);
-
-  tickers.forEach((ticker) => {
-    const allocation = (settings.tickerAllocations[ticker.id] ?? 0) / 100;
-    const growthRatio = growthMonths / 120;
-    const targetValue = ticker.totalInvested * (1 + growthRatio);
-    const uncappedTopUp = baseTopUp * allocation;
-    const maxAllowedTopUp =
-      settings.maxTopUpEnabled && settings.maxTopUpMultiplier != null
-        ? baseTopUp * settings.maxTopUpMultiplier * allocation
-        : Number.MAX_SAFE_INTEGER;
-
-    plans[ticker.id] = {
-      tickerId: ticker.id,
-      targetValue,
-      amountToInvest: Math.max(0, Math.min(uncappedTopUp, maxAllowedTopUp)),
-    };
-  });
-
-  return plans;
-}
-
 export default function DashboardPage({
   ctx,
   baseCurrency,
@@ -129,38 +104,12 @@ export default function DashboardPage({
   );
 
   const investmentPlan = useMemo(
-    () => buildInvestmentPlan(enabledTickers, settings),
+    () => calculateInvestmentPlanByTicker(settings, enabledTickers),
     [enabledTickers, settings],
   );
-
   const selectedTicker =
     enabledTickers.find((ticker) => ticker.id === selectedTickerId) ?? enabledTickers[0] ?? null;
-
   const selectedPlan = selectedTicker ? investmentPlan[selectedTicker.id] : null;
-  const allocationData = useMemo(
-    () =>
-      enabledTickers.map((ticker) => ({
-        tickerId: ticker.id,
-        symbol: ticker.symbol,
-        value: Math.max(0, toFiniteNumber(ticker.currentPrice) * toFiniteNumber(ticker.quantity)),
-      })),
-    [enabledTickers],
-  );
-  const totalAllocationValue = useMemo(
-    () => allocationData.reduce((total, item) => total + item.value, 0),
-    [allocationData],
-  );
-  const allocationChartData = useMemo(
-    () => allocationData.map((item) => ({ name: item.symbol, value: item.value, currency: baseCurrency })),
-    [allocationData, baseCurrency],
-  );
-  const selectedAllocationIndex = useMemo(() => {
-    if (!allocationData.length) return 0;
-    const selectedIndex = selectedTicker
-      ? allocationData.findIndex((item) => item.tickerId === selectedTicker.id)
-      : -1;
-    return selectedIndex >= 0 ? selectedIndex : 0;
-  }, [allocationData, selectedTicker]);
 
   const headerActions = <PageTabSelector currentPage={currentPage} onPageChange={onPageChange} />;
 
@@ -236,164 +185,152 @@ export default function DashboardPage({
       <PageHeader heading="Value Averaging" actions={headerActions} />
       <PageContent>
         <div className="grid gap-4 lg:grid-cols-3">
-          <div className="space-y-4 lg:col-span-2">
-            <div className="space-y-2">
-              <h2 className="text-sm font-medium">Holdings</h2>
-              <div className="min-h-0 flex-1 overflow-auto rounded-md border">
-                <Table>
-                  <TableHeader className="bg-muted-foreground/5 sticky top-0 z-10">
-                    <TableRow>
-                      <TableHead>Ticker</TableHead>
-                      <TableHead>Cost basis</TableHead>
-                      <TableHead>Market value</TableHead>
-                      <TableHead>Amount to invest</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {enabledTickers.map((ticker) => {
-                      const plan = investmentPlan[ticker.id];
-                      const isSelected = selectedTicker?.id === ticker.id;
-                      const quantity = toFiniteNumber(ticker.quantity);
-                      const costBasis = toFiniteNumber(ticker.totalInvested);
-                      const averageCost = quantity > 0 ? costBasis / quantity : toFiniteNumber(ticker.averageCost);
-                      const currentPrice = toFiniteNumber(ticker.currentPrice);
-                      const marketValue = currentPrice * quantity;
+          <div className="space-y-2 lg:col-span-2 lg:flex lg:flex-col">
+            <h2 className="text-sm font-medium">Holdings</h2>
+            <div className="min-h-0 flex-1 overflow-auto rounded-md border">
+              <Table>
+                <TableHeader className="bg-muted-foreground/5 sticky top-0 z-10">
+                  <TableRow>
+                    <TableHead>Ticker</TableHead>
+                    <TableHead>Cost basis</TableHead>
+                    <TableHead>Market value</TableHead>
+                    <TableHead className="text-right">Desired Value</TableHead>
+                    <TableHead className="text-right">Current / Desired</TableHead>
+                    <TableHead className="text-right">Amount to invest</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {enabledTickers.map((ticker) => {
+                    const plan = investmentPlan[ticker.id];
+                    const quantity = toFiniteNumber(ticker.quantity);
+                    const costBasis = toFiniteNumber(ticker.totalInvested);
+                    const averageCost = quantity > 0 ? costBasis / quantity : toFiniteNumber(ticker.averageCost);
+                    const currentPrice = toFiniteNumber(ticker.currentPrice);
+                    const marketValue = currentPrice * quantity;
+                    const currentDesiredDisplay = `${formatCurrency(
+                      plan?.currentPortfolioValue ?? 0,
+                      baseCurrency,
+                    )} / ${formatCurrency(plan?.targetValue ?? 0, baseCurrency)}`;
+                    const isSelected = selectedTicker?.id === ticker.id;
 
-                      return (
-                        <TableRow
-                          key={ticker.id}
-                          role="button"
-                          tabIndex={0}
-                          onClick={() => setSelectedTickerId(ticker.id)}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter" || event.key === " ") {
-                              event.preventDefault();
-                              setSelectedTickerId(ticker.id);
-                            }
-                          }}
-                          className={isSelected ? "bg-muted/50 cursor-pointer" : "cursor-pointer"}
-                        >
-                          <TableCell>
-                            <div className="flex items-center gap-2 text-left">
-                              <TickerLogo symbol={ticker.symbol} />
-                              <div>
-                                <div className="font-medium">{ticker.symbol}</div>
-                                <div className="text-muted-foreground text-xs">
-                                  {formatShareCount(quantity)} shares
-                                </div>
-                              </div>
+                    return (
+                      <TableRow
+                        key={ticker.id}
+                        className={isSelected ? "bg-muted/50 cursor-pointer" : "cursor-pointer"}
+                        onClick={() => setSelectedTickerId(ticker.id)}
+                      >
+                        <TableCell>
+                          <div className="flex items-center gap-2 text-left">
+                            <TickerLogo symbol={ticker.symbol} />
+                            <div>
+                              <div className="font-medium">{ticker.symbol}</div>
+                              <div className="text-muted-foreground text-xs">{formatShareCount(quantity)} shares</div>
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-medium">{formatCurrency(costBasis, baseCurrency)}</div>
-                            <div className="text-muted-foreground text-xs">
-                              {formatCurrency(averageCost, baseCurrency)}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium">{formatCurrency(costBasis, baseCurrency)}</div>
+                          <div className="text-muted-foreground text-xs">
+                            {formatCurrency(averageCost, baseCurrency)}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium">{formatCurrency(marketValue, baseCurrency)}</div>
+                          <div className="text-muted-foreground text-xs">{formatCurrency(currentPrice, baseCurrency)}</div>
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          <div>{formatCurrency(plan?.targetValue ?? 0, baseCurrency)}</div>
+                          <div className="text-muted-foreground text-xs">
+                            {formatCurrency(plan?.initialDeploymentValue ?? 0, baseCurrency)} +{" "}
+                            {formatCurrency(plan?.growthPerPeriod ?? 0, baseCurrency)} x {plan?.periodIndex ?? 1}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right font-medium">{currentDesiredDisplay}</TableCell>
+                        <TableCell className="text-right font-medium">
+                          <div className="flex flex-col items-end">
+                            {plan?.action === "hold" ? (
+                              <Badge variant="outline" className="text-muted-foreground">
+                                {baseCurrency} --.--
+                              </Badge>
+                            ) : plan && plan.amountToInvest < 0 ? (
+                              <Badge variant="destructive">
+                                {formatCurrency(Math.abs(plan.amountToInvest), baseCurrency)}
+                              </Badge>
+                            ) : (
+                              <Badge variant="success">
+                                {formatCurrency(plan?.amountToInvest ?? 0, baseCurrency)}
+                              </Badge>
+                            )}
+                            <div className="text-muted-foreground mt-1 text-right text-xs leading-tight">
+                              Shares:{" "}
+                              {currentPrice > 0 && plan
+                                ? formatShareCount(Math.abs(plan.amountToInvest) / currentPrice)
+                                : "--.--"}
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-medium">{formatCurrency(marketValue, baseCurrency)}</div>
-                            <div className="text-muted-foreground text-xs">
-                              {formatCurrency(currentPrice, baseCurrency)}
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {formatCurrency(plan?.amountToInvest ?? 0, baseCurrency)}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Ticker details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                {selectedTicker && selectedPlan ? (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Ticker</span>
-                      <span className="font-medium">{selectedTicker.symbol}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Account</span>
-                      <span className="font-medium">{selectedTicker.accountName}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Shares</span>
-                      <span className="font-medium">{formatShareCount(toFiniteNumber(selectedTicker.quantity))}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Cost basis</span>
-                      <span className="font-medium">
-                        {formatCurrency(toFiniteNumber(selectedTicker.totalInvested), baseCurrency)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Total invested (VA)</span>
-                      <span className="font-medium">
-                        {formatCurrency(selectedTicker.valueAveragingInvested, baseCurrency)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Target portfolio value</span>
-                      <span className="font-medium">{formatCurrency(selectedPlan.targetValue, baseCurrency)}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Amount to invest now</span>
-                      <span className="font-medium">{formatCurrency(selectedPlan.amountToInvest, baseCurrency)}</span>
-                    </div>
-                  </>
-                ) : (
-                  <p className="text-muted-foreground">Select a ticker to see details.</p>
-                )}
+          </div>
+
+          <div className="space-y-2 lg:flex lg:flex-col">
+            <h2 className="text-sm font-medium">Ticker details</h2>
+            <Card className="lg:flex-1">
+              <CardContent className="space-y-3 pt-4 text-sm">
+              {selectedTicker && selectedPlan ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Ticker</span>
+                    <span className="font-medium">{selectedTicker.symbol}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Account</span>
+                    <span className="font-medium">{selectedTicker.accountName}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Shares</span>
+                    <span className="font-medium">{formatShareCount(toFiniteNumber(selectedTicker.quantity))}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Desired value</span>
+                    <span className="font-medium">{formatCurrency(selectedPlan.targetValue, baseCurrency)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Current market value</span>
+                    <span className="font-medium">{formatCurrency(selectedPlan.currentPortfolioValue, baseCurrency)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Current / Desired</span>
+                    <span className="font-medium">
+                      {formatCurrency(selectedPlan.currentPortfolioValue, baseCurrency)} /{" "}
+                      {formatCurrency(selectedPlan.targetValue, baseCurrency)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Amount to invest</span>
+                    {selectedPlan.action === "hold" ? (
+                      <Badge variant="outline" className="text-muted-foreground">
+                        {baseCurrency} --.--
+                      </Badge>
+                    ) : selectedPlan.amountToInvest < 0 ? (
+                      <Badge variant="destructive">
+                        {formatCurrency(Math.abs(selectedPlan.amountToInvest), baseCurrency)}
+                      </Badge>
+                    ) : (
+                      <Badge variant="success">{formatCurrency(selectedPlan.amountToInvest, baseCurrency)}</Badge>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <p className="text-muted-foreground">Select a ticker to see details.</p>
+              )}
               </CardContent>
             </Card>
           </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Current allocation</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {totalAllocationValue > 0 ? (
-                <DonutChart
-                  data={allocationChartData}
-                  activeIndex={selectedAllocationIndex}
-                  displayTooltip
-                  onSectionClick={(_data, index) => {
-                    const tickerId = allocationData[index]?.tickerId;
-                    if (tickerId) {
-                      setSelectedTickerId(tickerId);
-                    }
-                  }}
-                />
-              ) : (
-                <p className="text-muted-foreground py-6 text-center text-sm">
-                  Allocation chart unavailable because current market value is zero.
-                </p>
-              )}
-              <div className="space-y-2">
-                {allocationData.map((item) => {
-                  const ratio = totalAllocationValue > 0 ? (item.value / totalAllocationValue) * 100 : 0;
-                  return (
-                    <div key={item.tickerId} className="flex items-center justify-between text-sm">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedTickerId(item.tickerId)}
-                        className="hover:text-foreground text-muted-foreground text-left transition-colors"
-                      >
-                        {item.symbol}
-                      </button>
-                      <span className="font-medium">{ratio.toFixed(1)}%</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         <Card>

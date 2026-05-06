@@ -80,6 +80,35 @@ function addIntervals(startDate: Date, interval: GrowthInterval, steps: number):
   }
 }
 
+export function getGrowthPeriodIndex(schedule: GrowthSchedule, asOfDate = new Date()): number {
+  const normalizedStart = normalizeIsoDate(schedule.startDate);
+  const parsedStart = parseIsoDate(normalizedStart);
+  if (!parsedStart) {
+    return 1;
+  }
+
+  const asOf = new Date(asOfDate);
+  if (Number.isNaN(asOf.getTime())) {
+    return 1;
+  }
+
+  if (asOf < parsedStart) {
+    return 1;
+  }
+
+  // Count periods using the same calendar stepping logic as end-date calculation.
+  let period = 1;
+  while (period < 10_000) {
+    const nextPeriodStart = addIntervals(parsedStart, schedule.interval, period);
+    if (nextPeriodStart > asOf) {
+      return period;
+    }
+    period += 1;
+  }
+
+  return period;
+}
+
 export function calculateEndDate(startDate: string, interval: GrowthInterval, installments: number): string {
   const normalizedStart = normalizeIsoDate(startDate);
   const parsedStart = parseIsoDate(normalizedStart);

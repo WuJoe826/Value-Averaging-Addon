@@ -44,5 +44,7 @@ export interface ValueAveragingSettings {
   growthSchedule: GrowthSchedule;
   enabledTickers: Record<string, boolean>;
   tickerAllocations: Record<string, number>;
+  initialDeploymentShares: Record<string, number>;
+  initialDeploymentValue: Record<string, number>;
   isConfigured: boolean;
 }

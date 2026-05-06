@@ -1,5 +1,7 @@
 export { formatCurrency } from "./format-currency";
 export {
+  calculateHoldingInvestmentPlan,
+  calculateInvestmentPlanByTicker,
   calculatePercentageTopUpAmount,
   canCalculatePercentageTopUp,
   getEnabledAllocationTotal,
@@ -12,6 +14,7 @@ export {
   clampInstallments,
   GROWTH_INTERVAL_OPTIONS,
   getGrowthMonthsEquivalent,
+  getGrowthPeriodIndex,
   getTodayIsoDate,
   isGrowthInterval,
   normalizeIsoDate,

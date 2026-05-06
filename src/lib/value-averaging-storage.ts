@@ -66,6 +66,8 @@ export function buildDefaultSettings(): ValueAveragingSettings {
     },
     enabledTickers: {},
     tickerAllocations: {},
+    initialDeploymentShares: {},
+    initialDeploymentValue: {},
     isConfigured: false,
   };
 }
@@ -130,6 +132,14 @@ export function readSettings(): ValueAveragingSettings {
       tickerAllocations: {
         ...defaults.tickerAllocations,
         ...(parsed.tickerAllocations ?? {}),
+      },
+      initialDeploymentShares: {
+        ...defaults.initialDeploymentShares,
+        ...(parsed.initialDeploymentShares ?? {}),
+      },
+      initialDeploymentValue: {
+        ...defaults.initialDeploymentValue,
+        ...(parsed.initialDeploymentValue ?? {}),
       },
     };
   } catch {

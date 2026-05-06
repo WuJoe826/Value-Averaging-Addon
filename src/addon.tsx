@@ -3,7 +3,7 @@ import type { Account, AddonContext, AddonEnableFunction, Holding } from "@wealt
 import { Icons } from "@wealthfolio/ui";
 import React, { useEffect, useMemo, useState } from "react";
 import type { AddonPageTab } from "./components/page-tab-selector";
-import { formatCurrency, readSettings, resolveBaseTopUpAmount, saveSettings } from "./lib";
+import { calculateHoldingInvestmentPlan, formatCurrency, readSettings, saveSettings } from "./lib";
 import { DashboardPage, SettingsPage } from "./pages";
 import type { PortfolioTicker, ValueAveragingSettings } from "./types";
 
@@ -135,6 +135,8 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
       let hasNewTicker = false;
       const nextEnabledTickers = { ...prev.enabledTickers };
       const nextTickerAllocations = { ...prev.tickerAllocations };
+      const nextInitialDeploymentShares = { ...prev.initialDeploymentShares };
+      const nextInitialDeploymentValue = { ...prev.initialDeploymentValue };
 
       tickers.forEach((ticker) => {
         if (!(ticker.id in nextEnabledTickers)) {
@@ -143,6 +145,17 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
         }
         if (!(ticker.id in nextTickerAllocations)) {
           nextTickerAllocations[ticker.id] = 0;
+          hasNewTicker = true;
+        }
+        if (!(ticker.id in nextInitialDeploymentShares)) {
+          nextInitialDeploymentShares[ticker.id] = Number.isFinite(ticker.quantity) ? ticker.quantity : 0;
+          hasNewTicker = true;
+        }
+        if (!(ticker.id in nextInitialDeploymentValue)) {
+          const initialValue = Number.isFinite(ticker.currentPrice * ticker.quantity)
+            ? ticker.currentPrice * ticker.quantity
+            : 0;
+          nextInitialDeploymentValue[ticker.id] = initialValue;
           hasNewTicker = true;
         }
       });
@@ -155,9 +168,11 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
         ...prev,
         enabledTickers: nextEnabledTickers,
         tickerAllocations: nextTickerAllocations,
+        initialDeploymentShares: nextInitialDeploymentShares,
+        initialDeploymentValue: nextInitialDeploymentValue,
       };
       saveSettings(nextSettings);
-      ctx.api.logger.info("Detected new holdings and added them as disabled tickers");
+      ctx.api.logger.info("Detected new holdings and initialized value averaging baselines");
       return nextSettings;
     });
   }, [tickers, ctx]);
@@ -173,16 +188,13 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
   };
 
   const autoGenerateTransactions = () => {
-    const baseTopUp = resolveBaseTopUpAmount(settings, enabledTickers);
-
     const generated = enabledTickers.map((ticker) => {
-      const allocation = (settings.tickerAllocations[ticker.id] ?? 0) / 100;
-      const plannedAmount = baseTopUp * allocation;
-      const amount =
-        settings.maxTopUpEnabled && settings.maxTopUpMultiplier != null
-          ? Math.min(plannedAmount, plannedAmount * settings.maxTopUpMultiplier)
-          : plannedAmount;
-      return `BUY ${ticker.symbol} in ${ticker.accountName}: ${formatCurrency(amount, baseCurrency)}`;
+      const plan = calculateHoldingInvestmentPlan(ticker, settings, enabledTickers);
+      if (plan.action === "hold") {
+        return `HOLD ${ticker.symbol} in ${ticker.accountName}: ${baseCurrency} --.--`;
+      }
+      const action = plan.amountToInvest < 0 ? "SELL" : "BUY";
+      return `${action} ${ticker.symbol} in ${ticker.accountName}: ${formatCurrency(Math.abs(plan.amountToInvest), baseCurrency)}`;
     });
 
     setGeneratedTransactions(generated);

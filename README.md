@@ -53,14 +53,6 @@ This addon requests only the required host API permissions:
 - Cost basis display is refreshed from latest holdings after successful creation.
 - Strategy supports continuous VA rounds by executed-period progression.
 
-## Release Checklist (v1.0.0)
-
-- `manifest.json` points to `dist/addon.js`
-- `pnpm type-check` passes
-- `pnpm build` passes
-- `pnpm bundle` generates installable zip
-- README and changelog are updated
-
 ## License
 
 MIT

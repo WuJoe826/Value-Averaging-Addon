@@ -86,8 +86,7 @@ export function DashboardPageDesktop({
             {enabledTickers.map((ticker) => {
               const plan = investmentPlan[ticker.id];
               const quantity = toFiniteNumber(ticker.quantity);
-              const vaCostBasis =
-                toFiniteNumber(plan?.initialDeploymentValue) + toFiniteNumber(ticker.valueAveragingInvested);
+              const vaCostBasis = toFiniteNumber(ticker.totalInvested);
               const vaAverageCost = quantity > 0 ? vaCostBasis / quantity : toFiniteNumber(ticker.averageCost);
               const currentPrice = toFiniteNumber(ticker.currentPrice);
               const marketValue = currentPrice * quantity;

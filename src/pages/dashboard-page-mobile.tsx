@@ -76,8 +76,7 @@ export function DashboardPageMobile({
 }: DashboardPageMobileProps) {
   const selectedQuantity = toFiniteNumber(selectedTicker?.quantity);
   const selectedCurrentPrice = toFiniteNumber(selectedTicker?.currentPrice);
-  const selectedVaCostBasis =
-    toFiniteNumber(selectedPlan?.initialDeploymentValue) + toFiniteNumber(selectedTicker?.valueAveragingInvested);
+  const selectedVaCostBasis = toFiniteNumber(selectedTicker?.totalInvested);
   const selectedVaAverageCost =
     selectedQuantity > 0 ? selectedVaCostBasis / selectedQuantity : toFiniteNumber(selectedTicker?.averageCost);
   const selectedMarketValue = selectedCurrentPrice * selectedQuantity;

@@ -8,6 +8,7 @@ import {
 import type { GrowthSchedule, PortfolioTicker, ValueAveragingSettings } from "../types";
 
 const SETTINGS_STORAGE_KEY = "value-averaging-addon:settings";
+const DEPLOY_RECORDS_STORAGE_KEY = "value-averaging-addon:deploy-records";
 
 export const DEFAULT_TICKERS: PortfolioTicker[] = [
   {
@@ -182,4 +183,56 @@ export function clearSettings(): void {
   }
 
   window.localStorage.removeItem(SETTINGS_STORAGE_KEY);
+}
+
+interface StoredDeployRecord {
+  id: string;
+  createdAt: string;
+  symbol: string;
+  action: "BUY" | "SELL";
+  accountName: string;
+  amount: number;
+  quantity: number;
+  unitPrice: number;
+  currency: string;
+  periodIndex: number;
+}
+
+export function readDeployRecords(): StoredDeployRecord[] {
+  if (typeof window === "undefined") {
+    return [];
+  }
+  const rawRecords = window.localStorage.getItem(DEPLOY_RECORDS_STORAGE_KEY);
+  if (!rawRecords) {
+    return [];
+  }
+  try {
+    const parsed = JSON.parse(rawRecords) as StoredDeployRecord[];
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed.filter(
+      (record) =>
+        Boolean(record?.id) &&
+        Boolean(record?.createdAt) &&
+        Boolean(record?.symbol) &&
+        (record?.action === "BUY" || record?.action === "SELL"),
+    );
+  } catch {
+    return [];
+  }
+}
+
+export function saveDeployRecords(records: StoredDeployRecord[]): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.setItem(DEPLOY_RECORDS_STORAGE_KEY, JSON.stringify(records));
+}
+
+export function clearDeployRecords(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.removeItem(DEPLOY_RECORDS_STORAGE_KEY);
 }

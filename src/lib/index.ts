@@ -20,9 +20,12 @@ export {
   normalizeIsoDate,
 } from "./growth-schedule";
 export {
+  clearDeployRecords,
   DEFAULT_TICKERS,
   buildDefaultSettings,
   clearSettings,
+  readDeployRecords,
   readSettings,
+  saveDeployRecords,
   saveSettings,
 } from "./value-averaging-storage";

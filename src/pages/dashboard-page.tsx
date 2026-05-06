@@ -24,6 +24,12 @@ import {
   SheetHeader,
   SheetTitle,
   Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@wealthfolio/ui";
 import React, { useEffect, useMemo, useState } from "react";
 import { IntervalInput, PageTabSelector, type AddonPageTab } from "../components";
@@ -65,7 +71,18 @@ interface DashboardPageProps {
     rawValue: string | number | boolean,
   ) => void;
   onConfirmGeneratedOrders: () => void | Promise<void>;
-  generatedTransactions: string[];
+  deployRecords: {
+    id: string;
+    createdAt: string;
+    symbol: string;
+    action: "BUY" | "SELL";
+    accountName: string;
+    amount: number;
+    quantity: number;
+    unitPrice: number;
+    currency: string;
+    periodIndex: number;
+  }[];
 }
 
 interface InvestmentPlan {
@@ -118,7 +135,7 @@ export default function DashboardPage({
   onOrderSheetOpenChange,
   onOrderDraftChange,
   onConfirmGeneratedOrders,
-  generatedTransactions,
+  deployRecords,
 }: DashboardPageProps) {
   const [selectedTickerId, setSelectedTickerId] = useState<string | null>(null);
   const [isTickerDetailSheetOpen, setIsTickerDetailSheetOpen] = useState(false);
@@ -184,6 +201,13 @@ export default function DashboardPage({
   const selectedPlan = selectedTicker ? investmentPlan[selectedTicker.id] : null;
 
   const headerActions = <PageTabSelector currentPage={currentPage} onPageChange={onPageChange} />;
+  const formatRecordTime = (iso: string) => {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) {
+      return "--";
+    }
+    return date.toLocaleString();
+  };
 
   if (isTickersLoading) {
     return (
@@ -407,18 +431,43 @@ export default function DashboardPage({
               </Button>
             </CardHeader>
             <CardContent>
-              {!generatedTransactions.length ? (
+              {!deployRecords.length ? (
                 <p className="text-muted-foreground text-sm">
                   No auto-generated transaction yet. Click "Auto generate transaction" to create one.
                 </p>
               ) : (
-                <ul className="space-y-2 text-sm">
-                  {generatedTransactions.map((transaction) => (
-                    <li key={transaction} className="bg-muted rounded-md px-3 py-2">
-                      {transaction}
-                    </li>
-                  ))}
-                </ul>
+                <div className="min-h-0 overflow-auto rounded-md border">
+                  <Table>
+                    <TableHeader className="bg-muted-foreground/5 sticky top-0 z-10">
+                      <TableRow>
+                        <TableHead>Time</TableHead>
+                        <TableHead>Ticker</TableHead>
+                        <TableHead>Action</TableHead>
+                        <TableHead>Account</TableHead>
+                        <TableHead>Period</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead className="text-right">Quantity</TableHead>
+                        <TableHead className="text-right">Price</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {deployRecords.map((record) => (
+                        <TableRow key={record.id}>
+                          <TableCell className="whitespace-nowrap text-xs">{formatRecordTime(record.createdAt)}</TableCell>
+                          <TableCell className="font-medium">{record.symbol}</TableCell>
+                          <TableCell>
+                            <Badge variant={record.action === "SELL" ? "destructive" : "success"}>{record.action}</Badge>
+                          </TableCell>
+                          <TableCell className="max-w-[200px] truncate">{record.accountName}</TableCell>
+                          <TableCell>{record.periodIndex}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(record.amount, record.currency)}</TableCell>
+                          <TableCell className="text-right">{record.quantity.toFixed(8)}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(record.unitPrice, record.currency)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </CardContent>
           </Card>

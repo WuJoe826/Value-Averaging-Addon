@@ -6,10 +6,14 @@ import type { AddonPageTab } from "./components/page-tab-selector";
 import {
   buildDefaultSettings,
   calculateHoldingInvestmentPlan,
+  clearDeployRecords,
   clearSettings,
   formatCurrency,
+  getGrowthPeriodIndex,
   getTodayIsoDate,
+  readDeployRecords,
   readSettings,
+  saveDeployRecords,
   saveSettings,
 } from "./lib";
 import { DashboardPage, SettingsPage } from "./pages";
@@ -45,6 +49,19 @@ interface GeneratedOrderDraft {
   instrumentId: string | null;
 }
 
+interface DeployRecord {
+  id: string;
+  createdAt: string;
+  symbol: string;
+  action: "BUY" | "SELL";
+  accountName: string;
+  amount: number;
+  quantity: number;
+  unitPrice: number;
+  currency: string;
+  periodIndex: number;
+}
+
 const QUANTITY_DECIMAL_PLACES = 8;
 
 function truncateToDecimals(value: number, decimals: number): number {
@@ -53,6 +70,10 @@ function truncateToDecimals(value: number, decimals: number): number {
   }
   const factor = 10 ** decimals;
   return Math.trunc(value * factor) / factor;
+}
+
+function isDuplicateActivityError(message: string): boolean {
+  return message.toLowerCase().includes("duplicate activity detected");
 }
 
 function hydrateSettingsForTickers(
@@ -239,7 +260,7 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
 
   const [currentPage, setCurrentPage] = useState<AddonPageTab>("dashboard");
   const [settings, setSettings] = useState<ValueAveragingSettings>(() => readSettings());
-  const [generatedTransactions, setGeneratedTransactions] = useState<string[]>([]);
+  const [deployRecords, setDeployRecords] = useState<DeployRecord[]>(() => readDeployRecords());
   const [orderDrafts, setOrderDrafts] = useState<GeneratedOrderDraft[]>([]);
   const [isOrderSheetOpen, setIsOrderSheetOpen] = useState(false);
   const [isSubmittingOrders, setIsSubmittingOrders] = useState(false);
@@ -283,8 +304,24 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
   };
 
   const autoGenerateTransactions = () => {
-    const nextDrafts: GeneratedOrderDraft[] = enabledTickers
+    const currentPeriodIndex = getGrowthPeriodIndex(settings.growthSchedule);
+    const minExecutedPeriod = enabledTickers.reduce((min, ticker) => {
+      const executed = Math.max(0, Number(settings.tickerExecutedPeriods[ticker.id] ?? 0));
+      return Math.min(min, executed);
+    }, Number.POSITIVE_INFINITY);
+    const synchronizationThreshold = Number.isFinite(minExecutedPeriod) ? minExecutedPeriod + 1 : 1;
+    const eligibleTickers = enabledTickers.filter(
+      (ticker) => {
+        const executed = Math.max(0, Number(settings.tickerExecutedPeriods[ticker.id] ?? 0));
+        // Gate by calendar period and by cross-ticker synchronization.
+        // A ticker that is ahead must wait until lagging tickers catch up.
+        return executed < currentPeriodIndex && executed < synchronizationThreshold;
+      },
+    );
+    const nextDrafts: GeneratedOrderDraft[] = eligibleTickers
       .map((ticker) => {
+        // Always calculate based on the full enabled portfolio context.
+        // Using only eligible tickers distorts per-period top-up math.
         const plan = calculateHoldingInvestmentPlan(ticker, settings, enabledTickers);
         if (plan.action === "hold") {
           return null;
@@ -394,9 +431,10 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
     setIsSubmittingOrders(true);
     let successCount = 0;
     const successfulTickerIds = new Set<string>();
-    const successRecords: string[] = [];
+    const successRecords: DeployRecord[] = [];
     const errors: string[] = [];
     const activityDate = getTodayIsoDate();
+    const currentPeriodIndex = getGrowthPeriodIndex(settings.growthSchedule);
 
     for (const draft of validDrafts) {
       try {
@@ -435,15 +473,23 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
           ...activityPayload,
         });
         successCount += 1;
-        // Only filled BUY/SELL orders advance period immediately.
-        // HOLD actions should wait for calendar period rollover.
-        if (draft.action === "buy" || draft.action === "sell") {
+        // Only successful BUY marks this ticker as deployed for current period.
+        if (draft.action === "buy") {
           successfulTickerIds.add(draft.tickerId);
         }
-        const actionLabel = draft.action === "sell" ? "SELL" : "BUY";
-        successRecords.push(
-          `${actionLabel} ${draft.symbol} in ${draft.accountName}: ${formatCurrency(draft.amount, draft.currency)}`,
-        );
+        const actionLabel: "BUY" | "SELL" = draft.action === "sell" ? "SELL" : "BUY";
+        successRecords.push({
+          id: `${draft.tickerId}-${Date.now()}`,
+          createdAt: new Date().toISOString(),
+          symbol: draft.symbol,
+          action: actionLabel,
+          accountName: draft.accountName,
+          amount: draft.amount,
+          quantity: truncateToDecimals(draft.quantity, QUANTITY_DECIMAL_PLACES),
+          unitPrice: draft.unitPrice,
+          currency: draft.currency,
+          periodIndex: currentPeriodIndex,
+        });
       } catch (err) {
         const message =
           err instanceof Error
@@ -451,6 +497,28 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
             : typeof err === "string"
               ? err
               : JSON.stringify(err);
+        if (isDuplicateActivityError(message)) {
+          // Treat duplicate as idempotent success: the activity already exists.
+          successCount += 1;
+          if (draft.action === "buy") {
+            successfulTickerIds.add(draft.tickerId);
+          }
+          const actionLabel: "BUY" | "SELL" = draft.action === "sell" ? "SELL" : "BUY";
+          successRecords.push({
+            id: `${draft.tickerId}-${Date.now()}-duplicate`,
+            createdAt: new Date().toISOString(),
+            symbol: draft.symbol,
+            action: actionLabel,
+            accountName: draft.accountName,
+            amount: draft.amount,
+            quantity: truncateToDecimals(draft.quantity, QUANTITY_DECIMAL_PLACES),
+            unitPrice: draft.unitPrice,
+            currency: draft.currency,
+            periodIndex: currentPeriodIndex,
+          });
+          ctx.api.logger.info(`[duplicate-treated-as-success] ${draft.symbol}: ${message}`);
+          continue;
+        }
         errors.push(`${draft.symbol}: ${message}`);
       }
     }
@@ -461,7 +529,7 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
       setSettings((prev) => {
         const nextExecutedPeriods = { ...prev.tickerExecutedPeriods };
         successfulTickerIds.forEach((tickerId) => {
-          nextExecutedPeriods[tickerId] = Math.max(0, Number(nextExecutedPeriods[tickerId] ?? 0)) + 1;
+          nextExecutedPeriods[tickerId] = currentPeriodIndex;
         });
         const nextSettings = {
           ...prev,
@@ -470,7 +538,11 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
         saveSettings(nextSettings);
         return nextSettings;
       });
-      setGeneratedTransactions(successRecords);
+      setDeployRecords((prev) => {
+        const nextRecords = [...successRecords, ...prev];
+        saveDeployRecords(nextRecords);
+        return nextRecords;
+      });
       await refetchTickers();
     }
 
@@ -494,8 +566,9 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
   const resetAddonData = () => {
     const { settings: resetSettings } = hydrateSettingsForTickers(buildDefaultSettings(), tickers);
     clearSettings();
+    clearDeployRecords();
     saveSettings(resetSettings);
-    setGeneratedTransactions([]);
+    setDeployRecords([]);
     setOrderDrafts([]);
     setIsOrderSheetOpen(false);
     setSettings(resetSettings);
@@ -538,7 +611,7 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
         onOrderSheetOpenChange={setIsOrderSheetOpen}
         onOrderDraftChange={updateOrderDraft}
         onConfirmGeneratedOrders={confirmGeneratedOrders}
-        generatedTransactions={generatedTransactions}
+        deployRecords={deployRecords}
       />
     </div>
   );

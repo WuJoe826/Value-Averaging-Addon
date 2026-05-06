@@ -1,0 +1,185 @@
+import { Avatar, AvatarFallback, AvatarImage, Badge, Sheet, SheetContent, SheetHeader, SheetTitle, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@wealthfolio/ui";
+import React from "react";
+import { formatCurrency } from "../lib";
+import type { PortfolioTicker } from "../types";
+
+interface InvestmentPlan {
+  tickerId: string;
+  periodIndex: number;
+  growthPerPeriod: number;
+  initialDeploymentValue: number;
+  targetValue: number;
+  currentPortfolioValue: number;
+  amountToInvest: number;
+  action: "buy" | "sell" | "hold";
+}
+
+interface DashboardPageMobileProps {
+  baseCurrency: string;
+  enabledTickers: PortfolioTicker[];
+  investmentPlan: Record<string, InvestmentPlan>;
+  selectedTicker: PortfolioTicker | null;
+  selectedPlan: InvestmentPlan | null;
+  onSelectTicker: (tickerId: string) => void;
+  isTickerDetailSheetOpen: boolean;
+  onTickerDetailSheetOpenChange: (open: boolean) => void;
+}
+
+function formatShareCount(quantity: number): string {
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 8,
+  }).format(quantity);
+}
+
+function toFiniteNumber(value: unknown, fallback = 0): number {
+  const num = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(num) ? num : fallback;
+}
+
+function TickerLogo({ symbol }: { symbol: string }) {
+  const fullSymbol = symbol.toUpperCase();
+  const baseSymbol = fullSymbol.split(/[.:-]/)[0];
+  const primaryLogoUrl = `/ticker-logos/${fullSymbol}.png`;
+  const fallbackLogoUrl = `/ticker-logos/${baseSymbol}.png`;
+
+  return (
+    <Avatar className="bg-primary/80 border-white/20 h-7 w-7 shrink-0">
+      <AvatarImage src={primaryLogoUrl} alt={fullSymbol} className="object-contain p-1.5" />
+      <AvatarFallback>
+        <Avatar className="bg-primary/80 border-white/20 text-white">
+          <AvatarImage src={fallbackLogoUrl} alt={fullSymbol} className="object-contain p-1.5" />
+          <AvatarFallback className="bg-transparent text-xs font-medium">
+            <span className="p-1" title={fullSymbol}>
+              {baseSymbol ? baseSymbol.slice(0, 4) : "•"}
+            </span>
+          </AvatarFallback>
+        </Avatar>
+      </AvatarFallback>
+    </Avatar>
+  );
+}
+
+export function DashboardPageMobile({
+  baseCurrency,
+  enabledTickers,
+  investmentPlan,
+  selectedTicker,
+  selectedPlan,
+  onSelectTicker,
+  isTickerDetailSheetOpen,
+  onTickerDetailSheetOpenChange,
+}: DashboardPageMobileProps) {
+  return (
+    <div className="sm:hidden">
+      <div className="min-h-0 flex-1 overflow-auto rounded-md border">
+        <Table>
+          <TableHeader className="bg-muted-foreground/5 sticky top-0 z-10">
+            <TableRow>
+              <TableHead>Ticker</TableHead>
+              <TableHead className="text-right">Amount to invest</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {enabledTickers.map((ticker) => {
+              const plan = investmentPlan[ticker.id];
+              const currentPrice = toFiniteNumber(ticker.currentPrice);
+
+              return (
+                <TableRow
+                  key={ticker.id}
+                  className="cursor-pointer"
+                  onClick={() => {
+                    onSelectTicker(ticker.id);
+                    onTickerDetailSheetOpenChange(true);
+                  }}
+                >
+                  <TableCell>
+                    <div className="flex items-center gap-2 text-left">
+                      <TickerLogo symbol={ticker.symbol} />
+                      <div>
+                        <div className="font-medium">{ticker.symbol}</div>
+                        <div className="text-muted-foreground text-xs">
+                          {formatShareCount(toFiniteNumber(ticker.quantity))} shares
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right font-medium">
+                    <div className="flex flex-col items-end">
+                      {plan?.action === "hold" ? (
+                        <Badge variant="outline" className="text-muted-foreground">
+                          {baseCurrency} --.--
+                        </Badge>
+                      ) : plan && plan.amountToInvest < 0 ? (
+                        <Badge variant="destructive">{formatCurrency(Math.abs(plan.amountToInvest), baseCurrency)}</Badge>
+                      ) : (
+                        <Badge variant="success">{formatCurrency(plan?.amountToInvest ?? 0, baseCurrency)}</Badge>
+                      )}
+                      <div className="text-muted-foreground mt-1 text-right text-xs leading-tight">
+                        Shares:{" "}
+                        {currentPrice > 0 && plan
+                          ? formatShareCount(Math.abs(plan.amountToInvest) / currentPrice)
+                          : "--.--"}
+                      </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      <Sheet open={isTickerDetailSheetOpen} onOpenChange={onTickerDetailSheetOpenChange}>
+        <SheetContent side="bottom" className="rounded-t-4xl mx-1 h-[75vh] p-0">
+          <SheetHeader className="border-border border-b px-6 py-4">
+            <SheetTitle>Ticker details</SheetTitle>
+          </SheetHeader>
+          <div className="space-y-3 overflow-auto px-6 py-4 text-sm">
+            {selectedTicker && selectedPlan ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Ticker</span>
+                  <span className="font-medium">{selectedTicker.symbol}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Account</span>
+                  <span className="font-medium">{selectedTicker.accountName}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Shares</span>
+                  <span className="font-medium">{formatShareCount(toFiniteNumber(selectedTicker.quantity))}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Desired value</span>
+                  <span className="font-medium">{formatCurrency(selectedPlan.targetValue, baseCurrency)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Current market value</span>
+                  <span className="font-medium">{formatCurrency(selectedPlan.currentPortfolioValue, baseCurrency)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Amount to invest</span>
+                  {selectedPlan.action === "hold" ? (
+                    <Badge variant="outline" className="text-muted-foreground">
+                      {baseCurrency} --.--
+                    </Badge>
+                  ) : selectedPlan.amountToInvest < 0 ? (
+                    <Badge variant="destructive">
+                      {formatCurrency(Math.abs(selectedPlan.amountToInvest), baseCurrency)}
+                    </Badge>
+                  ) : (
+                    <Badge variant="success">{formatCurrency(selectedPlan.amountToInvest, baseCurrency)}</Badge>
+                  )}
+                </div>
+              </>
+            ) : (
+              <p className="text-muted-foreground">Select a ticker to see details.</p>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
+}

@@ -1,5 +1,5 @@
 import type { AddonContext } from "@wealthfolio/addon-sdk";
-import { Page, PageContent, PageHeader } from "@wealthfolio/ui";
+import { Button, Page, PageContent, PageHeader } from "@wealthfolio/ui";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   AboutSettingsSection,
@@ -22,6 +22,7 @@ interface SettingsPageProps {
   settings: ValueAveragingSettings;
   tickers: PortfolioTicker[];
   onConfirmSettings: (nextSettings: ValueAveragingSettings) => void;
+  onResetAddonData: () => void;
 }
 
 export default function SettingsPage({
@@ -32,6 +33,7 @@ export default function SettingsPage({
   settings,
   tickers,
   onConfirmSettings,
+  onResetAddonData,
 }: SettingsPageProps) {
   const [draft, setDraft] = useState<ValueAveragingSettings>(settings);
   const [activeSection, setActiveSection] = useState<PreferenceSection>("general");
@@ -164,12 +166,23 @@ export default function SettingsPage({
       );
     }
     return (
-      <AboutSettingsSection
-        layout="desktop"
-        draft={draft}
-        title={sectionMeta.title}
-        description={sectionMeta.description}
-      />
+      <div className="space-y-4">
+        <AboutSettingsSection layout="desktop" draft={draft} title={sectionMeta.title} description={sectionMeta.description} />
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={() => {
+              if (!window.confirm("Reset addon data and start as first use?")) {
+                return;
+              }
+              onResetAddonData();
+            }}
+          >
+            Reset addon data
+          </Button>
+        </div>
+      </div>
     );
   };
 
@@ -205,12 +218,23 @@ export default function SettingsPage({
       );
     }
     return (
-      <AboutSettingsSection
-        layout="mobile"
-        draft={draft}
-        title={sectionMeta.title}
-        description={sectionMeta.description}
-      />
+      <div className="space-y-4">
+        <AboutSettingsSection layout="mobile" draft={draft} title={sectionMeta.title} description={sectionMeta.description} />
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={() => {
+              if (!window.confirm("Reset addon data and start as first use?")) {
+                return;
+              }
+              onResetAddonData();
+            }}
+          >
+            Reset addon data
+          </Button>
+        </div>
+      </div>
     );
   };
 

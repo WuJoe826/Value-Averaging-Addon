@@ -22,6 +22,7 @@ export {
 export {
   DEFAULT_TICKERS,
   buildDefaultSettings,
+  clearSettings,
   readSettings,
   saveSettings,
 } from "./value-averaging-storage";

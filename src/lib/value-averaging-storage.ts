@@ -154,3 +154,11 @@ export function saveSettings(settings: ValueAveragingSettings): void {
 
   window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
 }
+
+export function clearSettings(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(SETTINGS_STORAGE_KEY);
+}

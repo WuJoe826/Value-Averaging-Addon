@@ -9,7 +9,7 @@ import {
   clearDeployRecords,
   clearSettings,
   formatCurrency,
-  getGrowthPeriodIndex,
+  getEffectiveGrowthPeriodIndex,
   getTodayIsoDate,
   readDeployRecords,
   readSettings,
@@ -35,6 +35,7 @@ interface RawTickerSnapshot {
 interface GeneratedOrderDraft {
   id: string;
   tickerId: string;
+  periodIndex: number;
   symbol: string;
   enabled: boolean;
   autoDepositCash: boolean;
@@ -304,7 +305,7 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
   };
 
   const autoGenerateTransactions = () => {
-    const currentPeriodIndex = getGrowthPeriodIndex(settings.growthSchedule);
+    const effectivePeriodIndex = getEffectiveGrowthPeriodIndex(settings, enabledTickers);
     const minExecutedPeriod = enabledTickers.reduce((min, ticker) => {
       const executed = Math.max(0, Number(settings.tickerExecutedPeriods[ticker.id] ?? 0));
       return Math.min(min, executed);
@@ -313,16 +314,16 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
     const eligibleTickers = enabledTickers.filter(
       (ticker) => {
         const executed = Math.max(0, Number(settings.tickerExecutedPeriods[ticker.id] ?? 0));
-        // Gate by calendar period and by cross-ticker synchronization.
+        // Gate by effective period and by cross-ticker synchronization.
         // A ticker that is ahead must wait until lagging tickers catch up.
-        return executed < currentPeriodIndex && executed < synchronizationThreshold;
+        return executed < effectivePeriodIndex && executed < synchronizationThreshold;
       },
     );
     const nextDrafts: GeneratedOrderDraft[] = eligibleTickers
       .map((ticker) => {
         // Always calculate based on the full enabled portfolio context.
         // Using only eligible tickers distorts per-period top-up math.
-        const plan = calculateHoldingInvestmentPlan(ticker, settings, enabledTickers);
+        const plan = calculateHoldingInvestmentPlan(ticker, settings, enabledTickers, effectivePeriodIndex);
         if (plan.action === "hold") {
           return null;
         }
@@ -333,6 +334,7 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
         const draft: GeneratedOrderDraft = {
           id: `${ticker.id}-${plan.action}`,
           tickerId: ticker.id,
+          periodIndex: effectivePeriodIndex,
           symbol: ticker.symbol,
           enabled: true,
           autoDepositCash: false,
@@ -431,10 +433,10 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
     setIsSubmittingOrders(true);
     let successCount = 0;
     const successfulTickerIds = new Set<string>();
+    const successfulBuyPeriods = new Map<string, number>();
     const successRecords: DeployRecord[] = [];
     const errors: string[] = [];
     const activityDate = getTodayIsoDate();
-    const currentPeriodIndex = getGrowthPeriodIndex(settings.growthSchedule);
 
     for (const draft of validDrafts) {
       try {
@@ -476,6 +478,7 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
         // Only successful BUY marks this ticker as deployed for current period.
         if (draft.action === "buy") {
           successfulTickerIds.add(draft.tickerId);
+          successfulBuyPeriods.set(draft.tickerId, draft.periodIndex);
         }
         const actionLabel: "BUY" | "SELL" = draft.action === "sell" ? "SELL" : "BUY";
         successRecords.push({
@@ -488,7 +491,7 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
           quantity: truncateToDecimals(draft.quantity, QUANTITY_DECIMAL_PLACES),
           unitPrice: draft.unitPrice,
           currency: draft.currency,
-          periodIndex: currentPeriodIndex,
+          periodIndex: draft.periodIndex,
         });
       } catch (err) {
         const message =
@@ -502,6 +505,7 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
           successCount += 1;
           if (draft.action === "buy") {
             successfulTickerIds.add(draft.tickerId);
+            successfulBuyPeriods.set(draft.tickerId, draft.periodIndex);
           }
           const actionLabel: "BUY" | "SELL" = draft.action === "sell" ? "SELL" : "BUY";
           successRecords.push({
@@ -514,7 +518,7 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
             quantity: truncateToDecimals(draft.quantity, QUANTITY_DECIMAL_PLACES),
             unitPrice: draft.unitPrice,
             currency: draft.currency,
-            periodIndex: currentPeriodIndex,
+            periodIndex: draft.periodIndex,
           });
           ctx.api.logger.info(`[duplicate-treated-as-success] ${draft.symbol}: ${message}`);
           continue;
@@ -529,7 +533,9 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
       setSettings((prev) => {
         const nextExecutedPeriods = { ...prev.tickerExecutedPeriods };
         successfulTickerIds.forEach((tickerId) => {
-          nextExecutedPeriods[tickerId] = currentPeriodIndex;
+          const executedPeriodFromDraft = successfulBuyPeriods.get(tickerId) ?? 0;
+          const previousExecuted = Math.max(0, Number(nextExecutedPeriods[tickerId] ?? 0));
+          nextExecutedPeriods[tickerId] = Math.max(previousExecuted, executedPeriodFromDraft);
         });
         const nextSettings = {
           ...prev,

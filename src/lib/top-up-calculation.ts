@@ -1,5 +1,4 @@
 import type { PortfolioTicker, ValueAveragingSettings } from "../types";
-import { getGrowthPeriodIndex } from "./growth-schedule";
 
 const ALLOCATION_MIN = 99.9;
 const ALLOCATION_MAX = 100;
@@ -62,6 +61,23 @@ export function resolveBaseTopUpAmount(
   return Math.max(0, toFiniteNumber(settings.calculatedTopUpAmount));
 }
 
+export function getEffectiveGrowthPeriodIndex(
+  settings: ValueAveragingSettings,
+  enabledTickers: PortfolioTicker[],
+): number {
+  if (!enabledTickers.length) {
+    return 1;
+  }
+
+  const minExecutedPeriod = enabledTickers.reduce((min, ticker) => {
+    const executedPeriod = Math.max(0, Number(settings.tickerExecutedPeriods[ticker.id] ?? 0));
+    return Math.min(min, executedPeriod);
+  }, Number.POSITIVE_INFINITY);
+
+  const nextPeriod = Number.isFinite(minExecutedPeriod) ? minExecutedPeriod + 1 : 1;
+  return Math.max(1, nextPeriod);
+}
+
 interface HoldingInvestmentPlan {
   tickerId: string;
   periodIndex: number;
@@ -97,9 +113,13 @@ export function calculateHoldingInvestmentPlan(
   ticker: PortfolioTicker,
   settings: ValueAveragingSettings,
   enabledTickers: PortfolioTicker[],
+  periodIndexOverride?: number,
 ): HoldingInvestmentPlan {
   const baseTopUpAmount = resolveBaseTopUpAmount(settings, enabledTickers);
-  const periodIndex = getGrowthPeriodIndex(settings.growthSchedule);
+  const rawPeriodIndex = Number(periodIndexOverride);
+  const periodIndex = Number.isFinite(rawPeriodIndex) && rawPeriodIndex > 0
+    ? rawPeriodIndex
+    : getEffectiveGrowthPeriodIndex(settings, enabledTickers);
   const allocation = Math.max(0, toFiniteNumber(settings.tickerAllocations[ticker.id]) / 100);
   const growthPerPeriod = baseTopUpAmount * allocation;
   const initialDeploymentValue = Math.max(
@@ -135,9 +155,10 @@ export function calculateHoldingInvestmentPlan(
 export function calculateInvestmentPlanByTicker(
   settings: ValueAveragingSettings,
   enabledTickers: PortfolioTicker[],
+  periodIndexOverride?: number,
 ): Record<string, HoldingInvestmentPlan> {
   return enabledTickers.reduce<Record<string, HoldingInvestmentPlan>>((acc, ticker) => {
-    acc[ticker.id] = calculateHoldingInvestmentPlan(ticker, settings, enabledTickers);
+    acc[ticker.id] = calculateHoldingInvestmentPlan(ticker, settings, enabledTickers, periodIndexOverride);
     return acc;
   }, {});
 }

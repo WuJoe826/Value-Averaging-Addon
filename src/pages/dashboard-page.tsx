@@ -33,7 +33,7 @@ import {
 } from "@wealthfolio/ui";
 import React, { useEffect, useMemo, useState } from "react";
 import { IntervalInput, PageTabSelector, type AddonPageTab } from "../components";
-import { calculateInvestmentPlanByTicker, formatCurrency } from "../lib";
+import { calculateInvestmentPlanByTicker, formatCurrency, getEffectiveGrowthPeriodIndex } from "../lib";
 import type { PortfolioTicker, ValueAveragingSettings } from "../types";
 import { DashboardPageDesktop } from "./dashboard-page-desktop";
 import { DashboardPageMobile } from "./dashboard-page-mobile";
@@ -165,7 +165,10 @@ export default function DashboardPage({
   );
 
   const investmentPlan = useMemo(
-    () => calculateInvestmentPlanByTicker(settings, enabledTickers),
+    () => {
+      const effectivePeriodIndex = getEffectiveGrowthPeriodIndex(settings, enabledTickers);
+      return calculateInvestmentPlanByTicker(settings, enabledTickers, effectivePeriodIndex);
+    },
     [enabledTickers, settings],
   );
   const totalEnabledMarketValue = useMemo(
@@ -282,7 +285,7 @@ export default function DashboardPage({
         <p className="text-muted-foreground text-sm">No buy/sell order generated yet.</p>
       ) : (
         <>
-          {orderDrafts.filter((draft) => draft.enabled).map((draft) => {
+          {orderDrafts.map((draft) => {
             const canSubmit = Boolean(draft.accountId) && draft.amount > 0 && draft.quantity > 0;
             return (
               <div key={draft.id} className="bg-card space-y-3 rounded-md border p-4">
@@ -303,23 +306,12 @@ export default function DashboardPage({
                         onCheckedChange={(checked) => onOrderDraftChange(draft.id, "autoDepositCash", checked)}
                       />
                     </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => onOrderDraftChange(draft.id, "enabled", false)}
-                      aria-label={`Close ${draft.symbol}`}
-                    >
-                      <Icons.Close className="h-4 w-4" />
-                    </Button>
                   </div>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-4">
                   <label className="text-sm">
                     <span className="text-muted-foreground mb-1 block text-xs">Account</span>
                     <IntervalInput
-                      disabled={!draft.enabled}
                       value={draft.accountId}
                       onChange={(nextAccountId) => onOrderDraftChange(draft.id, "accountId", nextAccountId)}
                       options={draft.accountOptions.map((option) => ({
@@ -336,7 +328,6 @@ export default function DashboardPage({
                     <Input
                       type="number"
                       min={0}
-                      disabled={!draft.enabled}
                       value={draft.unitPrice}
                       onChange={(event) => onOrderDraftChange(draft.id, "unitPrice", event.target.value)}
                     />
@@ -346,7 +337,6 @@ export default function DashboardPage({
                     <Input
                       type="number"
                       min={0}
-                      disabled={!draft.enabled}
                       value={draft.amount}
                       onChange={(event) => onOrderDraftChange(draft.id, "amount", event.target.value)}
                     />
@@ -357,7 +347,6 @@ export default function DashboardPage({
                       type="number"
                       min={0}
                       step="0.00000001"
-                      disabled={!draft.enabled}
                       value={draft.quantity}
                       onChange={(event) => onOrderDraftChange(draft.id, "quantity", event.target.value)}
                     />
@@ -383,7 +372,7 @@ export default function DashboardPage({
         <Button
           type="button"
           onClick={onConfirmGeneratedOrders}
-          disabled={isSubmittingOrders || !orderDrafts.some((draft) => draft.enabled)}
+          disabled={isSubmittingOrders || !orderDrafts.length}
         >
           {isSubmittingOrders ? "Submitting..." : "Confirm and create activity"}
         </Button>

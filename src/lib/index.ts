@@ -4,6 +4,7 @@ export {
   calculateInvestmentPlanByTicker,
   calculatePercentageTopUpAmount,
   canCalculatePercentageTopUp,
+  getEffectiveGrowthPeriodIndex,
   getEnabledAllocationTotal,
   getEnabledPortfolioWorth,
   getTickerMarketValue,

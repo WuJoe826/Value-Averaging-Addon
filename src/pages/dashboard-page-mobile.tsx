@@ -1,4 +1,21 @@
-import { Avatar, AvatarFallback, AvatarImage, Badge, Icons, Sheet, SheetContent, SheetHeader, SheetTitle, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@wealthfolio/ui";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Badge,
+  Icons,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@wealthfolio/ui";
 import React from "react";
 import { formatCurrency } from "../lib";
 import type { PortfolioTicker } from "../types";
@@ -88,6 +105,11 @@ export function DashboardPageMobile({
       ? `${selectedAmountSign}${formatShareCount(Math.abs(selectedPlan.amountToInvest) / selectedCurrentPrice)} Shares`
       : "--.--";
 
+  const totalAmountToInvest = enabledTickers.reduce((sum, ticker) => {
+    const plan = investmentPlan[ticker.id];
+    return sum + (plan ? plan.amountToInvest : 0);
+  }, 0);
+
   return (
     <div className="sm:hidden">
       <div className="min-h-0 flex-1 overflow-auto rounded-md border">
@@ -153,6 +175,12 @@ export function DashboardPageMobile({
               );
             })}
           </TableBody>
+          <TableFooter className="bg-muted/40 border-t font-medium">
+            <TableRow>
+              <TableCell>Total</TableCell>
+              <TableCell className="text-right">{formatCurrency(totalAmountToInvest, baseCurrency)}</TableCell>
+            </TableRow>
+          </TableFooter>
         </Table>
       </div>
 

@@ -1,4 +1,16 @@
-import { Avatar, AvatarFallback, AvatarImage, Badge, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@wealthfolio/ui";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Badge,
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@wealthfolio/ui";
 import React from "react";
 import { formatCurrency } from "../lib";
 import type { PortfolioTicker } from "../types";
@@ -68,6 +80,11 @@ export function DashboardPageDesktop({
   selectedTickerId,
   onSelectTicker,
 }: DashboardPageDesktopProps) {
+  const totalAmountToInvest = enabledTickers.reduce((sum, ticker) => {
+    const plan = investmentPlan[ticker.id];
+    return sum + (plan ? plan.amountToInvest : 0);
+  }, 0);
+
   return (
     <div className="hidden sm:block">
       <div className="min-h-0 flex-1 overflow-auto rounded-md border">
@@ -154,6 +171,12 @@ export function DashboardPageDesktop({
               );
             })}
           </TableBody>
+          <TableFooter className="bg-muted/40 border-t font-medium">
+            <TableRow>
+              <TableCell colSpan={5}>Total</TableCell>
+              <TableCell className="text-right">{formatCurrency(totalAmountToInvest, baseCurrency)}</TableCell>
+            </TableRow>
+          </TableFooter>
         </Table>
       </div>
     </div>

@@ -1,6 +1,6 @@
 {
   "name": "value-averaging-addon",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "A Wealthfolio addon for value-averaging-addon",
   "type": "module",
   "main": "dist/addon.js",

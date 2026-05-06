@@ -88,6 +88,8 @@ interface HoldingInvestmentPlan {
   amountToInvest: number;
   action: "buy" | "sell" | "hold";
   hasOverflowBeyondTopUp: boolean;
+  /** True when gains are held (no sell) due to overflow + "hold to next round". */
+  overflowHoldDeferred: boolean;
 }
 
 function applyMaxTopUpIfNeeded(
@@ -134,9 +136,11 @@ export function calculateHoldingInvestmentPlan(
 
   let amountToInvest = applyMaxTopUpIfNeeded(settings, baseTopUpAmount, allocation, rawAmountToInvest);
   let action: "buy" | "sell" | "hold" = amountToInvest < 0 ? "sell" : "buy";
+  let overflowHoldDeferred = false;
   if (hasOverflowBeyondTopUp && settings.overflowGainsAction === "hold-to-next-round") {
     amountToInvest = 0;
     action = "hold";
+    overflowHoldDeferred = true;
   }
 
   return {
@@ -149,6 +153,7 @@ export function calculateHoldingInvestmentPlan(
     amountToInvest,
     action,
     hasOverflowBeyondTopUp,
+    overflowHoldDeferred,
   };
 }
 

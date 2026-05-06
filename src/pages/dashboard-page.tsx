@@ -53,7 +53,8 @@ interface DashboardPageProps {
     symbol: string;
     enabled: boolean;
     autoDepositCash: boolean;
-    action: "buy" | "sell";
+    action: "buy" | "sell" | "hold";
+    advancePeriodOnConfirm?: boolean;
     accountId: string;
     accountName: string;
     accountOptions: { id: string; name: string }[];
@@ -303,32 +304,49 @@ export default function DashboardPage({
       ) : (
         <>
           {orderDrafts.map((draft) => {
-            const canSubmit = Boolean(draft.accountId) && draft.amount > 0 && draft.quantity > 0;
+            const fieldsLocked = draft.action === "hold" || !draft.enabled;
+            const canSubmitRow = Boolean(draft.accountId) && draft.amount > 0 && draft.quantity > 0;
+            const actionBadge =
+              draft.action === "hold" ? (
+                <Badge variant="outline" className="text-muted-foreground">
+                  HOLD
+                </Badge>
+              ) : draft.action === "sell" ? (
+                <Badge variant="destructive">SELL</Badge>
+              ) : (
+                <Badge variant="success">BUY</Badge>
+              );
             return (
-              <div key={draft.id} className="bg-card space-y-2 rounded-md border p-3 sm:space-y-3 sm:p-4">
+              <div
+                key={draft.id}
+                className={
+                  draft.action === "hold"
+                    ? "bg-muted/25 space-y-2 rounded-md border p-3 sm:space-y-3 sm:p-4"
+                    : "bg-card space-y-2 rounded-md border p-3 sm:space-y-3 sm:p-4"
+                }
+              >
                 <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
                   <div className="flex items-center gap-1.5 sm:gap-2">
                     <TickerLogo symbol={draft.symbol} />
                     <div className="font-medium">{draft.symbol}</div>
-                    <Badge variant={draft.action === "sell" ? "destructive" : "success"}>
-                      {draft.action === "sell" ? "SELL" : "BUY"}
-                    </Badge>
+                    {actionBadge}
                   </div>
                   <div className="flex flex-wrap items-center gap-2 sm:justify-end sm:gap-3">
                     <div className="flex items-center gap-1.5 sm:gap-2">
                       <span className="text-muted-foreground text-xs">Auto deposit cash</span>
                       <Switch
                         checked={draft.autoDepositCash}
-                        disabled={draft.action !== "buy"}
+                        disabled={fieldsLocked || draft.action !== "buy"}
                         onCheckedChange={(checked) => onOrderDraftChange(draft.id, "autoDepositCash", checked)}
                       />
                     </div>
                   </div>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-4 sm:gap-3">
-                  <label className="text-sm">
+                  <label className={`text-sm ${fieldsLocked ? "pointer-events-none opacity-60" : ""}`}>
                     <span className="text-muted-foreground mb-1 block text-xs">Account</span>
                     <IntervalInput
+                      disabled={fieldsLocked}
                       value={draft.accountId}
                       onChange={(nextAccountId) => onOrderDraftChange(draft.id, "accountId", nextAccountId)}
                       options={draft.accountOptions.map((option) => ({
@@ -340,36 +358,44 @@ export default function DashboardPage({
                       emptyText="No account found."
                     />
                   </label>
-                  <label className="text-sm">
+                  <label className={`text-sm ${fieldsLocked ? "pointer-events-none opacity-60" : ""}`}>
                     <span className="text-muted-foreground mb-1 block text-xs">Price</span>
                     <Input
                       type="number"
                       min={0}
+                      disabled={fieldsLocked}
                       value={draft.unitPrice}
                       onChange={(event) => onOrderDraftChange(draft.id, "unitPrice", event.target.value)}
                     />
                   </label>
-                  <label className="text-sm">
+                  <label className={`text-sm ${fieldsLocked ? "pointer-events-none opacity-60" : ""}`}>
                     <span className="text-muted-foreground mb-1 block text-xs">Amount</span>
                     <Input
                       type="number"
                       min={0}
+                      disabled={fieldsLocked}
                       value={draft.amount}
                       onChange={(event) => onOrderDraftChange(draft.id, "amount", event.target.value)}
                     />
                   </label>
-                  <label className="text-sm">
+                  <label className={`text-sm ${fieldsLocked ? "pointer-events-none opacity-60" : ""}`}>
                     <span className="text-muted-foreground mb-1 block text-xs">Quantity</span>
                     <Input
                       type="number"
                       min={0}
                       step="0.00000001"
+                      disabled={fieldsLocked}
                       value={draft.quantity}
                       onChange={(event) => onOrderDraftChange(draft.id, "quantity", event.target.value)}
                     />
                   </label>
                 </div>
-                {!canSubmit ? (
+                {draft.action === "hold" && draft.advancePeriodOnConfirm ? (
+                  <p className="text-muted-foreground text-xs">
+                    Overflow gains held to next round — no sell order. Period advances when you confirm.
+                  </p>
+                ) : null}
+                {draft.enabled && draft.action !== "hold" && !canSubmitRow ? (
                   <p className="text-destructive text-xs">Account, amount, and quantity must be greater than zero.</p>
                 ) : null}
               </div>
@@ -425,7 +451,7 @@ export default function DashboardPage({
           />
           <Card className="mb-5">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Deploy Records</CardTitle>
+              <CardTitle>Records</CardTitle>
               <Button
                 type="button"
                 size="sm"
@@ -433,7 +459,7 @@ export default function DashboardPage({
                 onClick={onAutoGenerateTransactions}
               >
                 <span className="text-lg leading-none sm:hidden">+</span>
-                <span className="hidden sm:inline">+ Auto generate transaction</span>
+                <span className="hidden sm:inline">+ Generate Orders</span>
               </Button>
             </CardHeader>
             <CardContent>
@@ -546,7 +572,7 @@ export default function DashboardPage({
       {isDesktopViewport ? (
         <Dialog open={isOrderSheetOpen} onOpenChange={onOrderSheetOpenChange}>
           <DialogContent className="flex max-h-[92vh] flex-col overflow-hidden p-0 sm:max-w-6xl">
-            <DialogHeader className="border-border border-b px-6 py-4">
+            <DialogHeader className="border-border border-b px-6 py-6">
               <DialogTitle>Confirm generated orders</DialogTitle>
             </DialogHeader>
             {orderEditorContent}
@@ -557,9 +583,9 @@ export default function DashboardPage({
         <Sheet open={isOrderSheetOpen} onOpenChange={onOrderSheetOpenChange}>
           <SheetContent
             side="bottom"
-            className="mx-1 flex h-[80vh] flex-col rounded-t-4xl p-0 pb-20 [&>button.absolute]:hidden"
+            className="mx-1 flex h-[80vh] flex-col rounded-t-4xl p-0 pb-10 [&>button.absolute]:hidden"
           >
-            <SheetHeader className="border-border border-b px-3 py-3 sm:px-6 sm:py-4">
+            <SheetHeader className="border-border border-b px-3 py-5 sm:px-6 sm:py-5">
               <SheetTitle>Confirm generated orders</SheetTitle>
             </SheetHeader>
             {orderEditorContent}
@@ -639,7 +665,7 @@ export default function DashboardPage({
             }
           }}
         >
-          <SheetContent side="bottom" className="rounded-t-4xl mx-1 h-[75vh] p-0 pb-20 [&>button.absolute]:hidden">
+          <SheetContent side="bottom" className="rounded-t-4xl mx-1 h-[75vh] p-0 pb-15 [&>button.absolute]:hidden">
             <SheetHeader className="border-border border-b px-6 py-4">
               <SheetTitle>Deploy record details</SheetTitle>
             </SheetHeader>

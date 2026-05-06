@@ -38,7 +38,9 @@ interface GeneratedOrderDraft {
   symbol: string;
   enabled: boolean;
   autoDepositCash: boolean;
-  action: "buy" | "sell";
+  action: "buy" | "sell" | "hold";
+  /** When true, confirming updates tickerExecutedPeriod without creating an activity (overflow hold). */
+  advancePeriodOnConfirm: boolean;
   accountId: string;
   accountName: string;
   accountOptions: TickerAccountOption[];
@@ -324,7 +326,30 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
         // Using only eligible tickers distorts per-period top-up math.
         const plan = calculateHoldingInvestmentPlan(ticker, settings, enabledTickers, effectivePeriodIndex);
         if (plan.action === "hold") {
-          return null;
+          if (!plan.overflowHoldDeferred) {
+            return null;
+          }
+          const selectedAccount = resolveSelectedAccount(ticker);
+          const unitPrice = Number.isFinite(ticker.currentPrice) ? Math.max(0, ticker.currentPrice) : 0;
+          const deferredDraft: GeneratedOrderDraft = {
+            id: `${ticker.id}-hold-deferred`,
+            tickerId: ticker.id,
+            periodIndex: effectivePeriodIndex,
+            symbol: ticker.symbol,
+            enabled: false,
+            autoDepositCash: false,
+            action: "hold",
+            advancePeriodOnConfirm: true,
+            accountId: selectedAccount?.id ?? "",
+            accountName: selectedAccount?.name ?? ticker.accountName,
+            accountOptions: ticker.accountOptions,
+            amount: 0,
+            quantity: 0,
+            unitPrice,
+            currency: baseCurrency,
+            instrumentId: ticker.instrumentId,
+          };
+          return deferredDraft;
         }
         const selectedAccount = resolveSelectedAccount(ticker);
         const unitPrice = Number.isFinite(ticker.currentPrice) ? Math.max(0, ticker.currentPrice) : 0;
@@ -338,6 +363,7 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
           enabled: true,
           autoDepositCash: false,
           action: plan.action,
+          advancePeriodOnConfirm: false,
           accountId: selectedAccount?.id ?? "",
           accountName: selectedAccount?.name ?? ticker.accountName,
           accountOptions: ticker.accountOptions,
@@ -364,6 +390,9 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
     setOrderDrafts((prev) =>
       prev.map((draft) => {
         if (draft.id !== draftId) {
+          return draft;
+        }
+        if (draft.advancePeriodOnConfirm || draft.action === "hold") {
           return draft;
         }
         if (field === "enabled") {
@@ -416,23 +445,30 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
     );
   };
 
+  /** Persists deploy period (`tickerExecutedPeriods`) only when the user clicks Confirm on the order sheet. */
   const confirmGeneratedOrders = async () => {
     if (!orderDrafts.length || isSubmittingOrders) {
       return;
     }
 
     const validDrafts = orderDrafts.filter(
-      (draft) => draft.enabled && draft.accountId && draft.amount > 0 && draft.quantity > 0,
+      (draft) =>
+        draft.enabled &&
+        draft.action !== "hold" &&
+        draft.accountId &&
+        draft.amount > 0 &&
+        draft.quantity > 0,
     );
-    if (!validDrafts.length) {
+    const hasOverflowPeriodAdvance = orderDrafts.some((draft) => draft.advancePeriodOnConfirm);
+    if (!validDrafts.length && !hasOverflowPeriodAdvance) {
       ctx.api.logger.warn("No valid generated orders to submit.");
       return;
     }
 
     setIsSubmittingOrders(true);
     let successCount = 0;
-    const successfulTickerIds = new Set<string>();
-    const successfulBuyPeriods = new Map<string, number>();
+    /** Period indices to persist — only filled inside this confirm handler (Confirm button). */
+    const periodIndexAfterActivity = new Map<string, number>();
     const successRecords: DeployRecord[] = [];
     const errors: string[] = [];
     const activityDate = new Date().toISOString();
@@ -474,11 +510,8 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
           ...activityPayload,
         });
         successCount += 1;
-        // Only successful BUY marks this ticker as deployed for current period.
-        if (draft.action === "buy") {
-          successfulTickerIds.add(draft.tickerId);
-          successfulBuyPeriods.set(draft.tickerId, draft.periodIndex);
-        }
+        // Advance executed period only after successful host activity (confirm flow only).
+        periodIndexAfterActivity.set(draft.tickerId, draft.periodIndex);
         const actionLabel: "BUY" | "SELL" = draft.action === "sell" ? "SELL" : "BUY";
         successRecords.push({
           id: `${draft.tickerId}-${Date.now()}`,
@@ -502,10 +535,7 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
         if (isDuplicateActivityError(message)) {
           // Treat duplicate as idempotent success: the activity already exists.
           successCount += 1;
-          if (draft.action === "buy") {
-            successfulTickerIds.add(draft.tickerId);
-            successfulBuyPeriods.set(draft.tickerId, draft.periodIndex);
-          }
+          periodIndexAfterActivity.set(draft.tickerId, draft.periodIndex);
           const actionLabel: "BUY" | "SELL" = draft.action === "sell" ? "SELL" : "BUY";
           successRecords.push({
             id: `${draft.tickerId}-${Date.now()}-duplicate`,
@@ -528,14 +558,30 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
 
     setIsSubmittingOrders(false);
 
-    if (successCount > 0) {
+    const activityBatchClean = errors.length === 0;
+    const overflowPeriodTickerCount = activityBatchClean
+      ? orderDrafts.filter((draft) => draft.advancePeriodOnConfirm).length
+      : 0;
+
+    const shouldPersistExecutedPeriods =
+      successCount > 0 || (activityBatchClean && overflowPeriodTickerCount > 0);
+
+    if (shouldPersistExecutedPeriods) {
       setSettings((prev) => {
         const nextExecutedPeriods = { ...prev.tickerExecutedPeriods };
-        successfulTickerIds.forEach((tickerId) => {
-          const executedPeriodFromDraft = successfulBuyPeriods.get(tickerId) ?? 0;
+        periodIndexAfterActivity.forEach((executedPeriodFromDraft, tickerId) => {
           const previousExecuted = Math.max(0, Number(nextExecutedPeriods[tickerId] ?? 0));
           nextExecutedPeriods[tickerId] = Math.max(previousExecuted, executedPeriodFromDraft);
         });
+        if (activityBatchClean) {
+          orderDrafts.forEach((draft) => {
+            if (!draft.advancePeriodOnConfirm) {
+              return;
+            }
+            const previousExecuted = Math.max(0, Number(nextExecutedPeriods[draft.tickerId] ?? 0));
+            nextExecutedPeriods[draft.tickerId] = Math.max(previousExecuted, draft.periodIndex);
+          });
+        }
         const nextSettings = {
           ...prev,
           tickerExecutedPeriods: nextExecutedPeriods,
@@ -543,16 +589,31 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
         saveSettings(nextSettings);
         return nextSettings;
       });
+    }
+
+    if (successCount > 0) {
       setDeployRecords((prev) => {
         const nextRecords = [...successRecords, ...prev];
         saveDeployRecords(nextRecords);
         return nextRecords;
       });
+    }
+
+    if (successCount > 0 || (activityBatchClean && overflowPeriodTickerCount > 0)) {
       await refetchTickers();
     }
 
     if (!errors.length) {
-      ctx.api.logger.info(`Created ${successCount} activities from auto-generated orders.`);
+      const parts: string[] = [];
+      if (successCount > 0) {
+        parts.push(`created ${successCount} activities`);
+      }
+      if (overflowPeriodTickerCount > 0) {
+        parts.push(`advanced period for ${overflowPeriodTickerCount} overflow hold ticker(s)`);
+      }
+      ctx.api.logger.info(
+        `Confirm complete${parts.length ? `: ${parts.join("; ")}` : ""}.`,
+      );
       setIsOrderSheetOpen(false);
       return;
     }

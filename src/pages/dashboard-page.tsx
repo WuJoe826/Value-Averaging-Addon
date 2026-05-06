@@ -391,7 +391,7 @@ export default function DashboardPage({
           onClick={onConfirmGeneratedOrders}
           disabled={isSubmittingOrders || !orderDrafts.length}
         >
-          {isSubmittingOrders ? "Submitting..." : "Confirm and create activity"}
+          {isSubmittingOrders ? "Submitting..." : "Confirm"}
         </Button>
       </div>
     </div>

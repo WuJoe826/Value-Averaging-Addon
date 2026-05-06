@@ -73,6 +73,7 @@ export function buildDefaultSettings(): ValueAveragingSettings {
     enabledTickers: {},
     tickerAllocations: {},
     tickerAccountSelection: {},
+    tickerExecutedPeriods: {},
     initialDeploymentShares: {},
     initialDeploymentValue: {},
     isConfigured: false,
@@ -148,6 +149,10 @@ export function readSettings(): ValueAveragingSettings {
       tickerAccountSelection: {
         ...defaults.tickerAccountSelection,
         ...(parsed.tickerAccountSelection ?? {}),
+      },
+      tickerExecutedPeriods: {
+        ...defaults.tickerExecutedPeriods,
+        ...(parsed.tickerExecutedPeriods ?? {}),
       },
       initialDeploymentShares: {
         ...defaults.initialDeploymentShares,

@@ -33,6 +33,7 @@ interface GeneratedOrderDraft {
   tickerId: string;
   symbol: string;
   enabled: boolean;
+  autoDepositCash: boolean;
   action: "buy" | "sell";
   accountId: string;
   accountName: string;
@@ -62,6 +63,7 @@ function hydrateSettingsForTickers(
   const nextEnabledTickers = { ...baseSettings.enabledTickers };
   const nextTickerAllocations = { ...baseSettings.tickerAllocations };
   const nextTickerAccountSelection = { ...baseSettings.tickerAccountSelection };
+  const nextTickerExecutedPeriods = { ...baseSettings.tickerExecutedPeriods };
   const nextInitialDeploymentShares = { ...baseSettings.initialDeploymentShares };
   const nextInitialDeploymentValue = { ...baseSettings.initialDeploymentValue };
 
@@ -72,6 +74,10 @@ function hydrateSettingsForTickers(
     }
     if (!(ticker.id in nextTickerAllocations)) {
       nextTickerAllocations[ticker.id] = 0;
+      hasChanges = true;
+    }
+    if (!(ticker.id in nextTickerExecutedPeriods)) {
+      nextTickerExecutedPeriods[ticker.id] = 0;
       hasChanges = true;
     }
     const fallbackAccountId = ticker.accountOptions[0]?.id ?? "";
@@ -108,6 +114,7 @@ function hydrateSettingsForTickers(
       enabledTickers: nextEnabledTickers,
       tickerAllocations: nextTickerAllocations,
       tickerAccountSelection: nextTickerAccountSelection,
+      tickerExecutedPeriods: nextTickerExecutedPeriods,
       initialDeploymentShares: nextInitialDeploymentShares,
       initialDeploymentValue: nextInitialDeploymentValue,
     },
@@ -291,6 +298,7 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
           tickerId: ticker.id,
           symbol: ticker.symbol,
           enabled: true,
+          autoDepositCash: false,
           action: plan.action,
           accountId: selectedAccount?.id ?? "",
           accountName: selectedAccount?.name ?? ticker.accountName,
@@ -312,7 +320,7 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
 
   const updateOrderDraft = (
     draftId: string,
-    field: "enabled" | "accountId" | "amount" | "quantity" | "unitPrice",
+    field: "enabled" | "autoDepositCash" | "accountId" | "amount" | "quantity" | "unitPrice",
     rawValue: string | number | boolean,
   ) => {
     setOrderDrafts((prev) =>
@@ -324,6 +332,12 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
           return {
             ...draft,
             enabled: Boolean(rawValue),
+          };
+        }
+        if (field === "autoDepositCash") {
+          return {
+            ...draft,
+            autoDepositCash: Boolean(rawValue),
           };
         }
         if (field === "accountId") {
@@ -379,12 +393,24 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
 
     setIsSubmittingOrders(true);
     let successCount = 0;
+    const successfulTickerIds = new Set<string>();
     const successRecords: string[] = [];
     const errors: string[] = [];
     const activityDate = getTodayIsoDate();
 
     for (const draft of validDrafts) {
       try {
+        if (draft.action === "buy" && draft.autoDepositCash) {
+          await ctx.api.activities.create({
+            accountId: draft.accountId,
+            activityType: "DEPOSIT",
+            activityDate,
+            isDraft: false,
+            amount: draft.amount,
+            currency: draft.currency,
+            comment: `Auto deposit cash for ${draft.symbol} order`,
+          });
+        }
         const activityPayload = {
           accountId: draft.accountId,
           activityType: draft.action === "buy" ? "BUY" : "SELL",
@@ -395,18 +421,36 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
           unitPrice: draft.unitPrice,
           currency: draft.currency,
           comment: "Value Averaging auto-generated",
-          ...(draft.instrumentId ? { assetId: draft.instrumentId } : { symbol: draft.symbol }),
+          // Host expects AssetResolutionInput object here.
+          symbol: draft.instrumentId
+            ? {
+                id: draft.instrumentId,
+                symbol: draft.symbol,
+              }
+            : {
+                symbol: draft.symbol,
+              },
         };
         await ctx.api.activities.create({
           ...activityPayload,
         });
         successCount += 1;
+        // Only filled BUY/SELL orders advance period immediately.
+        // HOLD actions should wait for calendar period rollover.
+        if (draft.action === "buy" || draft.action === "sell") {
+          successfulTickerIds.add(draft.tickerId);
+        }
         const actionLabel = draft.action === "sell" ? "SELL" : "BUY";
         successRecords.push(
           `${actionLabel} ${draft.symbol} in ${draft.accountName}: ${formatCurrency(draft.amount, draft.currency)}`,
         );
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Unknown error";
+        const message =
+          err instanceof Error
+            ? err.message
+            : typeof err === "string"
+              ? err
+              : JSON.stringify(err);
         errors.push(`${draft.symbol}: ${message}`);
       }
     }
@@ -414,6 +458,18 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
     setIsSubmittingOrders(false);
 
     if (successCount > 0) {
+      setSettings((prev) => {
+        const nextExecutedPeriods = { ...prev.tickerExecutedPeriods };
+        successfulTickerIds.forEach((tickerId) => {
+          nextExecutedPeriods[tickerId] = Math.max(0, Number(nextExecutedPeriods[tickerId] ?? 0)) + 1;
+        });
+        const nextSettings = {
+          ...prev,
+          tickerExecutedPeriods: nextExecutedPeriods,
+        };
+        saveSettings(nextSettings);
+        return nextSettings;
+      });
       setGeneratedTransactions(successRecords);
       await refetchTickers();
     }

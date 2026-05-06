@@ -52,6 +52,7 @@ export interface ValueAveragingSettings {
   enabledTickers: Record<string, boolean>;
   tickerAllocations: Record<string, number>;
   tickerAccountSelection: Record<string, string>;
+  tickerExecutedPeriods: Record<string, number>;
   initialDeploymentShares: Record<string, number>;
   initialDeploymentValue: Record<string, number>;
   isConfigured: boolean;

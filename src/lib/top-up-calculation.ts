@@ -99,7 +99,9 @@ export function calculateHoldingInvestmentPlan(
   enabledTickers: PortfolioTicker[],
 ): HoldingInvestmentPlan {
   const baseTopUpAmount = resolveBaseTopUpAmount(settings, enabledTickers);
-  const periodIndex = getGrowthPeriodIndex(settings.growthSchedule);
+  const basePeriodIndex = getGrowthPeriodIndex(settings.growthSchedule);
+  const executedPeriods = Math.max(0, toFiniteNumber(settings.tickerExecutedPeriods[ticker.id], 0));
+  const periodIndex = Math.max(1, basePeriodIndex + executedPeriods);
   const allocation = Math.max(0, toFiniteNumber(settings.tickerAllocations[ticker.id]) / 100);
   const growthPerPeriod = baseTopUpAmount * allocation;
   const initialDeploymentValue = Math.max(

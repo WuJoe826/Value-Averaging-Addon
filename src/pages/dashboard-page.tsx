@@ -46,6 +46,7 @@ interface DashboardPageProps {
     id: string;
     symbol: string;
     enabled: boolean;
+    autoDepositCash: boolean;
     action: "buy" | "sell";
     accountId: string;
     accountName: string;
@@ -60,7 +61,7 @@ interface DashboardPageProps {
   onOrderSheetOpenChange: (open: boolean) => void;
   onOrderDraftChange: (
     draftId: string,
-    field: "enabled" | "accountId" | "amount" | "quantity" | "unitPrice",
+    field: "enabled" | "autoDepositCash" | "accountId" | "amount" | "quantity" | "unitPrice",
     rawValue: string | number | boolean,
   ) => void;
   onConfirmGeneratedOrders: () => void | Promise<void>;
@@ -257,23 +258,37 @@ export default function DashboardPage({
         <p className="text-muted-foreground text-sm">No buy/sell order generated yet.</p>
       ) : (
         <>
-          {orderDrafts.map((draft) => {
+          {orderDrafts.filter((draft) => draft.enabled).map((draft) => {
             const canSubmit = Boolean(draft.accountId) && draft.amount > 0 && draft.quantity > 0;
             return (
-              <div key={draft.id} className={`bg-card space-y-3 rounded-md border p-4 ${draft.enabled ? "" : "opacity-60"}`}>
-                <div className="flex items-center justify-between">
+              <div key={draft.id} className="bg-card space-y-3 rounded-md border p-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-2">
                     <TickerLogo symbol={draft.symbol} />
                     <div className="font-medium">{draft.symbol}</div>
-                  </div>
-                  <div className="flex items-center gap-3">
                     <Badge variant={draft.action === "sell" ? "destructive" : "success"}>
                       {draft.action === "sell" ? "SELL" : "BUY"}
                     </Badge>
-                    <Switch
-                      checked={draft.enabled}
-                      onCheckedChange={(checked) => onOrderDraftChange(draft.id, "enabled", checked)}
-                    />
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 sm:justify-end">
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground text-xs">Auto deposit cash</span>
+                      <Switch
+                        checked={draft.autoDepositCash}
+                        disabled={draft.action !== "buy"}
+                        onCheckedChange={(checked) => onOrderDraftChange(draft.id, "autoDepositCash", checked)}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => onOrderDraftChange(draft.id, "enabled", false)}
+                      aria-label={`Close ${draft.symbol}`}
+                    >
+                      <Icons.Close className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-4">
@@ -324,7 +339,7 @@ export default function DashboardPage({
                     />
                   </label>
                 </div>
-                {draft.enabled && !canSubmit ? (
+                {!canSubmit ? (
                   <p className="text-destructive text-xs">Account, amount, and quantity must be greater than zero.</p>
                 ) : null}
               </div>

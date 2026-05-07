@@ -1,5 +1,13 @@
 import type { AddonContext } from "@wealthfolio/addon-sdk";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
   Avatar,
   AvatarFallback,
   AvatarImage,
@@ -11,11 +19,17 @@ import {
   CardTitle,
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   EmptyPlaceholder,
   Icons,
   Input,
+  Label,
   Page,
   PageContent,
   PageHeader,
@@ -73,6 +87,8 @@ interface DashboardPageProps {
   ) => void;
   onConfirmGeneratedOrders: () => void | Promise<void>;
   deployRecords: DeployRecord[];
+  onUpdateDeployRecord: (id: string, patch: Partial<Omit<DeployRecord, "id" | "createdAt">>) => void;
+  onDeleteDeployRecord: (id: string) => void;
 }
 
 interface InvestmentPlan {
@@ -97,6 +113,124 @@ interface DeployRecord {
   unitPrice: number;
   currency: string;
   periodIndex: number;
+}
+
+const DEPLOY_ACTION_OPTIONS: { value: "BUY" | "SELL"; label: string }[] = [
+  { value: "BUY", label: "BUY" },
+  { value: "SELL", label: "SELL" },
+];
+
+function deployRecordToPatch(
+  record: DeployRecord,
+): Partial<Omit<DeployRecord, "id" | "createdAt">> {
+  return {
+    symbol: record.symbol,
+    action: record.action,
+    accountName: record.accountName,
+    periodIndex: record.periodIndex,
+    amount: record.amount,
+    quantity: record.quantity,
+    unitPrice: record.unitPrice,
+    currency: record.currency,
+  };
+}
+
+function DeployRecordEditor({
+  draft,
+  onChange,
+  formatRecordTime,
+}: {
+  draft: DeployRecord;
+  onChange: (next: DeployRecord) => void;
+  formatRecordTime: (iso: string) => string;
+}) {
+  const updateField = <K extends keyof DeployRecord>(key: K, value: DeployRecord[K]) => {
+    onChange({ ...draft, [key]: value });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <Label className="text-muted-foreground mb-1 block text-xs">Time</Label>
+        <p className="font-medium">{formatRecordTime(draft.createdAt)}</p>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2 sm:gap-3">
+        <label className="text-sm">
+          <span className="text-muted-foreground mb-1 block text-xs">Ticker</span>
+          <Input
+            type="text"
+            value={draft.symbol}
+            onChange={(event) => updateField("symbol", event.target.value)}
+          />
+        </label>
+        <label className="text-sm">
+          <span className="text-muted-foreground mb-1 block text-xs">Action</span>
+          <IntervalInput
+            value={draft.action}
+            onChange={(next) => updateField("action", next)}
+            options={DEPLOY_ACTION_OPTIONS}
+            placeholder="Select action"
+            searchPlaceholder="Search action..."
+            emptyText="No action found."
+          />
+        </label>
+        <label className="text-sm sm:col-span-2">
+          <span className="text-muted-foreground mb-1 block text-xs">Account</span>
+          <Input
+            type="text"
+            value={draft.accountName}
+            onChange={(event) => updateField("accountName", event.target.value)}
+          />
+        </label>
+        <label className="text-sm">
+          <span className="text-muted-foreground mb-1 block text-xs">Period</span>
+          <Input
+            type="number"
+            min={0}
+            step={1}
+            value={draft.periodIndex}
+            onChange={(event) => updateField("periodIndex", Number.parseInt(event.target.value, 10) || 0)}
+          />
+        </label>
+        <label className="text-sm">
+          <span className="text-muted-foreground mb-1 block text-xs">Currency</span>
+          <Input
+            type="text"
+            value={draft.currency}
+            onChange={(event) => updateField("currency", event.target.value)}
+          />
+        </label>
+        <label className="text-sm">
+          <span className="text-muted-foreground mb-1 block text-xs">Amount</span>
+          <Input
+            type="number"
+            min={0}
+            value={draft.amount}
+            onChange={(event) => updateField("amount", Number(event.target.value))}
+          />
+        </label>
+        <label className="text-sm">
+          <span className="text-muted-foreground mb-1 block text-xs">Quantity</span>
+          <Input
+            type="number"
+            min={0}
+            step="0.00000001"
+            value={draft.quantity}
+            onChange={(event) => updateField("quantity", Number(event.target.value))}
+          />
+        </label>
+        <label className="text-sm">
+          <span className="text-muted-foreground mb-1 block text-xs">Price</span>
+          <Input
+            type="number"
+            min={0}
+            value={draft.unitPrice}
+            onChange={(event) => updateField("unitPrice", Number(event.target.value))}
+          />
+        </label>
+      </div>
+    </div>
+  );
 }
 
 function TickerLogo({ symbol }: { symbol: string }) {
@@ -139,12 +273,18 @@ export default function DashboardPage({
   onOrderDraftChange,
   onConfirmGeneratedOrders,
   deployRecords,
+  onUpdateDeployRecord,
+  onDeleteDeployRecord,
 }: DashboardPageProps) {
   const RECORDS_PER_PAGE = 10;
   const [selectedTickerId, setSelectedTickerId] = useState<string | null>(null);
   const [isTickerDetailSheetOpen, setIsTickerDetailSheetOpen] = useState(false);
   const [selectedDeployRecord, setSelectedDeployRecord] = useState<DeployRecord | null>(null);
+  const [mobileDeployDraft, setMobileDeployDraft] = useState<DeployRecord | null>(null);
   const [isDeployRecordSheetOpen, setIsDeployRecordSheetOpen] = useState(false);
+  const [desktopDeployEditDraft, setDesktopDeployEditDraft] = useState<DeployRecord | null>(null);
+  const [isDesktopDeployEditOpen, setIsDesktopDeployEditOpen] = useState(false);
+  const [deleteDeployConfirmId, setDeleteDeployConfirmId] = useState<string | null>(null);
   const [deployRecordsPage, setDeployRecordsPage] = useState(1);
   const [isDesktopViewport, setIsDesktopViewport] = useState(() => {
     if (typeof window === "undefined") {
@@ -228,6 +368,27 @@ export default function DashboardPage({
       return "--";
     }
     return date.toLocaleString();
+  };
+
+  useEffect(() => {
+    if (selectedDeployRecord) {
+      setMobileDeployDraft({ ...selectedDeployRecord });
+    } else {
+      setMobileDeployDraft(null);
+    }
+  }, [selectedDeployRecord]);
+
+  const confirmDeleteDeployRecord = (id: string) => {
+    onDeleteDeployRecord(id);
+    setDeleteDeployConfirmId(null);
+    if (selectedDeployRecord?.id === id) {
+      setSelectedDeployRecord(null);
+      setIsDeployRecordSheetOpen(false);
+    }
+    if (desktopDeployEditDraft?.id === id) {
+      setDesktopDeployEditDraft(null);
+      setIsDesktopDeployEditOpen(false);
+    }
   };
 
   if (isTickersLoading) {
@@ -481,6 +642,7 @@ export default function DashboardPage({
                           <TableHead className="text-right">Amount</TableHead>
                           <TableHead className="text-right">Quantity</TableHead>
                           <TableHead className="text-right">Price</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -496,6 +658,41 @@ export default function DashboardPage({
                             <TableCell className="text-right">{formatCurrency(record.amount, record.currency)}</TableCell>
                             <TableCell className="text-right">{record.quantity.toFixed(8)}</TableCell>
                             <TableCell className="text-right">{formatCurrency(record.unitPrice, record.currency)}</TableCell>
+                            <TableCell className="text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                    aria-label={`Actions for ${record.symbol}`}
+                                  >
+                                    <Icons.MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onSelect={(event) => {
+                                      event.preventDefault();
+                                      setDesktopDeployEditDraft({ ...record });
+                                      setIsDesktopDeployEditOpen(true);
+                                    }}
+                                  >
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-destructive focus:text-destructive"
+                                    onSelect={(event) => {
+                                      event.preventDefault();
+                                      setDeleteDeployConfirmId(record.id);
+                                    }}
+                                  >
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -593,131 +790,145 @@ export default function DashboardPage({
           </SheetContent>
         </Sheet>
       )}
-      {isDesktopViewport ? (
-        <Dialog
-          open={isDeployRecordSheetOpen}
-          onOpenChange={(open) => {
-            setIsDeployRecordSheetOpen(open);
-            if (!open) {
-              setSelectedDeployRecord(null);
-            }
-          }}
+      <Dialog
+        open={isDesktopDeployEditOpen}
+        onOpenChange={(open) => {
+          setIsDesktopDeployEditOpen(open);
+          if (!open) {
+            setDesktopDeployEditDraft(null);
+          }
+        }}
+      >
+        <DialogContent className="flex max-h-[85vh] flex-col overflow-hidden p-0 sm:max-w-lg">
+          <DialogHeader className="border-border border-b px-6 py-4">
+            <DialogTitle>Edit deploy record</DialogTitle>
+          </DialogHeader>
+          <div className="min-h-0 flex-1 overflow-auto px-6 pt-4 text-sm">
+            {desktopDeployEditDraft ? (
+              <DeployRecordEditor
+                draft={desktopDeployEditDraft}
+                onChange={setDesktopDeployEditDraft}
+                formatRecordTime={formatRecordTime}
+              />
+            ) : null}
+          </div>
+          <DialogFooter className="border-border border-t px-6 py-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setIsDesktopDeployEditOpen(false);
+                setDesktopDeployEditDraft(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={!desktopDeployEditDraft}
+              onClick={() => {
+                if (!desktopDeployEditDraft) {
+                  return;
+                }
+                onUpdateDeployRecord(desktopDeployEditDraft.id, deployRecordToPatch(desktopDeployEditDraft));
+                setIsDesktopDeployEditOpen(false);
+                setDesktopDeployEditDraft(null);
+              }}
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Sheet
+        open={isDeployRecordSheetOpen}
+        onOpenChange={(open) => {
+          setIsDeployRecordSheetOpen(open);
+          if (!open) {
+            setSelectedDeployRecord(null);
+          }
+        }}
+      >
+        <SheetContent
+          side="bottom"
+          className="mx-1 flex h-[75vh] flex-col rounded-t-4xl p-0 pb-15 [&>button.absolute]:hidden"
         >
-          <DialogContent className="max-h-[85vh] overflow-hidden p-0 sm:max-w-lg">
-            <DialogHeader className="border-border border-b px-6 py-4">
-              <DialogTitle>Deploy record details</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-3 overflow-auto px-6 pt-4 pb-6 text-sm">
-              {selectedDeployRecord ? (
-                <>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Time</span>
-                    <span className="font-medium">{formatRecordTime(selectedDeployRecord.createdAt)}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Ticker</span>
-                    <span className="font-medium">{selectedDeployRecord.symbol}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Action</span>
-                    <Badge variant={selectedDeployRecord.action === "SELL" ? "destructive" : "success"}>
-                      {selectedDeployRecord.action}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Account</span>
-                    <span className="font-medium">{selectedDeployRecord.accountName}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Period</span>
-                    <span className="font-medium">{selectedDeployRecord.periodIndex}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Amount</span>
-                    <span className="font-medium">
-                      {formatCurrency(selectedDeployRecord.amount, selectedDeployRecord.currency)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Quantity</span>
-                    <span className="font-medium">{selectedDeployRecord.quantity.toFixed(8)}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Price</span>
-                    <span className="font-medium">
-                      {formatCurrency(selectedDeployRecord.unitPrice, selectedDeployRecord.currency)}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <p className="text-muted-foreground">Select a record to see details.</p>
-              )}
+          <SheetHeader className="border-border shrink-0 border-b px-6 py-4">
+            <SheetTitle>Deploy record</SheetTitle>
+          </SheetHeader>
+          <div className="min-h-0 flex-1 overflow-auto px-6 pt-4 text-sm">
+            {mobileDeployDraft ? (
+              <DeployRecordEditor
+                draft={mobileDeployDraft}
+                onChange={setMobileDeployDraft}
+                formatRecordTime={formatRecordTime}
+              />
+            ) : (
+              <p className="text-muted-foreground">Select a record to see details.</p>
+            )}
+          </div>
+          <div className="bg-background shrink-0 border-t px-6 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <Button
+              type="button"
+              className="w-full"
+              disabled={!mobileDeployDraft}
+              onClick={() => {
+                if (!mobileDeployDraft) {
+                  return;
+                }
+                onUpdateDeployRecord(mobileDeployDraft.id, deployRecordToPatch(mobileDeployDraft));
+              }}
+            >
+              Save
+            </Button>
+            <div className="mt-2 flex justify-center">
+              <Button
+                type="button"
+                variant="destructive"
+                className="mx-auto w-[80%]"
+                disabled={!mobileDeployDraft}
+                onClick={() => {
+                  if (mobileDeployDraft) {
+                    setDeleteDeployConfirmId(mobileDeployDraft.id);
+                  }
+                }}
+              >
+                Delete
+              </Button>
             </div>
-          </DialogContent>
-        </Dialog>
-      ) : (
-        <Sheet
-          open={isDeployRecordSheetOpen}
-          onOpenChange={(open) => {
-            setIsDeployRecordSheetOpen(open);
-            if (!open) {
-              setSelectedDeployRecord(null);
-            }
-          }}
-        >
-          <SheetContent side="bottom" className="rounded-t-4xl mx-1 h-[75vh] p-0 pb-15 [&>button.absolute]:hidden">
-            <SheetHeader className="border-border border-b px-6 py-4">
-              <SheetTitle>Deploy record details</SheetTitle>
-            </SheetHeader>
-            <div className="space-y-3 overflow-auto px-6 pt-4 pb-20 text-sm">
-              {selectedDeployRecord ? (
-                <>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Time</span>
-                    <span className="font-medium">{formatRecordTime(selectedDeployRecord.createdAt)}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Ticker</span>
-                    <span className="font-medium">{selectedDeployRecord.symbol}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Action</span>
-                    <Badge variant={selectedDeployRecord.action === "SELL" ? "destructive" : "success"}>
-                      {selectedDeployRecord.action}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Account</span>
-                    <span className="font-medium">{selectedDeployRecord.accountName}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Period</span>
-                    <span className="font-medium">{selectedDeployRecord.periodIndex}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Amount</span>
-                    <span className="font-medium">
-                      {formatCurrency(selectedDeployRecord.amount, selectedDeployRecord.currency)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Quantity</span>
-                    <span className="font-medium">{selectedDeployRecord.quantity.toFixed(8)}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Price</span>
-                    <span className="font-medium">
-                      {formatCurrency(selectedDeployRecord.unitPrice, selectedDeployRecord.currency)}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <p className="text-muted-foreground">Select a record to see details.</p>
-              )}
-            </div>
-          </SheetContent>
-        </Sheet>
-      )}
+          </div>
+        </SheetContent>
+      </Sheet>
+      <AlertDialog
+        open={deleteDeployConfirmId !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteDeployConfirmId(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete deploy record?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the record from your list. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteDeployConfirmId) {
+                  confirmDeleteDeployRecord(deleteDeployConfirmId);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Page>
   );
 }

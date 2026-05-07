@@ -64,6 +64,8 @@ interface DeployRecord {
   periodIndex: number;
 }
 
+type DeployRecordUpdate = Partial<Omit<DeployRecord, "id" | "createdAt">>;
+
 const QUANTITY_DECIMAL_PLACES = 8;
 
 function truncateToDecimals(value: number, decimals: number): number {
@@ -629,6 +631,68 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
     saveSettings(nextSettings);
   };
 
+  const updateDeployRecord = (id: string, patch: DeployRecordUpdate) => {
+    setDeployRecords((prev) => {
+      const index = prev.findIndex((r) => r.id === id);
+      if (index === -1) {
+        return prev;
+      }
+      const current = prev[index];
+      const next: DeployRecord = { ...current };
+      if (patch.symbol !== undefined) {
+        next.symbol = String(patch.symbol).trim();
+      }
+      if (patch.accountName !== undefined) {
+        next.accountName = String(patch.accountName).trim();
+      }
+      if (patch.action !== undefined) {
+        if (patch.action === "BUY" || patch.action === "SELL") {
+          next.action = patch.action;
+        }
+      }
+      if (patch.currency !== undefined) {
+        const c = String(patch.currency).trim().toUpperCase();
+        next.currency = c || current.currency;
+      }
+      if (patch.amount !== undefined) {
+        const n = Number(patch.amount);
+        if (Number.isFinite(n)) {
+          next.amount = Math.max(0, n);
+        }
+      }
+      if (patch.unitPrice !== undefined) {
+        const n = Number(patch.unitPrice);
+        if (Number.isFinite(n)) {
+          next.unitPrice = Math.max(0, n);
+        }
+      }
+      if (patch.quantity !== undefined) {
+        const n = Number(patch.quantity);
+        if (Number.isFinite(n)) {
+          next.quantity = Math.max(0, truncateToDecimals(n, QUANTITY_DECIMAL_PLACES));
+        }
+      }
+      if (patch.periodIndex !== undefined) {
+        const n = Number(patch.periodIndex);
+        if (Number.isFinite(n)) {
+          next.periodIndex = Math.max(0, Math.floor(n));
+        }
+      }
+      const out = [...prev];
+      out[index] = next;
+      saveDeployRecords(out);
+      return out;
+    });
+  };
+
+  const deleteDeployRecord = (id: string) => {
+    setDeployRecords((prev) => {
+      const out = prev.filter((r) => r.id !== id);
+      saveDeployRecords(out);
+      return out;
+    });
+  };
+
   const resetAddonData = () => {
     const { settings: resetSettings } = hydrateSettingsForTickers(buildDefaultSettings(), tickers);
     clearSettings();
@@ -678,6 +742,8 @@ function ValueAveragingShell({ ctx }: { ctx: AddonContext }) {
         onOrderDraftChange={updateOrderDraft}
         onConfirmGeneratedOrders={confirmGeneratedOrders}
         deployRecords={deployRecords}
+        onUpdateDeployRecord={updateDeployRecord}
+        onDeleteDeployRecord={deleteDeployRecord}
       />
     </div>
   );

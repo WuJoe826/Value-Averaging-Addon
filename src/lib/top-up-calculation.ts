@@ -139,7 +139,9 @@ export function calculateHoldingInvestmentPlan(
   let overflowHoldDeferred: boolean;
 
   if (settings.oneSidedVaEnabled) {
-    const combinedBuy = growthPerPeriod + Math.max(0, rawAmountToInvest);
+    // Behind target: classic VA gap already reflects the schedule (no extra R on top).
+    // At/above target: still invest the base slice R (no sells).
+    const combinedBuy = rawAmountToInvest > 0 ? rawAmountToInvest : growthPerPeriod;
     amountToInvest = applyMaxTopUpIfNeeded(settings, baseTopUpAmount, allocation, combinedBuy);
     action = "buy";
     overflowHoldDeferred = false;

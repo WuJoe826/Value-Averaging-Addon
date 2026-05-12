@@ -72,9 +72,9 @@ export function GeneralSettingsContent({
                 One Sided VA
               </Label>
               <p className="text-muted-foreground text-xs">
-                Buy-only hybrid: each period invest your base slice R plus any shortfall vs the target (R +
-                max(0, desired value − market value)). No sell orders; large rallies still invest R instead of
-                deferring to the next round.
+                Buy-only: if you are below the desired value, invest the VA gap only (it already reflects the
+                plan). If you are at or above target, invest your base slice R. No sell orders; large rallies
+                still invest R instead of deferring to the next round.
               </p>
             </div>
             <Switch

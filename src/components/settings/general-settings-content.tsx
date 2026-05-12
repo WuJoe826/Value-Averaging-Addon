@@ -66,6 +66,30 @@ export function GeneralSettingsContent({
           </div>
         </CardHeader>
         <CardContent className="space-y-6 pt-2">
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0 space-y-0.5">
+              <Label htmlFor="va-one-sided-va" className="text-base">
+                One Sided VA
+              </Label>
+              <p className="text-muted-foreground text-xs">
+                Buy-only hybrid: each period invest your base slice R plus any shortfall vs the target (R +
+                max(0, desired value − market value)). No sell orders; large rallies still invest R instead of
+                deferring to the next round.
+              </p>
+            </div>
+            <Switch
+              id="va-one-sided-va"
+              checked={draft.oneSidedVaEnabled}
+              onCheckedChange={(checked) =>
+                setDraft((prev) => ({
+                  ...prev,
+                  oneSidedVaEnabled: checked,
+                }))
+              }
+              className="shrink-0"
+            />
+          </div>
+
           <div className="flex flex-col gap-3">
             <Label className="text-base">Top-up mode</Label>
             <div className="flex flex-wrap gap-2">

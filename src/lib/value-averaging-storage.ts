@@ -55,6 +55,7 @@ export const DEFAULT_TICKERS: PortfolioTicker[] = [
 export function buildDefaultSettings(): ValueAveragingSettings {
   const today = getTodayIsoDate();
   return {
+    oneSidedVaEnabled: false,
     topUpMode: "amount",
     overflowGainsAction: "hold-to-next-round",
     purchaseUnit: "fractional-unit",

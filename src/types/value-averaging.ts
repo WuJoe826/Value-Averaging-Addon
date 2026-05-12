@@ -39,6 +39,8 @@ export interface GrowthSchedule {
 }
 
 export interface ValueAveragingSettings {
+  /** When true: buy-only VA with C = R + max(0, V_n − M) per holding; no sell / overflow hold deferral. */
+  oneSidedVaEnabled: boolean;
   topUpMode: "amount" | "percentage";
   overflowGainsAction: "hold-to-next-round" | "sell";
   purchaseUnit: "fractional-unit" | "whole-unit";

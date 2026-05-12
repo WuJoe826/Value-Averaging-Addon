@@ -95,7 +95,7 @@ interface HoldingInvestmentPlan {
 function applyMaxTopUpIfNeeded(
   settings: ValueAveragingSettings,
   baseTopUpAmount: number,
-  allocation: number,
+  allocationFraction: number,
   amountToInvest: number,
 ): number {
   if (amountToInvest <= 0) {
@@ -107,7 +107,7 @@ function applyMaxTopUpIfNeeded(
   }
 
   const normalizedMultiplier = Math.max(1, toFiniteNumber(settings.maxTopUpMultiplier, 10));
-  const maxAllowedTopUp = baseTopUpAmount * normalizedMultiplier * allocation;
+  const maxAllowedTopUp = baseTopUpAmount * normalizedMultiplier * allocationFraction;
   return Math.min(amountToInvest, maxAllowedTopUp);
 }
 
@@ -122,8 +122,11 @@ export function calculateHoldingInvestmentPlan(
   const periodIndex = Number.isFinite(rawPeriodIndex) && rawPeriodIndex > 0
     ? rawPeriodIndex
     : getEffectiveGrowthPeriodIndex(settings, enabledTickers);
-  const allocation = Math.max(0, toFiniteNumber(settings.tickerAllocations[ticker.id]) / 100);
-  const growthPerPeriod = baseTopUpAmount * allocation;
+  const enabledAllocationSum = getEnabledAllocationTotal(settings, enabledTickers);
+  const tickerAllocationPct = Math.max(0, toFiniteNumber(settings.tickerAllocations[ticker.id]));
+  const allocationFraction =
+    enabledAllocationSum > 0 ? tickerAllocationPct / enabledAllocationSum : 0;
+  const growthPerPeriod = baseTopUpAmount * allocationFraction;
   const initialDeploymentValue = Math.max(
     0,
     toFiniteNumber(settings.initialDeploymentValue[ticker.id], 0),
@@ -142,11 +145,11 @@ export function calculateHoldingInvestmentPlan(
     // Behind target: classic VA gap already reflects the schedule (no extra R on top).
     // At/above target: still invest the base slice R (no sells).
     const combinedBuy = rawAmountToInvest > 0 ? rawAmountToInvest : growthPerPeriod;
-    amountToInvest = applyMaxTopUpIfNeeded(settings, baseTopUpAmount, allocation, combinedBuy);
+    amountToInvest = applyMaxTopUpIfNeeded(settings, baseTopUpAmount, allocationFraction, combinedBuy);
     action = "buy";
     overflowHoldDeferred = false;
   } else {
-    amountToInvest = applyMaxTopUpIfNeeded(settings, baseTopUpAmount, allocation, rawAmountToInvest);
+    amountToInvest = applyMaxTopUpIfNeeded(settings, baseTopUpAmount, allocationFraction, rawAmountToInvest);
     action = amountToInvest < 0 ? "sell" : "buy";
     overflowHoldDeferred = false;
     if (hasOverflowBeyondTopUp && settings.overflowGainsAction === "hold-to-next-round") {

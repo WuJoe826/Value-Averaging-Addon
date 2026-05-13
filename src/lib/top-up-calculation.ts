@@ -137,26 +137,13 @@ export function calculateHoldingInvestmentPlan(
   const overflowAmount = Math.max(0, currentPortfolioValue - targetValue);
   const hasOverflowBeyondTopUp = overflowAmount > growthPerPeriod;
 
-  let amountToInvest: number;
-  let action: "buy" | "sell" | "hold";
-  let overflowHoldDeferred: boolean;
-
-  if (settings.oneSidedVaEnabled) {
-    // Behind target: classic VA gap already reflects the schedule (no extra R on top).
-    // At/above target: still invest the base slice R (no sells).
-    const combinedBuy = rawAmountToInvest > 0 ? rawAmountToInvest : growthPerPeriod;
-    amountToInvest = applyMaxTopUpIfNeeded(settings, baseTopUpAmount, allocationFraction, combinedBuy);
-    action = "buy";
-    overflowHoldDeferred = false;
-  } else {
-    amountToInvest = applyMaxTopUpIfNeeded(settings, baseTopUpAmount, allocationFraction, rawAmountToInvest);
-    action = amountToInvest < 0 ? "sell" : "buy";
-    overflowHoldDeferred = false;
-    if (hasOverflowBeyondTopUp && settings.overflowGainsAction === "hold-to-next-round") {
-      amountToInvest = 0;
-      action = "hold";
-      overflowHoldDeferred = true;
-    }
+  let amountToInvest = applyMaxTopUpIfNeeded(settings, baseTopUpAmount, allocationFraction, rawAmountToInvest);
+  let action: "buy" | "sell" | "hold" = amountToInvest < 0 ? "sell" : "buy";
+  let overflowHoldDeferred = false;
+  if (hasOverflowBeyondTopUp && settings.overflowGainsAction === "hold-to-next-round") {
+    amountToInvest = 0;
+    action = "hold";
+    overflowHoldDeferred = true;
   }
 
   return {

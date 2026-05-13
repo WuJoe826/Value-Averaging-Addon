@@ -41,6 +41,11 @@ export interface GrowthSchedule {
 export interface ValueAveragingSettings {
   topUpMode: "amount" | "percentage";
   overflowGainsAction: "hold-to-next-round" | "sell";
+  /**
+   * When overflow gains use "hold-to-next-round", optional portfolio-wide minimum buy per cycle.
+   * Each holding receives `overflowMinTopUpAmount * allocationFraction` (same weights as growth).
+   */
+  overflowMinTopUpAmount: number;
   purchaseUnit: "fractional-unit" | "whole-unit";
   topUpAmount: number;
   topUpPercentage: number;

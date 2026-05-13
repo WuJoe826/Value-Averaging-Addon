@@ -141,9 +141,18 @@ export function calculateHoldingInvestmentPlan(
   let action: "buy" | "sell" | "hold" = amountToInvest < 0 ? "sell" : "buy";
   let overflowHoldDeferred = false;
   if (hasOverflowBeyondTopUp && settings.overflowGainsAction === "hold-to-next-round") {
-    amountToInvest = 0;
-    action = "hold";
-    overflowHoldDeferred = true;
+    const minTotal = Math.max(0, toFiniteNumber(settings.overflowMinTopUpAmount, 0));
+    const minPortion = minTotal * allocationFraction;
+    const cappedMin = applyMaxTopUpIfNeeded(settings, baseTopUpAmount, allocationFraction, minPortion);
+    if (cappedMin > 0) {
+      amountToInvest = cappedMin;
+      action = "buy";
+      overflowHoldDeferred = false;
+    } else {
+      amountToInvest = 0;
+      action = "hold";
+      overflowHoldDeferred = true;
+    }
   }
 
   return {

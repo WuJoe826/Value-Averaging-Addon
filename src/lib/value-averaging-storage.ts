@@ -57,7 +57,6 @@ export function buildDefaultSettings(): ValueAveragingSettings {
   return {
     topUpMode: "amount",
     overflowGainsAction: "hold-to-next-round",
-    overflowMinTopUpAmount: 0,
     purchaseUnit: "fractional-unit",
     topUpAmount: 500,
     topUpPercentage: 2,
@@ -128,10 +127,6 @@ export function readSettings(): ValueAveragingSettings {
         parsed.overflowGainsAction === "sell" || parsed.overflowGainsAction === "hold-to-next-round"
           ? parsed.overflowGainsAction
           : defaults.overflowGainsAction,
-      overflowMinTopUpAmount:
-        parsed.overflowMinTopUpAmount == null || !Number.isFinite(Number(parsed.overflowMinTopUpAmount))
-          ? defaults.overflowMinTopUpAmount
-          : Math.max(0, Number(parsed.overflowMinTopUpAmount)),
       purchaseUnit:
         parsed.purchaseUnit === "whole-unit" || parsed.purchaseUnit === "fractional-unit"
           ? parsed.purchaseUnit

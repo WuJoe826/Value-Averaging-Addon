@@ -160,28 +160,6 @@ export function GeneralSettingsContent({
                 Sell
               </Button>
             </div>
-            {draft.overflowGainsAction === "hold-to-next-round" ? (
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="va-overflow-min-top-up">Minimum top-up ({baseCurrency})</Label>
-                <Input
-                  id="va-overflow-min-top-up"
-                  type="number"
-                  min={0}
-                  className="w-full max-w-[360px]"
-                  value={draft.overflowMinTopUpAmount}
-                  onChange={(event) =>
-                    setDraft((prev) => ({
-                      ...prev,
-                      overflowMinTopUpAmount: Math.max(0, Number(event.target.value) || 0),
-                    }))
-                  }
-                />
-                <p className="text-muted-foreground text-xs">
-                  When gains are held to the next round, each holding can still buy at least its share of this
-                  total (same allocation weights as your plan). Set to 0 to skip buys during overflow hold.
-                </p>
-              </div>
-            ) : null}
           </div>
 
           <div className="flex flex-col gap-3">
